@@ -6,7 +6,7 @@ interface IconProps {
   color?: string;
 }
 
-// Engine Repair Icon
+// Engine Repair Icon - Cải tiến chuyên nghiệp hơn
 export function EngineIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -17,20 +17,40 @@ export function EngineIcon({ className = '', size = 24, color = 'currentColor' }
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <path
-        d="M12 2L13.09 5.26L16 4L17.74 6.74L21 5.84L22.16 9.16L19.84 11.5L22.16 13.84L21 17.16L17.74 16.26L16 19L13.09 17.74L12 21L10.91 17.74L8 19L6.26 16.26L3 17.16L1.84 13.84L4.16 11.5L1.84 9.16L3 5.84L6.26 6.74L8 4L10.91 5.26L12 2Z"
-        fill={color}
-        fillOpacity="0.1"
-        stroke={color}
-        strokeWidth="2"
-      />
-      <circle cx="12" cy="11.5" r="3" fill={color} fillOpacity="0.2" />
-      <path d="M9 11.5h6M12 8.5v6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      {/* Engine block */}
+      <rect x="4" y="8" width="16" height="10" rx="2" fill="url(#engine-gradient)" stroke={color} strokeWidth="1.5" />
+      <rect x="6" y="10" width="12" height="6" rx="1" fill={color} fillOpacity="0.1" />
+
+      {/* Cylinders */}
+      <rect x="7" y="4" width="2" height="4" rx="1" fill={color} fillOpacity="0.3" stroke={color} strokeWidth="1"/>
+      <rect x="10.5" y="4" width="2" height="4" rx="1" fill={color} fillOpacity="0.3" stroke={color} strokeWidth="1"/>
+      <rect x="14" y="4" width="2" height="4" rx="1" fill={color} fillOpacity="0.3" stroke={color} strokeWidth="1"/>
+
+      {/* Spark plugs */}
+      <circle cx="8" cy="3" r="0.8" fill={color} fillOpacity="0.6" />
+      <circle cx="11.5" cy="3" r="0.8" fill={color} fillOpacity="0.6" />
+      <circle cx="15" cy="3" r="0.8" fill={color} fillOpacity="0.6" />
+
+      {/* Engine details */}
+      <path d="M2 12h2M20 12h2M4 15h2M18 15h2" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="12" cy="13" r="1.5" fill="none" stroke={color} strokeWidth="1" />
+      <path d="M11 12h2M12 11v2" stroke={color} strokeWidth="1" strokeLinecap="round" />
+
+      {/* Exhaust */}
+      <path d="M20 16h3" stroke={color} strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+      <circle cx="22" cy="16" r="0.5" fill={color} opacity="0.4"/>
+
+      <defs>
+        <linearGradient id="engine-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.15"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
 
-// Maintenance Icon
+// Maintenance Icon - Cải tiến chuyên nghiệp hơn
 export function MaintenanceIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -41,14 +61,25 @@ export function MaintenanceIcon({ className = '', size = 24, color = 'currentCol
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <path
-        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"
-        fill={color}
-        fillOpacity="0.1"
-        stroke={color}
-        strokeWidth="2"
-      />
-      <circle cx="11" cy="11" r="2" fill={color} fillOpacity="0.3" />
+      {/* Main gear */}
+      <circle cx="12" cy="12" r="6" fill="url(#maintenance-gradient)" stroke={color} strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="3" fill="none" stroke={color} strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="1" fill={color} />
+
+      {/* Gear teeth */}
+      <path d="M12 2v4M12 18v4M22 12h-4M6 12H2" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M19.07 4.93l-2.83 2.83M7.76 16.24l-2.83 2.83M19.07 19.07l-2.83-2.83M7.76 7.76L4.93 4.93" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Tool overlays */}
+      <path d="M8 8l2 2M14 14l2 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>
+      <circle cx="9" cy="15" r="0.8" fill="#fff" opacity="0.6"/>
+
+      <defs>
+        <linearGradient id="maintenance-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.15"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
@@ -97,61 +128,7 @@ export function BrakeIcon({ className = '', size = 24, color = 'currentColor' }:
   );
 }
 
-// Car Wash Icon
-export function CarWashIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <path
-        d="M3 16h18v2c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2v-2z"
-        fill={color}
-        fillOpacity="0.1"
-        stroke={color}
-        strokeWidth="2"
-      />
-      <path
-        d="M7 16V9c0-2.76 2.24-5 5-5s5 2.24 5 5v7"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-      />
-      {/* Water drops */}
-      <circle cx="8" cy="6" r="1" fill={color} fillOpacity="0.5" />
-      <circle cx="12" cy="4" r="1" fill={color} fillOpacity="0.5" />
-      <circle cx="16" cy="6" r="1" fill={color} fillOpacity="0.5" />
-      <circle cx="10" cy="2" r="0.5" fill={color} fillOpacity="0.3" />
-      <circle cx="14" cy="2" r="0.5" fill={color} fillOpacity="0.3" />
-    </svg>
-  );
-}
-
-// Diagnostic Icon
-export function DiagnosticIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <rect x="2" y="6" width="20" height="12" rx="2" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="2" />
-      <rect x="4" y="8" width="16" height="8" rx="1" fill={color} fillOpacity="0.1" />
-      <path d="M8 11h8M8 13h6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="18" cy="12" r="1" fill={color} />
-      <path d="M12 2v4M6 4l1.5 1.5M18 4l-1.5 1.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// Insurance Icon - Mới thêm cho dịch vụ bảo hiểm
+// Insurance Icon - Cải tiến chuyên nghiệp hơn
 export function InsuranceIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -164,24 +141,33 @@ export function InsuranceIcon({ className = '', size = 24, color = 'currentColor
     >
       <path
         d="M12 2L21 6v6c0 5.55-3.84 10.74-9 12-5.16-1.26-9-6.45-9-12V6l9-4z"
-        fill={color}
-        fillOpacity="0.1"
+        fill="url(#insurance-gradient)"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="1.5"
       />
       <path
         d="M9 12l2 2 4-4"
-        stroke={color}
-        strokeWidth="2"
+        stroke="#fff"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="12" r="1" fill={color} />
+      <circle cx="12" cy="12" r="8" fill="none" stroke="url(#insurance-inner)" strokeWidth="0.5" opacity="0.3" />
+      <defs>
+        <linearGradient id="insurance-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.1"/>
+        </linearGradient>
+        <linearGradient id="insurance-inner" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.2"/>
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
 
-// Registration Icon - Mới thêm cho dịch vụ đăng ký đăng kiểm
+// Registration Icon - Cải tiến chuyên nghiệp hơn
 export function RegistrationIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -192,14 +178,65 @@ export function RegistrationIcon({ className = '', size = 24, color = 'currentCo
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <rect x="3" y="4" width="18" height="16" rx="2" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="2" />
-      <path d="M3 10h18" stroke={color} strokeWidth="2" />
-      <path d="M7 14h10M7 17h6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-      <rect x="5" y="6" width="4" height="2" rx="1" fill={color} fillOpacity="0.3" />
-      <circle cx="17" cy="7" r="1" fill={color} />
+      <rect x="3" y="4" width="18" height="16" rx="3" fill="url(#reg-gradient)" stroke={color} strokeWidth="1.5" />
+      <path d="M3 10h18" stroke={color} strokeWidth="1.5" />
+      <path d="M7 14h10M7 17h8" stroke={color} strokeWidth="1.2" strokeLinecap="round" />
+      <rect x="5" y="6" width="6" height="2" rx="1" fill={color} fillOpacity="0.7" />
+      <circle cx="17" cy="7" r="1.5" fill={color} fillOpacity="0.8" />
+      <path d="M16 13l1 1 2-2" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <defs>
+        <linearGradient id="reg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.1"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
+
+// Car Wash Icon - Đổi tên thành PaintServiceIcon để phù hợp với ServicesCarousel
+export function CarWashIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Car silhouette */}
+      <path
+        d="M6 14h12l1.5-4c.5-1.5-.5-3-2-3H6.5c-1.5 0-2.5 1.5-2 3L6 14z"
+        fill="url(#paint-gradient)"
+        stroke={color}
+        strokeWidth="1.2"
+      />
+      <path d="M4 14h16v2c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2v-2z" fill={color} fillOpacity="0.2" />
+      <circle cx="7" cy="17" r="1.5" fill={color} fillOpacity="0.6" />
+      <circle cx="17" cy="17" r="1.5" fill={color} fillOpacity="0.6" />
+
+      {/* Paint brush */}
+      <path d="M15 3l3 3-2 2-3-3 2-2z" fill={color} fillOpacity="0.3" stroke={color} strokeWidth="1" />
+      <path d="M18 6l2-2" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Paint drops */}
+      <circle cx="10" cy="5" r="0.8" fill={color} fillOpacity="0.4" />
+      <circle cx="12" cy="3" r="0.6" fill={color} fillOpacity="0.3" />
+      <circle cx="8" cy="6" r="0.5" fill={color} fillOpacity="0.3" />
+
+      <defs>
+        <linearGradient id="paint-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.15"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.08"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// Alias cho PaintServiceIcon để tương thích
+export const PaintServiceIcon = CarWashIcon;
 
 // Document Icon - Mới thêm cho các dịch vụ giấy tờ
 export function DocumentIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
@@ -306,14 +343,29 @@ export function ToolsIcon({ className = '', size = 24, color = 'currentColor' }:
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
+      {/* Wrench */}
       <path
         d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"
         stroke={color}
-        strokeWidth="2"
-        fill={color}
-        fillOpacity="0.1"
+        strokeWidth="1.5"
+        fill="url(#tools-gradient)"
       />
-      <path d="M22 4L2 24M15 9l6-6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Screwdriver */}
+      <path d="M4 14l3-3 4 4-3 3c-1.1 1.1-2.9 1.1-4 0s-1.1-2.9 0-4z" fill={color} fillOpacity="0.3" stroke={color} strokeWidth="1"/>
+      <path d="M7 11l6-6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M13 5l2-2" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Gear accent */}
+      <circle cx="16" cy="8" r="1.5" fill="none" stroke={color} strokeWidth="1" opacity="0.4"/>
+      <path d="M15.2 7.2l1.6 1.6M16.8 7.2l-1.6 1.6" stroke={color} strokeWidth="0.8" opacity="0.4"/>
+
+      <defs>
+        <linearGradient id="tools-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.1"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
     </svg>
   );
 }
@@ -357,6 +409,38 @@ export function QualityIcon({ className = '', size = 24, color = 'currentColor' 
         stroke={color}
         strokeWidth="2"
       />
+    </svg>
+  );
+}
+
+// Diagnostic Icon
+export function DiagnosticIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <rect x="2" y="6" width="20" height="12" rx="3" fill="url(#diagnostic-gradient)" stroke={color} strokeWidth="1.5" />
+      <rect x="4" y="8" width="16" height="8" rx="1" fill={color} fillOpacity="0.1" />
+      <path d="M8 11h8M8 13h6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="18" cy="12" r="1.5" fill={color} fillOpacity="0.8" />
+      <path d="M12 2v4M6 4l1.5 1.5M18 4l-1.5 1.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* Screen content */}
+      <path d="M6 10h3M6 12h5M6 14h4" stroke={color} strokeWidth="0.8" strokeLinecap="round" opacity="0.6"/>
+      <circle cx="15" cy="11" r="0.5" fill={color} opacity="0.4"/>
+      <circle cx="16" cy="13" r="0.5" fill={color} opacity="0.4"/>
+
+      <defs>
+        <linearGradient id="diagnostic-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.1"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
     </svg>
   );
 }

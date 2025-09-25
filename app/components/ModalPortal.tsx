@@ -33,12 +33,11 @@ export function ModalPortal({ children, isOpen }: ModalPortalProps) {
     return () => {
       // Only remove container if it's empty and component is unmounting
       if (modalContainer && modalContainer.children.length === 0) {
-        const timeoutId = setTimeout(() => {
+        setTimeout(() => {
           if (modalContainer && modalContainer.parentNode && modalContainer.children.length === 0) {
             modalContainer.parentNode.removeChild(modalContainer);
           }
         }, 100);
-        return () => clearTimeout(timeoutId);
       }
     };
   }, []);

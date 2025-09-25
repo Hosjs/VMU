@@ -5,7 +5,6 @@ import {
   TireIcon,
   BrakeIcon,
   CarWashIcon,
-  DiagnosticIcon,
   LocationIcon,
   PhoneIcon
 } from './Icons';
