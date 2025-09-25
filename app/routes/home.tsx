@@ -14,6 +14,9 @@ import {
   BrakeIcon,
   CarWashIcon,
   DiagnosticIcon,
+  InsuranceIcon,
+  RegistrationIcon,
+  DocumentIcon,
   LocationIcon,
   PhoneIcon,
   MechanicIcon,
@@ -28,6 +31,7 @@ interface ServiceDetail {
   description: string;
   icon: React.ReactNode;
   price: string;
+  isSpecialService?: boolean; // Đánh dấu dịch vụ đặc biệt cần báo giá
   details: {
     supportedBrands: string[];
     carTypes: string[];
@@ -40,8 +44,8 @@ interface ServiceDetail {
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "AutoCare Pro - Dịch Vụ Sửa Chữa & Bảo Dưỡng Xe Hơi Chuyên Nghiệp" },
-    { name: "description", content: "Dịch vụ gara ô tô chuyên nghiệp với công nghệ hiện đại. Sửa chữa, bảo dưỡng xe các hãng Toyota, Honda, Ford, BMW, Mercedes với đội ngũ kỹ thuật viên chuyên nghiệp." },
+    { title: "AutoCare Pro - Dịch Vụ Bảo Hiểm & Đăng Kiểm Xe Hơi Chuyên Nghiệp" },
+    { name: "description", content: "Dịch vụ bảo hiểm xe, đăng ký đăng kiểm và sửa chữa ô tô chuyên nghiệp. Đăng kiểm hộ, bảo hiểm trách nhiệm dân sự, bảo hiểm thân vỏ với giá tốt nhất." },
   ];
 }
 
@@ -143,7 +147,7 @@ export default function Home() {
       title: "Sửa Chữa Động Cơ",
       description: "Chẩn đoán và sửa chữa mọi vấn đề về động cơ xe với công nghệ hiện đại",
       icon: <EngineIcon size={64} color="#3B82F6" />,
-      price: "Từ 500.000đ",
+      price: "Liên hệ",
       details: {
         supportedBrands: [
           "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
@@ -172,7 +176,7 @@ export default function Home() {
       title: "Bảo Dưỡng Định Kỳ",
       description: "Dịch vụ bảo dưỡng toàn diện theo lịch trình của nhà sản xuất",
       icon: <MaintenanceIcon size={64} color="#10B981" />,
-      price: "Từ 300.000đ",
+      price: "Liên hệ",
       details: {
         supportedBrands: [
           "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
@@ -201,7 +205,7 @@ export default function Home() {
       title: "Thay Thế Lốp Xe",
       description: "Lốp xe chính hãng từ các thương hiệu uy tín, lắp đặt chuyên nghiệp",
       icon: <TireIcon size={64} color="#F59E0B" />,
-      price: "Từ 800.000đ",
+      price: "Liên hệ",
       details: {
         supportedBrands: [
           "Bridgestone", "Michelin", "Continental", "Pirelli", "Yokohama",
@@ -230,7 +234,7 @@ export default function Home() {
       title: "Sửa Chữa Phanh",
       description: "Kiểm tra và thay thế hệ thống phanh đảm bảo an toàn tuyệt đối",
       icon: <BrakeIcon size={64} color="#EF4444" />,
-      price: "Từ 400.000đ",
+      price: "Liên hệ",
       details: {
         supportedBrands: [
           "Toyota", "Honda", "Ford", "Hyundai", "KIA", "Mazda",
@@ -259,7 +263,7 @@ export default function Home() {
       title: "Rửa Xe & Làm Đẹp",
       description: "Dịch vụ rửa xe, đánh bóng và chăm sóc ngoại thất chuyên nghiệp",
       icon: <CarWashIcon size={64} color="#8B5CF6" />,
-      price: "Từ 100.000đ",
+      price: "Liên hệ",
       details: {
         supportedBrands: [
           "Tất cả các hãng xe", "Xe Nhật Bản", "Xe Hàn Quốc", "Xe Châu Âu",
@@ -287,7 +291,7 @@ export default function Home() {
       title: "Kiểm Tra Tổng Thể",
       description: "Kiểm tra toàn bộ hệ thống xe với thiết bị chẩn đoán hiện đại",
       icon: <DiagnosticIcon size={64} color="#06B6D4" />,
-      price: "Từ 200.000đ",
+      price: "Liên hệ",
       details: {
         supportedBrands: [
           "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
@@ -311,7 +315,183 @@ export default function Home() {
         gallery: []
       }
     },
+    {
+      id: 7,
+      title: "Bảo Hiểm Xe Hơi",
+      description: "Các gói bảo hiểm xe hơi toàn diện, bảo vệ bạn và xe trước rủi ro",
+      icon: <InsuranceIcon size={64} color="#3B82F6" />,
+      price: "Liên hệ",
+      isSpecialService: true,
+      details: {
+        supportedBrands: [],
+        carTypes: [],
+        features: [],
+        warranty: "",
+        duration: "",
+        gallery: []
+      }
+    },
+    {
+      id: 8,
+      title: "Đăng Kiểm Xe Ô Tô",
+      description: "Dịch vụ đăng kiểm xe ô tô nhanh chóng, thủ tục đơn giản, giá cả cạnh tranh",
+      icon: <RegistrationIcon size={64} color="#10B981" />,
+      price: "Liên hệ",
+      isSpecialService: true,
+      details: {
+        supportedBrands: [],
+        carTypes: [],
+        features: [],
+        warranty: "",
+        duration: "",
+        gallery: []
+      }
+    },
+    {
+      id: 9,
+      title: "Làm Giấy Tờ Xe",
+      description: "Dịch vụ làm giấy tờ xe nhanh chóng, bao gồm đăng ký, sang tên, đổi biển số",
+      icon: <DocumentIcon size={64} color="#F59E0B" />,
+      price: "Liên hệ",
+      isSpecialService: true,
+      details: {
+        supportedBrands: [],
+        carTypes: [],
+        features: [],
+        warranty: "",
+        duration: "",
+        gallery: []
+      }
+    }
   ];
+
+  // Thêm các dịch vụ bảo hiểm và đăng kiểm nổi bật
+  const specialServices = [
+    {
+      id: 10,
+      title: "Đăng Kiểm Hộ",
+      description: "Dịch vụ đăng kiểm xe nhanh chóng, tiết kiệm thời gian, thủ tục đơn giản",
+      icon: <RegistrationIcon size={64} color="#10B981" />,
+      price: "Liên hệ báo giá",
+      isSpecialService: true,
+      details: {
+        supportedBrands: ["Tất cả các hãng xe"],
+        carTypes: ["Xe con", "SUV", "Pickup", "Xe tải nhẹ", "MPV"],
+        features: [
+          "Đăng kiểm định kỳ theo quy định",
+          "Kiểm tra kỹ thuật toàn diện",
+          "Hỗ trợ sửa chữa nếu không đạt",
+          "Nhận tem đăng kiểm trong ngày"
+        ],
+        warranty: "Tem đăng kiểm hợp lệ",
+        duration: "1 ngày",
+        gallery: []
+      }
+    },
+    {
+      id: 11,
+      title: "Bảo Hiểm TNDS",
+      description: "Bảo hiểm trách nhiệm dân sự bắt buộc và tự nguyện với mức phí cạnh tranh",
+      icon: <InsuranceIcon size={64} color="#3B82F6" />,
+      price: "Liên hệ báo giá",
+      isSpecialService: true,
+      details: {
+        supportedBrands: ["Tất cả các hãng xe"],
+        carTypes: ["Xe con", "SUV", "MPV", "Pickup", "Xe tải", "Xe khách"],
+        features: [
+          "Bảo hiểm TNDS bắt buộc",
+          "Bảo hiểm TNDS tự nguyện",
+          "Bảo hiểm người ngồi trên xe",
+          "Hỗ trợ giải quyết bồi thường"
+        ],
+        warranty: "Theo hợp đồng bảo hiểm",
+        duration: "1 năm",
+        gallery: []
+      }
+    },
+    {
+      id: 12,
+      title: "Bảo Hiểm Thân Vỏ",
+      description: "Bảo vệ tài sản xe trước rủi ro tai nạn, cháy nổ, trộm cắp, thiên tai",
+      icon: <InsuranceIcon size={64} color="#8B5CF6" />,
+      price: "Liên hệ báo giá",
+      isSpecialService: true,
+      details: {
+        supportedBrands: ["Tất cả các hãng xe"],
+        carTypes: ["Xe con", "SUV", "MPV", "Xe sang", "Xe thể thao"],
+        features: [
+          "Bảo hiểm vật chất xe",
+          "Bảo hiểm cháy nổ",
+          "Bảo hiểm trộm cắp",
+          "Cứu hộ 24/7"
+        ],
+        warranty: "Theo hợp đồng bảo hiểm",
+        duration: "1 năm",
+        gallery: []
+      }
+    },
+    {
+      id: 13,
+      title: "Mua Phụ Tùng",
+      description: "Cung cấp phụ tùng chính hãng cho tất cả các hãng xe với giá cạnh tranh",
+      icon: <ToolsIcon size={64} color="#F59E0B" />,
+      price: "Liên hệ",
+      details: {
+        supportedBrands: [
+          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
+          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "BMW",
+          "Mercedes", "Audi", "Volkswagen", "Peugeot", "Renault"
+        ],
+        carTypes: [
+          "Xe con các loại", "SUV/CUV", "MPV", "Pickup", "Xe tải nhẹ",
+          "Xe sang", "Xe thể thao", "Xe hybrid"
+        ],
+        features: [
+          "Phụ tùng chính hãng 100%",
+          "Bảo hành chính hãng",
+          "Giao hàng tận nơi",
+          "Tư vấn lựa chọn phù hợp",
+          "Hỗ trợ lắp đặt",
+          "Đổi trả trong 7 ngày"
+        ],
+        warranty: "6-24 tháng",
+        duration: "Giao hàng trong ngày",
+        gallery: []
+      }
+    },
+    {
+      id: 14,
+      title: "Sửa Chữa & Sơn Sửa",
+      description: "Dịch vụ sửa chữa tổng thể và sơn sửa ngoài bảo hiểm với chất lượng cao",
+      icon: <MaintenanceIcon size={64} color="#EF4444" />,
+      price: "Liên hệ",
+      details: {
+        supportedBrands: [
+          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
+          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Isuzu",
+          "BMW", "Mercedes", "Audi", "Lexus", "Infiniti", "Volvo"
+        ],
+        carTypes: [
+          "Xe con", "SUV", "MPV", "Pickup", "Xe tải nhẹ", "Xe sang",
+          "Xe thể thao", "Xe cổ", "Xe độ"
+        ],
+        features: [
+          "Sửa chữa sau tai nạn",
+          "Sơn sửa chuyên nghiệp",
+          "Khôi phục nguyên bản",
+          "Sử dụng sơn chính hãng",
+          "Đánh bóng hoàn thiện",
+          "Bảo hành chất lượng"
+        ],
+        warranty: "6-12 tháng",
+        duration: "3-7 ngày",
+        gallery: []
+      }
+    }
+  ];
+
+  // Gộp tất cả dịch vụ
+  const allServices = [...featuredServices, ...specialServices];
 
   const testimonials = [
     {
@@ -474,41 +654,63 @@ export default function Home() {
       <section id="services" className="py-20 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16 slide-up">
-            <h3 className="text-4xl font-bold text-gray-800 mb-4">Dịch Vụ Nổi Bật</h3>
+            <h3 className="text-4xl font-bold text-gray-800 mb-4">Cung Cấp Các Dịch Vụ</h3>
             <p className="text-xl text-gray-600">Các dịch vụ chất lượng cao được khách hàng tin tưởng với hỗ trợ đa dạng hãng xe</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredServices.map((service, index) => (
-              <div key={service.id} className={`bg-gradient-to-br from-white to-blue-50 rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-blue-100 card-hover stagger-item`}>
+            {allServices.map((service, index) => (
+              <div key={service.id} className={`bg-gradient-to-br from-white to-blue-50 rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-blue-100 card-hover stagger-item ${service.isSpecialService ? 'border-orange-300 bg-gradient-to-br from-orange-50 to-yellow-50' : ''}`}>
                 <div className="flex justify-center mb-4">{service.icon}</div>
                 <h4 className="text-2xl font-bold text-gray-800 mb-4 text-center">{service.title}</h4>
                 <p className="text-gray-600 mb-6 text-center leading-relaxed">{service.description}</p>
 
-                {/* Quick Info */}
-                <div className="mb-6 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Hãng xe hỗ trợ:</span>
-                    <span className="text-gray-700 font-semibold">{service.details.supportedBrands.length}+ hãng</span>
+                {/* Special Service Badge */}
+                {service.isSpecialService && (
+                  <div className="mb-4 text-center">
+                    <span className="inline-block bg-orange-100 text-orange-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      📞 Dịch vụ đặc biệt - Liên hệ báo giá
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Thời gian:</span>
-                    <span className="text-gray-700 font-semibold">{service.details.duration}</span>
+                )}
+
+                {/* Quick Info - chỉ hiển thị cho dịch vụ thường */}
+                {!service.isSpecialService && (
+                  <div className="mb-6 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Hãng xe hỗ trợ:</span>
+                      <span className="text-gray-700 font-semibold">{service.details.supportedBrands.length}+ hãng</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Thời gian:</span>
+                      <span className="text-gray-700 font-semibold">{service.details.duration}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Bảo hành:</span>
+                      <span className="text-gray-700 font-semibold">{service.details.warranty}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Bảo hành:</span>
-                    <span className="text-gray-700 font-semibold">{service.details.warranty}</span>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-blue-600">{service.price}</span>
-                  <button
-                    onClick={() => setSelectedService(service)}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold btn-hover"
-                  >
-                    Xem Chi Tiết
-                  </button>
+                  <span className={`text-2xl font-bold ${service.isSpecialService ? 'text-orange-600' : 'text-blue-600'}`}>
+                    {service.price}
+                  </span>
+                  {service.isSpecialService ? (
+                    <button
+                      onClick={handleConsultationClick}
+                      className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors font-semibold btn-hover"
+                    >
+                      Liên Hệ Ngay
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSelectedService(service)}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold btn-hover"
+                    >
+                      Xem Chi Tiết
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

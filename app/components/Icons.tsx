@@ -108,25 +108,25 @@ export function CarWashIcon({ className = '', size = 24, color = 'currentColor' 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Car outline */}
       <path
-        d="M5 14v-3l2-4h10l2 4v3M7 18h10M9 18v2M15 18v2"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M3 16h18v2c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2v-2z"
         fill={color}
         fillOpacity="0.1"
+        stroke={color}
+        strokeWidth="2"
+      />
+      <path
+        d="M7 16V9c0-2.76 2.24-5 5-5s5 2.24 5 5v7"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
       />
       {/* Water drops */}
-      <path
-        d="M8 3c0 2-2 3-2 5s2 3 2 3 2-1 2-3-2-3-2-5zM16 2c0 1.5-1.5 2.5-1.5 4s1.5 2.5 1.5 2.5 1.5-1 1.5-2.5S16 3.5 16 2zM12 4c0 1-1 2-1 3s1 2 1 2 1-1 1-2-1-2-1-3z"
-        fill={color}
-        fillOpacity="0.6"
-      />
-      {/* Wheels */}
-      <circle cx="8" cy="16" r="2" stroke={color} strokeWidth="1.5" fill="none" />
-      <circle cx="16" cy="16" r="2" stroke={color} strokeWidth="1.5" fill="none" />
+      <circle cx="8" cy="6" r="1" fill={color} fillOpacity="0.5" />
+      <circle cx="12" cy="4" r="1" fill={color} fillOpacity="0.5" />
+      <circle cx="16" cy="6" r="1" fill={color} fillOpacity="0.5" />
+      <circle cx="10" cy="2" r="0.5" fill={color} fillOpacity="0.3" />
+      <circle cx="14" cy="2" r="0.5" fill={color} fillOpacity="0.3" />
     </svg>
   );
 }
@@ -142,18 +142,92 @@ export function DiagnosticIcon({ className = '', size = 24, color = 'currentColo
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Magnifying glass */}
-      <circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.1" />
-      <circle cx="11" cy="11" r="4" stroke={color} strokeWidth="1" fill="none" />
-      <path d="m21 21-4.35-4.35" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Diagnostic symbols inside */}
-      <path d="M9 11h4M11 9v4" stroke={color} strokeWidth="1" strokeLinecap="round" />
-      <circle cx="11" cy="11" r="0.5" fill={color} />
+      <rect x="2" y="6" width="20" height="12" rx="2" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="2" />
+      <rect x="4" y="8" width="16" height="8" rx="1" fill={color} fillOpacity="0.1" />
+      <path d="M8 11h8M8 13h6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="18" cy="12" r="1" fill={color} />
+      <path d="M12 2v4M6 4l1.5 1.5M18 4l-1.5 1.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-// Location Pin Icon
+// Insurance Icon - Mới thêm cho dịch vụ bảo hiểm
+export function InsuranceIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M12 2L21 6v6c0 5.55-3.84 10.74-9 12-5.16-1.26-9-6.45-9-12V6l9-4z"
+        fill={color}
+        fillOpacity="0.1"
+        stroke={color}
+        strokeWidth="2"
+      />
+      <path
+        d="M9 12l2 2 4-4"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="1" fill={color} />
+    </svg>
+  );
+}
+
+// Registration Icon - Mới thêm cho dịch vụ đăng ký đăng kiểm
+export function RegistrationIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="2" />
+      <path d="M3 10h18" stroke={color} strokeWidth="2" />
+      <path d="M7 14h10M7 17h6" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="5" y="6" width="4" height="2" rx="1" fill={color} fillOpacity="0.3" />
+      <circle cx="17" cy="7" r="1" fill={color} />
+    </svg>
+  );
+}
+
+// Document Icon - Mới thêm cho các dịch vụ giấy tờ
+export function DocumentIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+        fill={color}
+        fillOpacity="0.1"
+        stroke={color}
+        strokeWidth="2"
+      />
+      <polyline points="14,2 14,8 20,8" fill={color} fillOpacity="0.2" stroke={color} strokeWidth="2" />
+      <line x1="16" y1="13" x2="8" y2="13" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="16" y1="17" x2="8" y2="17" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      <polyline points="10,9 9,10 10,11" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// Location Icon
 export function LocationIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -171,7 +245,7 @@ export function LocationIcon({ className = '', size = 24, color = 'currentColor'
         stroke={color}
         strokeWidth="2"
       />
-      <circle cx="12" cy="10" r="3" fill={color} fillOpacity="0.6" />
+      <circle cx="12" cy="10" r="3" fill={color} fillOpacity="0.3" stroke={color} strokeWidth="1.5" />
     </svg>
   );
 }
@@ -198,7 +272,7 @@ export function PhoneIcon({ className = '', size = 24, color = 'currentColor' }:
   );
 }
 
-// Professional Mechanic Icon
+// Additional utility icons
 export function MechanicIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -209,30 +283,19 @@ export function MechanicIcon({ className = '', size = 24, color = 'currentColor'
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Person */}
+      <circle cx="12" cy="6" r="4" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="2" />
       <path
-        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M8 14v8h8v-8"
         fill={color}
         fillOpacity="0.1"
-      />
-      <circle cx="12" cy="7" r="4" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.2" />
-      {/* Tools */}
-      <path
-        d="M16 8l2-2 1 1-2 2M8 16l-2 2-1-1 2-2"
         stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth="2"
       />
+      <path d="M6 14h12l-2-2H8l-2 2z" fill={color} fillOpacity="0.2" stroke={color} strokeWidth="1.5" />
     </svg>
   );
 }
 
-// Tools Icon
 export function ToolsIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -245,22 +308,16 @@ export function ToolsIcon({ className = '', size = 24, color = 'currentColor' }:
     >
       <path
         d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"
-        fill={color}
-        fillOpacity="0.1"
         stroke={color}
         strokeWidth="2"
+        fill={color}
+        fillOpacity="0.1"
       />
-      <path
-        d="M9.2 9.2L4.3 14.1a2.4 2.4 0 0 0 3.4 3.4L12.6 12.6"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M22 4L2 24M15 9l6-6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-// Speed/Fast Service Icon
 export function SpeedIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -271,27 +328,18 @@ export function SpeedIcon({ className = '', size = 24, color = 'currentColor' }:
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.1" />
       <path
-        d="M12 6v6l4 2"
+        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+        fill={color}
+        fillOpacity="0.1"
         stroke={color}
         strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       />
-      {/* Speed lines */}
-      <path
-        d="M18 6l-2 2M20 12h-2M18 18l-2-2"
-        stroke={color}
-        strokeWidth="1"
-        strokeLinecap="round"
-        opacity="0.6"
-      />
+      <path d="M12 6v6l4 2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-// Quality/Diamond Icon
 export function QualityIcon({ className = '', size = 24, color = 'currentColor' }: IconProps) {
   return (
     <svg
@@ -303,18 +351,11 @@ export function QualityIcon({ className = '', size = 24, color = 'currentColor' 
       className={className}
     >
       <path
-        d="M6 3h12l4 6-10 12L2 9l4-6z"
+        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
         fill={color}
         fillOpacity="0.1"
         stroke={color}
         strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6 3l6 6 6-6M2 9l10 12 10-12"
-        stroke={color}
-        strokeWidth="1"
-        strokeLinejoin="round"
       />
     </svg>
   );
