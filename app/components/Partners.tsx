@@ -24,52 +24,118 @@ export function Partners({ className = '' }: PartnersProps) {
   const partners: Partner[] = [
     {
       id: 1,
-      name: "Bosch Vietnam",
-      logo: "🔧",
-      category: "Phụ tùng động cơ",
-      description: "Nhà cung cấp hàng đầu về công nghệ và dịch vụ ô tô toàn cầu",
-      website: "bosch.com.vn",
-      established: "1886",
-      products: ["Hệ thống phun nhiên liệu", "Bugi", "Lọc dầu", "Cảm biến"],
-      highlight: "Công nghệ Đức - Chất lượng hàng đầu thế giới"
+      name: "Castrol Vietnam",
+      logo: "🛢️",
+      category: "Dầu nhớt cao cấp",
+      description: "Thương hiệu dầu nhớt hàng đầu thế giới với công nghệ Titanium FST tiên tiến",
+      website: "castrol.com.vn",
+      established: "1899",
+      products: ["Dầu nhớt động cơ", "Dầu hộp số", "Dầu phanh", "Phụ gia động cơ"],
+      highlight: "Công nghệ Titanium FST - Bảo vệ động cơ vượt trội"
     },
     {
       id: 2,
-      name: "Brembo Asia Pacific",
-      logo: "🛑",
-      category: "Hệ thống phanh",
-      description: "Thương hiệu phanh hàng đầu thế giới, được tin dùng bởi các đội đua F1",
-      website: "brembo.com",
-      established: "1961",
-      products: ["Má phanh", "Đĩa phanh", "Piston phanh", "Dầu phanh"],
-      highlight: "Được sử dụng trong đua xe F1 và các xe thể thao cao cấp"
+      name: "Hyundai Mobis",
+      logo: "🚗",
+      category: "Phụ tùng chính hãng",
+      description: "Nhà cung cấp phụ tùng chính hãng cho tất cả dòng xe Hyundai và KIA",
+      website: "mobis.hyundai.com",
+      established: "1977",
+      products: ["Đồ gầm chính hãng", "Đồ vỏ các loại", "Đồ máy xe con", "Phụ tùng từ 4-45 chỗ"],
+      highlight: "Phụ tùng chính hãng cho xe từ 4 chỗ đến 45 chỗ"
     },
     {
       id: 3,
-      name: "Michelin Vietnam",
-      logo: "🛞",
-      category: "Lốp xe ô tô",
-      description: "Nhà sản xuất lốp xe hàng đầu với công nghệ tiên tiến và độ bền cao",
-      website: "michelin.com.vn",
-      established: "1889",
-      products: ["Lốp xe con", "Lốp SUV", "Lốp thương mại", "Lốp xe máy"],
-      highlight: "Công nghệ EverGrip - An toàn vượt trội trong mọi điều kiện"
+      name: "Mando Corporation",
+      logo: "⚙️",
+      category: "Hệ thống gầm & vỏ xe",
+      description: "Chuyên gia hàng đầu về đồ gầm, đồ vỏ và đồ máy cho mọi loại xe từ 4-45 chỗ",
+      website: "mando.com",
+      established: "1962",
+      products: ["Giảm xóc", "Hệ thống lái", "Phanh ABS", "Cảm biến xe"],
+      highlight: "Công nghệ Hàn Quốc - Chuyên về đồ gầm, vỏ, máy các loại xe"
     },
     {
       id: 4,
-      name: "GS Battery Vietnam",
-      logo: "🔋",
-      category: "Ắc quy ô tô",
-      description: "Thương hiệu ắc quy số 1 Đông Nam Á với công nghệ Nhật Bản",
-      website: "gs-battery.com.vn",
-      established: "1985",
-      products: ["Ắc quy khô", "Ắc quy nước", "Ắc quy AGM", "Ắc quy Gel"],
-      highlight: "Công nghệ Nhật Bản - Tuổi thọ và hiệu năng vượt trội"
+      name: "Koyo Bearings Hải Phòng",
+      logo: "⚡",
+      category: "Vòng bi chính hãng",
+      description: "Đại lý cấp 1 tại Hải Phòng về vòng bi chính hãng Koyo - Thương hiệu Nhật Bản",
+      website: "koyo.co.jp",
+      established: "1921",
+      products: ["Vòng bi bánh xe", "Vòng bi động cơ", "Vòng bi hộp số", "Vòng bi công nghiệp"],
+      highlight: "Đại lý cấp 1 tại Hải Phòng - Vòng bi chính hãng Nhật Bản"
     },
     {
       id: 5,
+      name: "Valeo Vietnam",
+      logo: "🔧",
+      category: "Hệ thống ly hợp & phanh",
+      description: "Chuyên gia về bàn ép, lá côn và các hệ thống truyền động",
+      website: "valeo.com",
+      established: "1923",
+      products: ["Bàn ép ly hợp", "Lá côn", "Hệ thống làm mát", "Đèn pha LED"],
+      highlight: "Công nghệ Pháp - Chuyên về bàn ép, lá côn chất lượng cao"
+    },
+    {
+      id: 6,
+      name: "Bosch Vietnam",
+      logo: "🛠️",
+      category: "Phụ tùng đa ngành",
+      description: "Thương hiệu Đức hàng đầu về gạt mưa, má phanh, bugi và các sản phẩm ô tô",
+      website: "bosch.com.vn",
+      established: "1886",
+      products: ["Gạt mưa", "Má phanh", "Bugi", "Cảm biến", "Hệ thống phun xăng"],
+      highlight: "Made in Germany - Gạt mưa, má phanh, bugi chính hãng"
+    },
+    {
+      id: 7,
+      name: "Mahle Filter Systems",
+      logo: "🔍",
+      category: "Hệ thống lọc & bugi",
+      description: "Chuyên gia về lọc động cơ, lọc điều hòa, bugi và má phanh chất lượng cao",
+      website: "mahle.com",
+      established: "1920",
+      products: ["Lọc động cơ", "Lọc điều hòa", "Bugi cao cấp", "Má phanh", "Piston"],
+      highlight: "Công nghệ Đức - Lọc động cơ, điều hòa, bugi, má phanh"
+    },
+    {
+      id: 8,
+      name: "Phụ Tùng Ô Tô Việt Nga",
+      logo: "🏪",
+      category: "Nhà phân phối phụ tùng",
+      description: "Đối tác chiến lược cung cấp phụ tùng chính hãng với mạng lưới rộng khắp",
+      website: "phuтungviетnga.com",
+      established: "2010",
+      products: ["Phụ tùng đa hãng", "Dầu nhớt", "Lốp xe", "Ắc quy", "Phụ kiện ô tô"],
+      highlight: "⭐ ĐỐI TÁC CHIẾN LƯỢC - Nhà phân phối phụ tùng uy tín"
+    },
+    {
+      id: 9,
+      name: "DBV Insurance",
+      logo: "🛡️",
+      category: "Bảo hiểm ô tô",
+      description: "Đơn vị bảo hiểm uy tín chuyên cung cấp bảo hiểm TNDS và Vật chất cho ô tô",
+      website: "dbv.com.vn",
+      established: "2008",
+      products: ["TNDS bắt buộc", "TNDS tự nguyện", "Bảo hiểm vật chất", "Bảo hiểm người"],
+      highlight: "⭐ ĐỐI TÁC BẢO HIỂM CHÍNH - Đơn vị bảo hiểm uy tín"
+    },
+    {
+      id: 10,
+      name: "Mạng Lưới Gara Hải Phòng",
+      logo: "🔗",
+      category: "Hợp tác sửa chữa",
+      description: "Mạng lưới hợp tác với các gara uy tín tại các phường: Hải An, Lê Chân, Hồng Bàng, Kiến An",
+      website: "gara-haiphong.vn",
+      established: "2015",
+      products: ["Sửa chữa chuyên sâu", "Đại tu động cơ", "Sơn gò", "Bảo dưỡng"],
+      highlight: "⭐ HỢP TÁC SĐỬA CHỮA - Gara uy tín lâu đời tại Hải Phòng"
+    },
+    {
+      id: 11,
       name: "Toyota Motor Vietnam",
-      logo: "🚗",
+      logo: "🚘",
       category: "Xe ô tô & Phụ tùng",
       description: "Hãng xe hàng đầu Việt Nam với chất lượng và độ tin cậy cao",
       website: "toyota.com.vn",
@@ -78,37 +144,15 @@ export function Partners({ className = '' }: PartnersProps) {
       highlight: "Thương hiệu xe được tin dùng nhất Việt Nam"
     },
     {
-      id: 6,
-      name: "Honda Vietnam",
-      logo: "🏍️",
-      category: "Xe ô tô & Xe máy",
-      description: "Thương hiệu Nhật Bản với công nghệ động cơ tiên tiến và tiết kiệm nhiên liệu",
-      website: "honda.com.vn",
-      established: "1948",
-      products: ["Xe ô tô", "Xe máy", "Phụ tùng Honda", "Dầu nhớt Honda"],
-      highlight: "Công nghệ VTEC và i-VTEC tiên tiến"
-    },
-    {
-      id: 7,
-      name: "Castrol Vietnam",
-      logo: "🛢️",
-      category: "Dầu nhớt & Hóa chất",
-      description: "Thương hiệu dầu nhớt hàng đầu thế giới với công thức GTX tiên tiến",
-      website: "castrol.com.vn",
-      established: "1899",
-      products: ["Dầu nhớt động cơ", "Dầu hộp số", "Dầu phanh", "Phụ gia động cơ"],
-      highlight: "Công thức Titanium FST - Bảo vệ động cơ tối ưu"
-    },
-    {
-      id: 8,
-      name: "3M Vietnam",
-      logo: "✨",
-      category: "Phim cách nhiệt & Bảo vệ",
-      description: "Công nghệ bảo vệ và cải thiện xe hơi với các sản phẩm cao cấp",
-      website: "3m.com.vn",
-      established: "1902",
-      products: ["Phim cách nhiệt", "Phim bảo vệ sơn", "Sản phẩm đánh bóng", "Băng keo chuyên dụng"],
-      highlight: "Công nghệ nano ceramic - Cách nhiệt và UV vượt trội"
+      id: 12,
+      name: "Nhiều Thương Hiệu Lớn Khác",
+      logo: "🌟",
+      category: "Đa thương hiệu",
+      description: "Hợp tác với nhiều thương hiệu lớn khác để đảm bảo cung cấp đầy đủ các sản phẩm chất lượng",
+      website: "partners.network",
+      established: "2020",
+      products: ["Phụ tùng đa hãng", "Dầu nhớt", "Lốp xe", "Phụ kiện", "Dịch vụ"],
+      highlight: "Mạng lưới đối tác rộng khắp - Đảm bảo nguồn hàng ổn định"
     }
   ];
 
@@ -154,10 +198,33 @@ export function Partners({ className = '' }: PartnersProps) {
             <br /><span className="text-blue-600">Các Thương Hiệu Hàng Đầu</span>
           </h2>
 
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Chúng tôi tự hào là đối tác của những thương hiệu uy tín hàng đầu thế giới,
-            đảm bảo chất lượng sản phẩm và dịch vụ tốt nhất cho khách hàng.
+          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8">
+            Chúng tôi tự hào hợp tác cùng <strong className="text-blue-600">Castrol (Dầu nhớt)</strong>,
+            <strong className="text-blue-600"> Hyundai Mobis</strong>, <strong className="text-blue-600">Mando (Đồ gầm, đồ vỏ, đồ máy)</strong>,
+            <strong className="text-blue-600"> Koyo (Đại lý cấp 1 tại Hải Phòng về vòng bi)</strong>,
+            <strong className="text-blue-600"> Valeo (Bàn ép, lá côn)</strong>,
+            <strong className="text-blue-600"> Bosch (Gạt mưa, má phanh, bugi)</strong>,
+            <strong className="text-blue-600"> Mahle (Lọc động cơ, điều hòa, bugi, má phanh)</strong>
+            và nhiều thương hiệu lớn khác.
           </p>
+
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">🌟 Đối Tác Chiến Lược Đặc Biệt</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div className="bg-white rounded-lg p-4 shadow-md">
+                <h4 className="font-bold text-blue-600 mb-2">🏪 Phụ Tùng Ô Tô Việt Nga</h4>
+                <p className="text-sm text-gray-600">Đối tác phân phối phụ tùng hàng đầu</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-md">
+                <h4 className="font-bold text-blue-600 mb-2">🛡️ DBV Insurance</h4>
+                <p className="text-sm text-gray-600">Đơn vị bảo hiểm chính thức</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-md">
+                <h4 className="font-bold text-blue-600 mb-2">🔗 Mạng Lưới Gara Hải Phòng</h4>
+                <p className="text-sm text-gray-600">Hợp tác các phường: Hải An, Lê Chân, Hồng Bàng, Kiến An</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Featured Partner Showcase */}

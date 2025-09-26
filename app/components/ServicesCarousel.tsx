@@ -5,21 +5,11 @@ import {
   ToolsIcon,
   InsuranceIcon,
   RegistrationIcon,
-  CarWashIcon
+  CarWashIcon,
+  InfoDetailIcon
 } from './Icons';
-
-interface Service {
-  id: number;
-  title: string;
-  subtitle: string;
-  description: string;
-  icon: React.ReactNode;
-  price: string;
-  isSpecialService?: boolean;
-  features: string[];
-  bgColor: string;
-  accentColor: string;
-}
+import { MAIN_SERVICES } from '~/data/services';
+import type { ServiceData } from '~/data/services';
 
 interface ServicesCarouselProps {
   onServiceSelect: (serviceTitle: string) => void;
@@ -31,79 +21,16 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
 
-  const services: Service[] = [
-    {
-      id: 1,
-      title: "Hỗ Trợ Đăng Kiểm",
-      subtitle: "Dịch vụ toàn diện từ A-Z",
-      description: "Nhận xe, xếp hàng, đăng kiểm và giao trả xe tại nhà. Phục vụ tất cả các ngày trong tuần theo giờ hành chính.",
-      icon: <RegistrationIcon size={120} color="#10B981" />,
-      price: "Liên hệ báo giá",
-      isSpecialService: true,
-      features: ["Nhận xe tại nhà", "Xếp hàng đăng kiểm", "Giao trả xe", "Phục vụ 7 ngày/tuần"],
-      bgColor: "from-emerald-50 to-teal-100",
-      accentColor: "#10B981"
-    },
-    {
-      id: 2,
-      title: "Bảo Hiểm TNDS & Vật Chất",
-      subtitle: "Bảo vệ toàn diện cho xe và người",
-      description: "Cung cấp bảo hiểm Trách nhiệm Dân sự và Vật chất với mức phí cạnh tranh, hỗ trợ làm thủ tục bồi thường nhanh chóng.",
-      icon: <InsuranceIcon size={120} color="#3B82F6" />,
-      price: "Liên hệ báo giá",
-      isSpecialService: true,
-      features: ["TNDS bắt buộc & tự nguyện", "Bảo hiểm vật chất", "Hỗ trợ bồi thường", "Cứu hộ 24/7"],
-      bgColor: "from-blue-50 to-indigo-100",
-      accentColor: "#3B82F6"
-    },
-    {
-      id: 3,
-      title: "Sơn Sửa Bảo Hiểm",
-      subtitle: "Phục hồi xe như mới",
-      description: "Dịch vụ sơn sửa chuyên nghiệp cho xe bảo hiểm với quy trình chuẩn, sử dụng sơn chính hãng.",
-      icon: <CarWashIcon size={120} color="#8B5CF6" />,
-      price: "Theo báo giá BH",
-      features: ["Sơn theo chuẩn BH", "Sơn chính hãng", "Tháo lắp chuyên nghiệp", "Bảo hành chất lượng"],
-      bgColor: "from-purple-50 to-violet-100",
-      accentColor: "#8B5CF6"
-    },
-    {
-      id: 4,
-      title: "Phụ Tùng Ô Tô",
-      subtitle: "Chính hãng - Giá tốt",
-      description: "Cung cấp phụ tùng chính hãng cho tất cả các hãng xe với giá cạnh tranh, giao hàng nhanh.",
-      icon: <ToolsIcon size={120} color="#F59E0B" />,
-      price: "Từ 50.000đ",
-      isSpecialService: false,
-      features: ["Phụ tùng chính hãng 100%", "Giá cạnh tranh", "Giao hàng tận nơi", "Hỗ trợ lắp đặt"],
-      bgColor: "from-amber-50 to-yellow-100",
-      accentColor: "#F59E0B"
-    },
-    {
-      id: 5,
-      title: "Bảo Dưỡng Định Kỳ",
-      subtitle: "Chuẩn nhà sản xuất",
-      description: "Bảo dưỡng định kỳ theo chuẩn nhà sản xuất cho tất cả các cấp với dầu nhớt chính hãng.",
-      icon: <MaintenanceIcon size={120} color="#10B981" />,
-      price: "Từ 300.000đ",
-      isSpecialService: false,
-      features: ["Cấp 1, 2, 3, 4", "Dầu nhớt chính hãng", "Kiểm tra 56 hạng mục", "Rửa xe miễn phí"],
-      bgColor: "from-green-50 to-emerald-100",
-      accentColor: "#10B981"
-    },
-    {
-      id: 6,
-      title: "Sửa Chữa Tổng Thể",
-      subtitle: "Ngoài bảo hiểm",
-      description: "Kiểm tra, chẩn đoán và sửa chữa toàn diện các hư hỏng xe ngoài bảo hiểm với đội ngũ thợ lành nghề.",
-      icon: <EngineIcon size={120} color="#EF4444" />,
-      price: "Từ 200.000đ",
-      isSpecialService: false,
-      features: ["Chẩn đoán máy scan", "Sửa chữa động cơ", "Sơn gò chuyên nghiệp", "Bảo hành chất lượng"],
-      bgColor: "from-red-50 to-rose-100",
-      accentColor: "#EF4444"
-    }
-  ];
+  // Sử dụng data từ file services.ts và thêm icon
+  const services: ServiceData[] = MAIN_SERVICES.map(service => ({
+    ...service,
+    icon: service.id === 1 ? <RegistrationIcon size={120} color="#10B981" /> :
+          service.id === 2 ? <InsuranceIcon size={120} color="#3B82F6" /> :
+          service.id === 3 ? <CarWashIcon size={120} color="#8B5CF6" /> :
+          service.id === 4 ? <ToolsIcon size={120} color="#F59E0B" /> :
+          service.id === 5 ? <MaintenanceIcon size={120} color="#10B981" /> :
+          service.id === 6 ? <EngineIcon size={120} color="#EF4444" /> : null
+  }));
 
   // Auto slide every 5 seconds - pause when hovered
   useEffect(() => {
@@ -253,10 +180,11 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={() => onServiceSelect(currentService.title)}
-                  className="px-6 py-3 rounded-xl text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="px-6 py-3 rounded-xl text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
                   style={{ backgroundColor: currentService.accentColor }}
                 >
-                  👁️ Xem Chi Tiết
+                  <InfoDetailIcon size={20} color="#ffffff" />
+                  <span>Chi Tiết Dịch Vụ</span>
                 </button>
 
                 {currentService.isSpecialService ? (

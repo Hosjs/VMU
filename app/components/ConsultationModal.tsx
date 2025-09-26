@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { PhoneIcon } from './Icons';
+import { PhoneIcon, LocationIcon } from './Icons';
 import { ModalPortal } from './ModalPortal';
+import { MAIN_SERVICES } from '~/data/services';
 
 interface ConsultationData {
   name: string;
@@ -8,6 +9,7 @@ interface ConsultationData {
   carBrand: string;
   issue: string;
   contactTime: string;
+  interestedService: string;
 }
 
 interface ConsultationModalProps {
@@ -21,7 +23,8 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
     phone: '',
     carBrand: '',
     issue: '',
-    contactTime: ''
+    contactTime: '',
+    interestedService: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,8 +37,6 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
     } else {
       document.body.style.overflow = 'unset';
     }
-
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -45,11 +46,12 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
+    // Simulate realistic API call
     setTimeout(() => {
       setIsSubmitting(false);
       setShowSuccess(true);
 
+      // Auto close after showing success
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
@@ -58,10 +60,11 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
           phone: '',
           carBrand: '',
           issue: '',
-          contactTime: ''
+          contactTime: '',
+          interestedService: ''
         });
       }, 3000);
-    }, 1500);
+    }, 2000);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -71,7 +74,32 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
     });
   };
 
+  const handleCallNow = () => {
+    window.open('tel:0123456789', '_self');
+  };
+
   if (!isOpen) return null;
+
+  const carBrands = [
+    'Toyota', 'Honda', 'Mazda', 'Ford', 'Hyundai', 'KIA',
+    'Mitsubishi', 'Nissan', 'Chevrolet', 'Suzuki', 'BMW',
+    'Mercedes', 'Audi', 'Lexus', 'Infiniti', 'Volvo', 'Khác'
+  ];
+
+  const contactTimes = [
+    'Ngay bây giờ', '8:00 - 12:00', '13:00 - 17:00', 'Tối (18:00 - 20:00)', 'Cuối tuần'
+  ];
+
+  const commonIssues = [
+    'Tư vấn giá dịch vụ',
+    'Đăng kiểm xe ô tô',
+    'Mua bảo hiểm xe',
+    'Sửa chữa xe',
+    'Mua phụ tùng',
+    'Bảo dưỡng định kỳ',
+    'Sơn sửa xe',
+    'Khác'
+  ];
 
   const modalContent = (
     <div
@@ -101,7 +129,7 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
           backgroundColor: 'white',
           borderRadius: '1rem',
           width: '100%',
-          maxWidth: '32rem',
+          maxWidth: showSuccess ? '32rem' : '40rem',
           maxHeight: '90vh',
           overflow: 'auto',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
@@ -111,157 +139,258 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
         className="animate-in"
       >
         {showSuccess ? (
+          // Success State
           <div className="p-8 text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <PhoneIcon size={32} color="#3B82F6" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Yêu Cầu Tư Vấn Đã Được Gửi!</h3>
-            <p className="text-gray-600 mb-4">
-              Chuyên gia của chúng tôi sẽ liên hệ với bạn trong vòng 15 phút để tư vấn miễn phí.
-            </p>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-green-800">
-                <strong>Mã tư vấn:</strong> #{Math.random().toString(36).substr(2, 8).toUpperCase()}
+            <div className="mb-6">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Gửi Yêu Cầu Thành Công!</h3>
+              <p className="text-gray-600 mb-6">
+                Chúng tôi đã nhận được yêu cầu tư vấn của bạn và sẽ liên hệ trong vòng 5-10 phút.
               </p>
+
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-6">
+                <h4 className="font-semibold text-gray-800 mb-2">🌟 Cam kết của chúng tôi:</h4>
+                <div className="text-left text-sm text-gray-600 space-y-2">
+                  <p>• <strong>Tư vấn miễn phí</strong> từ chuyên gia có kinh nghiệm</p>
+                  <p>• <strong>Báo giá chính xác</strong> cho tất cả dịch vụ</p>
+                  <p>• <strong>Đối tác uy tín:</strong> DBV Insurance & Phụ Tùng Việt Nga</p>
+                  <p>• <strong>Hỗ trợ 24/7</strong> kể cả cuối tuần</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleCallNow}
+                  className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <PhoneIcon size={20} color="white" />
+                  <span>Gọi Ngay: 0123 456 789</span>
+                </button>
+                <p className="text-xs text-gray-500">Tự động đóng sau 3 giây...</p>
+              </div>
+            </div>
+          </div>
+        ) : isSubmitting ? (
+          // Loading State
+          <div className="p-8 text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Đang gửi yêu cầu tư vấn...</h3>
+              <p className="text-gray-600">Chuyên gia của chúng tôi sẽ liên hệ với bạn ngay</p>
             </div>
           </div>
         ) : (
+          // Form State
           <div className="p-8">
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-3xl font-bold text-gray-800">Tư Vấn Miễn Phí</h2>
-                <p className="text-gray-600 mt-1">Chuyên gia sẽ liên hệ trong 15 phút</p>
+                <h2 className="text-3xl font-bold text-gray-800">💬 Tư Vấn Miễn Phí</h2>
+                <p className="text-gray-600 mt-2">Nhận tư vấn chuyên nghiệp từ đội ngũ chuyên gia</p>
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 text-3xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors btn-hover"
+                className="text-gray-500 hover:text-gray-700 text-3xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="stagger-item">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                  placeholder="Nhập họ và tên"
-                />
-              </div>
+            {/* Quick Contact Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <button
+                onClick={handleCallNow}
+                className="flex items-center justify-center space-x-2 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <PhoneIcon size={20} color="white" />
+                <span>📞 Gọi Ngay: 0123 456 789</span>
+              </button>
+              <button
+                className="flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.219-5.237 1.219-5.237s-.31-.663-.31-1.645c0-1.541.893-2.691 2.005-2.691.946 0 1.404.709 1.404 1.559 0 .951-.609 2.373-.92 3.692-.262 1.103.552 2.002 1.637 2.002 1.966 0 3.48-2.072 3.48-5.077 0-2.654-1.905-4.515-4.627-4.515-3.15 0-4.996 2.362-4.996 4.806 0 .951.368 1.972.829 2.527.091.111.104.208.077.321-.084.353-.273 1.11-.311 1.267-.049.2-.16.242-.37.146-1.35-.629-2.193-2.607-2.193-4.193 0-3.403 2.471-6.531 7.131-6.531 3.745 0 6.654 2.668 6.654 6.233 0 3.719-2.343 6.711-5.596 6.711-1.093 0-2.122-.568-2.471-1.245l-.672 2.562c-.242.93-.9 2.097-1.338 2.807.998.309 2.058.477 3.165.477 6.624 0 11.99-5.367 11.99-11.987C24.007 5.367 18.641.001 12.017.001z"/>
+                </svg>
+                <span>💬 Chat Zalo</span>
+              </button>
+            </div>
 
-              <div className="stagger-item">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Số điện thoại *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                  placeholder="0123 456 789"
-                />
-              </div>
-
-              <div className="stagger-item">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Hãng xe
-                </label>
-                <select
-                  name="carBrand"
-                  value={formData.carBrand}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Chọn hãng xe (tùy chọn)</option>
-                  <option value="toyota">Toyota</option>
-                  <option value="honda">Honda</option>
-                  <option value="ford">Ford</option>
-                  <option value="hyundai">Hyundai</option>
-                  <option value="kia">KIA</option>
-                  <option value="mazda">Mazda</option>
-                  <option value="other">Khác</option>
-                </select>
-              </div>
-
-              <div className="stagger-item">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Thời gian thuận tiện liên hệ
-                </label>
-                <select
-                  name="contactTime"
-                  value={formData.contactTime}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Bất kỳ lúc nào</option>
-                  <option value="morning">Buổi sáng (8:00 - 12:00)</option>
-                  <option value="afternoon">Buổi chiều (13:00 - 17:00)</option>
-                  <option value="evening">Buổi tối (18:00 - 20:00)</option>
-                </select>
-              </div>
-
-              <div className="stagger-item">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Vấn đề cần tư vấn
-                </label>
-                <textarea
-                  name="issue"
-                  value={formData.issue}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Mô tả vấn đề hoặc câu hỏi cần tư vấn..."
-                />
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg stagger-item">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
+            {/* Partners Showcase */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-8 border border-blue-200">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">🌟 Đối Tác Chiến Lược</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">🛡️</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-blue-600">DBV Insurance</h4>
+                      <p className="text-sm text-gray-600">Đơn vị bảo hiểm chính thức</p>
+                    </div>
                   </div>
-                  <div className="text-sm text-blue-800">
-                    <p className="font-semibold mb-1">Cam kết của chúng tôi:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Tư vấn hoàn toàn miễn phí</li>
-                      <li>Phản hồi trong 15 phút</li>
-                      <li>Chuyên gia có kinh nghiệm 10+ năm</li>
-                    </ul>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">🏪</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-amber-600">Phụ Tùng Việt Nga</h4>
+                      <p className="text-sm text-gray-600">Nhà phân phối phụ tùng uy tín</p>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex space-x-4 stagger-item">
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Họ và tên *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Nhập họ và tên của bạn"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Số điện thoại *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
+              </div>
+
+              {/* Car & Service Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Hãng xe
+                  </label>
+                  <select
+                    name="carBrand"
+                    value={formData.carBrand}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  >
+                    <option value="">Chọn hãng xe</option>
+                    {carBrands.map((brand) => (
+                      <option key={brand} value={brand}>
+                        {brand}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Dịch vụ quan tâm
+                  </label>
+                  <select
+                    name="interestedService"
+                    value={formData.interestedService}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  >
+                    <option value="">Chọn dịch vụ</option>
+                    {MAIN_SERVICES.map((service) => (
+                      <option key={service.id} value={service.title}>
+                        {service.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Issue & Contact Time */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Vấn đề cần tư vấn
+                  </label>
+                  <select
+                    name="issue"
+                    value={formData.issue}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  >
+                    <option value="">Chọn vấn đề</option>
+                    {commonIssues.map((issue) => (
+                      <option key={issue} value={issue}>
+                        {issue}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Thời gian liên hệ
+                  </label>
+                  <select
+                    name="contactTime"
+                    value={formData.contactTime}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  >
+                    <option value="">Chọn thời gian</option>
+                    {contactTimes.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Benefits */}
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 className="font-semibold text-green-800 mb-2">✨ Lợi ích khi tư vấn với chúng tôi:</h4>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• Tư vấn miễn phí từ chuyên gia có 10+ năm kinh nghiệm</li>
+                  <li>• Báo giá chính xác, minh bạch cho tất cả dịch vụ</li>
+                  <li>• Cam kết giá tốt nhất với chất lượng đảm bảo</li>
+                  <li>• Hỗ trợ 24/7, kể cả cuối tuần và ngày lễ</li>
+                </ul>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  type="submit"
+                  disabled={!formData.name || !formData.phone}
+                  className="flex-1 bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+                >
+                  💬 Gửi Yêu Cầu Tư Vấn
+                </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors font-semibold btn-hover"
+                  className="sm:w-32 border-2 border-gray-300 text-gray-700 py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                 >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed btn-hover"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Đang gửi...</span>
-                    </div>
-                  ) : (
-                    'Nhận Tư Vấn Ngay'
-                  )}
+                  Đóng
                 </button>
               </div>
             </form>

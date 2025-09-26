@@ -7,7 +7,9 @@ import { ConsultationModal } from "~/components/ConsultationModal";
 import { SkeletonLoader } from "~/components/Loading";
 import { ServicesCarousel } from "~/components/ServicesCarousel";
 import { Partners } from "~/components/Partners";
+import { GoogleMap, LocationSection } from "~/components/GoogleMap";
 import { usePageTransition } from "~/components/PageTransition";
+import { MAIN_SERVICES, getServiceByTitle } from "~/data/services";
 import {
   EngineIcon,
   MaintenanceIcon,
@@ -67,243 +69,16 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 6 dịch vụ chính cho ServiceDetail modal
-  const mainServices = [
-    {
-      id: 1,
-      title: "Hỗ Trợ Đăng Kiểm",
-      subtitle: "Dịch vụ toàn diện từ A-Z",
-      description: "Nhận xe, xếp hàng, đăng kiểm và giao trả xe tại nhà. Phục vụ tất cả các ngày trong tuần theo giờ hành chính.",
-      icon: <RegistrationIcon size={80} color="#10B981" />,
-      price: "Liên hệ báo giá",
-      isSpecialService: true,
-      features: [
-        "Nhận xe tại nhà hoặc công ty",
-        "Xếp hàng và thực hiện đăng kiểm",
-        "Giao trả xe sau khi hoàn thành",
-        "Phục vụ tất cả các ngày trong tuần",
-        "Theo giờ hành chính (8:00-17:00)",
-        "Hỗ trợ sửa chữa nếu xe không đạt"
-      ],
-      details: {
-        supportedBrands: [
-          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Isuzu",
-          "BMW", "Mercedes", "Audi", "Lexus", "Tất cả các hãng xe"
-        ],
-        carTypes: [
-          "Xe con dưới 9 chỗ", "SUV/CUV", "MPV 7-9 chỗ", "Pickup truck",
-          "Xe tải nhẹ dưới 3.5T", "Xe khách", "Xe chuyên dùng"
-        ],
-        features: [
-          "Nhận xe tại địa chỉ của khách hàng",
-          "Kiểm tra sơ bộ trước khi đăng kiểm",
-          "Xếp hàng và thực hiện đăng kiểm",
-          "Sửa chữa nhỏ nếu xe không đạt tiêu chuẩn",
-          "Giao trả xe cùng với giấy tờ đăng kiểm",
-          "Nhắc lịch đăng kiểm lần tiếp theo"
-        ],
-        warranty: "Tem đăng kiểm có hiệu lực",
-        duration: "1-2 ngày làm việc",
-        gallery: []
-      }
-    },
-    {
-      id: 2,
-      title: "Mua Bảo Hiểm TNDS & Vật Chất",
-      subtitle: "Bảo vệ toàn diện cho xe và người",
-      description: "Cung cấp bảo hiểm Trách nhiệm Dân sự bắt buộc và Bảo hiểm Vật chất với mức phí cạnh tranh nhất thị trường.",
-      icon: <InsuranceIcon size={80} color="#3B82F6" />,
-      price: "Liên hệ báo giá",
-      isSpecialService: true,
-      features: [
-        "Bảo hiểm TNDS bắt buộc theo quy định",
-        "Bảo hiểm TNDS tự nguyện",
-        "Bảo hiểm Vật chất (thân vỏ xe)",
-        "Bảo hiểm người ngồi trên xe",
-        "Hỗ trợ làm thủ tục bồi thường",
-        "Tư vấn gói bảo hiểm phù hợp"
-      ],
-      details: {
-        supportedBrands: [
-          "Tất cả các hãng xe", "Xe con", "Xe tải", "Xe khách",
-          "Xe chuyên dùng", "Xe máy", "Moto phân khối lớn"
-        ],
-        carTypes: [
-          "Xe con 4-9 chỗ", "SUV/CUV", "MPV", "Pickup truck",
-          "Xe tải các loại", "Xe khách", "Xe chuyên dùng", "Xe container"
-        ],
-        features: [
-          "TNDS bắt buộc: bồi thường tối đa 150 triệu/người",
-          "TNDS tự nguyện: mức bồi thường cao hơn",
-          "Vật chất: bồi thường 100% khi mất trộm/hỏng toàn bộ",
-          "Chi trả 80-100% chi phí sửa chữa khi tai nạn",
-          "Cứu hộ 24/7 toàn quốc miễn phí",
-          "Hỗ trợ pháp lý khi có tranh chấp"
-        ],
-        warranty: "Theo hợp đồng bảo hiểm",
-        duration: "1 năm (có thể gia hạn)",
-        gallery: []
-      }
-    },
-    {
-      id: 3,
-      title: "Làm Sơn Sửa Bảo Hiểm",
-      subtitle: "Phục hồi xe như mới sau tai nạn",
-      description: "Dịch vụ sơn sửa chuyên nghiệp cho xe bảo hiểm với quy trình chuẩn, sử dụng sơn chính hãng, khôi phục xe như ban đầu.",
-      icon: <CarWashIcon size={80} color="#8B5CF6" />,
-      price: "Theo báo giá bảo hiểm",
-      isSpecialService: true,
-      features: [
-        "Sơn sửa theo tiêu chuẩn bảo hiểm",
-        "Sử dụng sơn chính hãng",
-        "Tháo lắp chuyên nghiệp",
-        "Sơn phủ hoàn thiện",
-        "Bàn giao xe như mới",
-        "Bảo hành chất lượng sơn"
-      ],
-      details: {
-        supportedBrands: [
-          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "BMW",
-          "Mercedes", "Audi", "Lexus", "Infiniti", "Volvo", "Tất cả hãng"
-        ],
-        carTypes: [
-          "Xe con", "SUV", "MPV", "Pickup", "Xe sang", "Xe thể thao",
-          "Xe tải nhẹ", "Xe đã qua sử dụng"
-        ],
-        features: [
-          "Định giá thiệt hại theo chuẩn bảo hiểm",
-          "Tháo lắp chi tiết bị hư hỏng",
-          "Gò đập chỉnh hình thân xe",
-          "Sơn lót, sơn phủ bằng sơn chính hãng",
-          "Lắp ráp và kiểm tra chất lượng",
-          "Đánh bóng và hoàn thiện"
-        ],
-        warranty: "6-12 tháng",
-        duration: "3-7 ngày tùy mức độ hư hỏng",
-        gallery: []
-      }
-    },
-    {
-      id: 4,
-      title: "Mua Phụ Tùng Ô Tô",
-      subtitle: "Phụ tùng chính hãng giá tốt nhất",
-      description: "Cung cấp phụ tùng chính hãng cho tất cả các hãng xe với giá cạnh tranh, giao hàng nhanh, bảo hành chính thức.",
-      icon: <ToolsIcon size={80} color="#F59E0B" />,
-      price: "Từ 50.000đ",
-      isSpecialService: false,
-      features: [
-        "Phụ tùng chính hãng 100%",
-        "Giá cạnh tranh nhất thị trường",
-        "Giao hàng tận nơi",
-        "Tư vấn lựa chọn phù hợp",
-        "Hỗ trợ lắp đặt",
-        "Bảo hành chính hãng"
-      ],
-      details: {
-        supportedBrands: [
-          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "BMW",
-          "Mercedes", "Audi", "Volkswagen", "Peugeot", "Renault",
-          "Lexus", "Infiniti", "Acura", "Volvo", "Jaguar", "Land Rover"
-        ],
-        carTypes: [
-          "Xe con các loại", "SUV/CUV", "MPV", "Pickup", "Xe tải nhẹ",
-          "Xe sang", "Xe thể thao", "Xe hybrid", "Xe cũ", "Xe độ"
-        ],
-        features: [
-          "Lọc dầu, lọc gió, lọc nhiên liệu các loại",
-          "Má phanh, đĩa phanh, dầu phanh chính hãng",
-          "Lốp xe các thương hiệu nổi tiếng",
-          "Ắc quy, bugi, dây curoa chính hãng",
-          "Đèn xe, gương xe, kính xe",
-          "Tư vấn và lắp đặt tại garage"
-        ],
-        warranty: "6-24 tháng tùy sản phẩm",
-        duration: "Giao hàng trong ngày",
-        gallery: []
-      }
-    },
-    {
-      id: 5,
-      title: "Bảo Dưỡng Định Kỳ Các Cấp",
-      subtitle: "Bảo dưỡng chuẩn nhà sản xuất",
-      description: "Dịch vụ bảo dưỡng định kỳ theo chuẩn nhà sản xuất cho tất cả các cấp: 5.000km, 10.000km, 20.000km, 40.000km...",
-      icon: <MaintenanceIcon size={80} color="#10B981" />,
-      price: "Từ 300.000đ",
-      isSpecialService: false,
-      features: [
-        "Bảo dưỡng cấp 1: 5.000-10.000km",
-        "Bảo dưỡng cấp 2: 15.000-20.000km",
-        "Bảo dưỡng cấp 3: 30.000-40.000km",
-        "Bảo dưỡng cấp 4: 60.000km trở lên",
-        "Sử dụng dầu nhớt chính hãng",
-        "Kiểm tra tổng thể 56 hạng mục"
-      ],
-      details: {
-        supportedBrands: [
-          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Isuzu",
-          "Daewoo", "Ssangyong", "Peugeot", "Renault", "Fiat"
-        ],
-        carTypes: [
-          "Xe con 4-5 chỗ", "SUV/CUV", "MPV 7-9 chỗ", "Pickup",
-          "Xe tải nhẹ dưới 3.5T", "Xe van/minibus", "Xe hybrid"
-        ],
-        features: [
-          "Thay dầu động cơ + lọc dầu theo chuẩn",
-          "Kiểm tra và bổ sung dầu các hệ thống",
-          "Thay lọc gió, lọc nhiên liệu theo chu kỳ",
-          "Kiểm tra hệ thống phanh và lốp xe",
-          "Test ắc quy và hệ thống điện",
-          "Vệ sinh động cơ và rửa xe miễn phí"
-        ],
-        warranty: "3-6 tháng",
-        duration: "2-4 giờ",
-        gallery: []
-      }
-    },
-    {
-      id: 6,
-      title: "Kiểm Tra, Sửa Chữa, Sơn Gò Ngoài Bảo Hiểm",
-      subtitle: "Sửa chữa tổng thể mọi hư hỏng",
-      description: "Dịch vụ kiểm tra, chẩn đoán và sửa chữa toàn diện các hư hỏng xe ngoài bảo hiểm với đội ngũ thợ lành nghề.",
-      icon: <EngineIcon size={80} color="#EF4444" />,
-      price: "Từ 200.000đ",
-      isSpecialService: false,
-      features: [
-        "Chẩn đoán hư hỏng bằng máy scan",
-        "Sửa chữa động cơ, hộp số",
-        "Sửa chữa hệ thống điện, điều hóa",
-        "Sơn gò thân xe chuyên nghiệp",
-        "Thay thế linh kiện hỏng",
-        "Kiểm tra tổng thể sau sửa chữa"
-      ],
-      details: {
-        supportedBrands: [
-          "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-          "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Isuzu",
-          "BMW", "Mercedes", "Audi", "Lexus", "Infiniti", "Volvo"
-        ],
-        carTypes: [
-          "Xe con", "SUV", "MPV", "Pickup", "Xe tải nhẹ", "Xe sang",
-          "Xe thể thao", "Xe cũ", "Xe độ", "Xe tai nạn"
-        ],
-        features: [
-          "Chẩn đoán lỗi bằng máy scan chuyên dụng",
-          "Sửa chữa động cơ: piston, xilanh, van...",
-          "Sửa hộp số: ly hợp, hộp số tự động/sàn",
-          "Sơn gò: chỉnh hình, sơn phủ chuyên nghiệp",
-          "Sửa hệ thống điện: đèn, còi, điều hóa",
-          "Bảo hành chất lượng sửa chữa"
-        ],
-        warranty: "3-12 tháng tùy hạng mục",
-        duration: "1-7 ngày tùy mức độ hư hỏng",
-        gallery: []
-      }
-    }
-  ];
+  // Sử dụng dữ liệu từ services.ts và thêm icon
+  const mainServices = MAIN_SERVICES.map(service => ({
+    ...service,
+    icon: service.id === 1 ? <RegistrationIcon size={80} color="#10B981" /> :
+          service.id === 2 ? <InsuranceIcon size={80} color="#3B82F6" /> :
+          service.id === 3 ? <CarWashIcon size={80} color="#8B5CF6" /> :
+          service.id === 4 ? <ToolsIcon size={80} color="#F59E0B" /> :
+          service.id === 5 ? <MaintenanceIcon size={80} color="#10B981" /> :
+          service.id === 6 ? <EngineIcon size={80} color="#EF4444" /> : null
+  }));
 
   const testimonials = [
     {
@@ -349,6 +124,16 @@ export default function Home() {
     const service = mainServices.find(s => s.title === serviceTitle);
     if (service) {
       setSelectedService(service);
+    }
+  };
+
+  const scrollToPartners = () => {
+    const partnersSection = document.getElementById('strategic-partners');
+    if (partnersSection) {
+      partnersSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
     }
   };
 
@@ -581,6 +366,200 @@ export default function Home() {
       {/* Partners Section */}
       <Partners />
 
+      {/* Strategic Partners Highlight Section - NEW */}
+      <section id="strategic-partners" className="py-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/10 rounded-full"></div>
+        </div>
+
+        <div className="container mx-auto px-6 relative z-10">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
+              <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+              <span className="text-sm font-semibold uppercase tracking-wide">Đối tác chiến lược</span>
+            </div>
+
+            <button
+              onClick={scrollToPartners}
+              className="group text-4xl md:text-6xl font-bold mb-6 hover:scale-105 transition-all duration-300 cursor-pointer"
+            >
+              🌟 Đối Tác Chiến Lược Hàng Đầu
+              <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="inline-flex items-center space-x-2 text-base font-normal text-blue-200">
+                  <span>Click để xem chi tiết</span>
+                  <svg className="w-4 h-4 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </button>
+
+            <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed mb-8">
+              Chúng tôi tự hào hợp tác cùng <strong className="text-yellow-400">2 đơn vị uy tín hàng đầu</strong>
+              trong lĩnh vực bảo hiểm và phụ tùng ô tô, đảm bảo chất lượng dịch vụ tốt nhất cho khách hàng.
+            </p>
+          </div>
+
+          {/* Two Main Partners */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* DBV Insurance */}
+            <div className="group bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">🛡️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">DBV Insurance</h3>
+                    <p className="text-blue-200">Đơn vị bảo hiểm chính thức</p>
+                  </div>
+                </div>
+                <div className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
+                  CHÍNH THỨC
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-white">Bảo hiểm TNDS bắt buộc & tự nguyện</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-white">Bảo hiểm vật chất thân vỏ xe</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-white">Hỗ trợ bồi thường nhanh chóng</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-white">Cứu hộ 24/7 toàn quốc miễn phí</span>
+                </div>
+              </div>
+
+              <div className="bg-white/10 p-4 rounded-xl mb-6">
+                <h4 className="font-bold text-yellow-400 mb-2">✨ Ưu điểm vượt trội:</h4>
+                <p className="text-blue-100 text-sm">
+                  "Quy trình bồi thường minh bạch, nhanh chóng. Được tin tưởng bởi hàng nghìn khách hàng
+                  với mức phí cạnh tranh nhất thị trường."
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-blue-200">
+                  <span className="font-semibold">5000+</span> khách hàng tin tưởng
+                </div>
+                <button
+                  onClick={handleConsultationClick}
+                  className="bg-yellow-400 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+                >
+                  Tư Vấn Ngay
+                </button>
+              </div>
+            </div>
+
+            {/* Phụ Tùng Việt Nga */}
+            <div className="group bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">🏪</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Phụ Tùng Ô Tô Việt Nga</h3>
+                    <p className="text-blue-200">Nhà phân phối phụ tùng uy tín</p>
+                  </div>
+                </div>
+                <div className="bg-amber-400 text-black px-3 py-1 rounded-full text-sm font-bold">
+                  CHIẾN LƯỢC
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  <span className="text-white">Phụ tùng chính hãng 100%</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  <span className="text-white">Mạng lưới phân phối rộng khắp</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  <span className="text-white">Giao hàng nhanh trong ngày</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  <span className="text-white">Bảo hành chính thức từ 6-24 tháng</span>
+                </div>
+              </div>
+
+              <div className="bg-white/10 p-4 rounded-xl mb-6">
+                <h4 className="font-bold text-amber-400 mb-2">🎯 Cam kết chất lượng:</h4>
+                <p className="text-blue-100 text-sm">
+                  "Đối tác tin cậy với kho phụ tùng đa dạng, phục vụ tất cả các hãng xe từ phổ thông đến cao cấp,
+                  giá cạnh tranh nhất thị trường."
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-blue-200">
+                  <span className="font-semibold">10+</span> năm kinh nghiệm
+                </div>
+                <button
+                  onClick={handleConsultationClick}
+                  className="bg-amber-400 text-black px-6 py-2 rounded-lg font-semibold hover:bg-amber-300 transition-colors"
+                >
+                  Xem Phụ Tùng
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Partners Preview */}
+          <div className="text-center">
+            <p className="text-blue-200 mb-6">
+              Ngoài ra, chúng tôi còn hợp tác với nhiều thương hiệu uy tín khác:
+            </p>
+
+            <div className="flex flex-wrap justify-center items-center gap-6 mb-8">
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">🛢️ Castrol</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">🚗 Hyundai Mobis</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">⚙️ Mando</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">⚡ Koyo</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">🔧 Valeo</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">🛠️ Bosch</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-semibold">🔍 Mahle</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleConsultationClick}
+              className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg"
+            >
+              💬 Tư Vấn Miễn Phí Ngay
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Testimonials */}
       <section id="testimonials" className="py-20 bg-gray-50">
@@ -608,6 +587,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Location Section với Google Map */}
+      <LocationSection />
 
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-white">
@@ -671,7 +653,7 @@ export default function Home() {
 
                 <button
                   onClick={handleConsultationClick}
-                  className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors"
+                  className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-lg text-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors"
                 >
                   💬 Tư Vấn Miễn Phí
                 </button>
