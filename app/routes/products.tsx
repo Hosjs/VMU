@@ -287,7 +287,7 @@ export default function Products() {
           <h1 className="text-5xl font-bold text-gray-800 mb-4 slide-in-left drop-shadow-lg">
             Sản Phẩm & <span className="text-blue-600">Phụ Tùng</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto slide-in-right drop-shadow">
+          <p className="text-xl text-gray-800 mb-8 max-w-3xl mx-auto slide-in-right drop-shadow">
             Phụ tùng ô tô chính hãng từ các nhà cung cấp uy tín với chất lượng đảm bảo
           </p>
 
