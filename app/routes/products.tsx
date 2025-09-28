@@ -239,9 +239,9 @@ export default function Products() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen relative">
       {/* Header with animation */}
-      <header className="bg-white shadow-lg sticky top-0 z-40 slide-in-right">
+      <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-white/30 slide-in-right">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <CompanyLogo />
@@ -268,24 +268,38 @@ export default function Products() {
       </header>
 
       {/* Hero Section with animations */}
-      <section className="py-16 text-center scale-in">
-        <div className="container mx-auto px-6">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4 slide-in-left">
+      <section className="py-16 text-center relative">
+        {/* Background với ảnh 3.jpg */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url("/images/3.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+
+        {/* Overlay để text dễ đọc */}
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px]"></div>
+
+        <div className="container mx-auto px-6 relative z-10">
+          <h1 className="text-5xl font-bold text-gray-800 mb-4 slide-in-left drop-shadow-lg">
             Sản Phẩm & <span className="text-blue-600">Phụ Tùng</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto slide-in-right">
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto slide-in-right drop-shadow">
             Phụ tùng ô tô chính hãng từ các nhà cung cấp uy tín với chất lượng đảm bảo
           </p>
 
-          {/* Search Bar with animation */}
+          {/* Search Bar với nền trong suốt */}
           <div className="max-w-2xl mx-auto mb-8 slide-up">
-            <div className="relative">
+            <div className="relative bg-white/80 backdrop-blur-md rounded-full p-2 shadow-xl">
               <input
                 type="text"
                 placeholder="Tìm kiếm sản phẩm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 text-lg border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg transition-all duration-300"
+                className="w-full px-6 py-4 text-lg border-0 bg-transparent rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               <button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors btn-hover">
                 🔍
@@ -293,12 +307,12 @@ export default function Products() {
             </div>
           </div>
 
-          {/* Filters with stagger animation */}
+          {/* Filters với nền glassmorphism */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 stagger-item"
+              className="px-4 py-2 bg-white/70 backdrop-blur-md border border-white/30 rounded-lg focus:ring-2 focus:ring-blue-500 stagger-item"
             >
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
@@ -308,7 +322,7 @@ export default function Products() {
             <select
               value={selectedSupplier}
               onChange={(e) => setSelectedSupplier(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 stagger-item"
+              className="px-4 py-2 bg-white/70 backdrop-blur-md border border-white/30 rounded-lg focus:ring-2 focus:ring-blue-500 stagger-item"
             >
               {suppliers.map(supplier => (
                 <option key={supplier} value={supplier}>{supplier}</option>
@@ -318,7 +332,7 @@ export default function Products() {
             <select
               value={selectedBrand}
               onChange={(e) => setSelectedBrand(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 stagger-item"
+              className="px-4 py-2 bg-white/70 backdrop-blur-md border border-white/30 rounded-lg focus:ring-2 focus:ring-blue-500 stagger-item"
             >
               {brands.map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
@@ -326,21 +340,27 @@ export default function Products() {
             </select>
           </div>
 
-          {/* Results Count with animation */}
-          <p className="text-gray-600 mb-8 slide-up">
-            Tìm thấy <span className="font-bold text-blue-600">{filteredProducts.length}</span> sản phẩm
-          </p>
+          {/* Results Count với nền */}
+          <div className="bg-white/60 backdrop-blur-md rounded-xl p-4 inline-block shadow-lg">
+            <p className="text-gray-700 mb-0 slide-up font-semibold">
+              Tìm thấy <span className="font-bold text-blue-600">{filteredProducts.length}</span> sản phẩm
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Products Grid with stagger animations */}
-      <section className="pb-20">
-        <div className="container mx-auto px-6">
+      <section className="pb-20 relative">
+        {/* Background riêng cho products grid - giảm opacity */}
+        <div className="absolute inset-0 bg-white/75 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 to-blue-50/30"></div>
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((product, index) => (
-              <div key={product.id} className={`bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden card-hover stagger-item`}>
+              <div key={product.id} className={`bg-white/85 backdrop-blur-md rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden card-hover stagger-item border border-white/30`}>
                 {/* Product Image with hover effect */}
-                <div className="h-48 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center text-6xl transition-transform duration-300 hover:scale-110">
+                <div className="h-48 bg-gradient-to-br from-blue-50/70 to-indigo-100/70 flex items-center justify-center text-6xl transition-transform duration-300 hover:scale-110">
                   {product.image}
                 </div>
 
@@ -463,10 +483,10 @@ export default function Products() {
         </div>
       </section>
 
-      {/* Product Detail Modal with enhanced animation */}
+      {/* Product Detail Modal với glassmorphism */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-2xl w-full my-auto shadow-2xl modal-enter">
+          <div className="bg-white/85 backdrop-blur-md rounded-2xl max-w-2xl w-full my-auto shadow-2xl modal-enter border border-white/30">
             <div className="p-8">
               {/* Header */}
               <div className="flex justify-between items-start mb-6">
@@ -569,7 +589,7 @@ export default function Products() {
         </div>
       )}
 
-      {/* Floating Action Buttons with enhanced animations */}
+      {/* Floating Action Buttons */}
       <div className="fixed bottom-6 right-6 flex flex-col space-y-3">
         <button
           onClick={handleWhatsAppClick}
@@ -590,7 +610,7 @@ export default function Products() {
         </button>
       </div>
 
-      {/* Modals with animations */}
+      {/* Modals */}
       <div className={isBookingOpen ? "modal-enter" : ""}>
         <BookingModal
           isOpen={isBookingOpen}
@@ -607,8 +627,10 @@ export default function Products() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="container mx-auto px-6">
+      <footer className="py-12 relative">
+        <div className="absolute inset-0 bg-gray-800/90 backdrop-blur-md"></div>
+
+        <div className="container mx-auto px-6 relative z-10 text-white">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <CompanyLogo />

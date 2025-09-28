@@ -184,11 +184,11 @@ export function Partners({ className = '' }: PartnersProps) {
   };
 
   return (
-    <section className={`py-20 bg-gradient-to-br from-gray-50 to-blue-50 ${className}`}>
+    <section className={`py-20 ${className}`}>
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center space-x-2 bg-blue-100 px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center space-x-2 bg-blue-100/80 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
             <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
             <span className="text-sm font-semibold text-blue-600 uppercase tracking-wide">Đối tác tin cậy</span>
           </div>
@@ -207,29 +207,11 @@ export function Partners({ className = '' }: PartnersProps) {
             <strong className="text-blue-600"> Mahle (Lọc động cơ, điều hòa, bugi, má phanh)</strong>
             và nhiều thương hiệu lớn khác.
           </p>
-
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">🌟 Đối Tác Chiến Lược Đặc Biệt</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div className="bg-white rounded-lg p-4 shadow-md">
-                <h4 className="font-bold text-blue-600 mb-2">🏪 Phụ Tùng Ô Tô Việt Nga</h4>
-                <p className="text-sm text-gray-600">Đối tác phân phối phụ tùng hàng đầu</p>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-md">
-                <h4 className="font-bold text-blue-600 mb-2">🛡️ DBV Insurance</h4>
-                <p className="text-sm text-gray-600">Đơn vị bảo hiểm chính thức</p>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-md">
-                <h4 className="font-bold text-blue-600 mb-2">🔗 Mạng Lưới Gara Hải Phòng</h4>
-                <p className="text-sm text-gray-600">Hợp tác các phường: Hải An, Lê Chân, Hồng Bàng, Kiến An</p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Featured Partner Showcase */}
+        {/* Main Partner Display */}
         <div
-          className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-12 transition-all duration-500 hover:shadow-3xl"
+          className="bg-white/60 backdrop-blur-md rounded-3xl p-8 md:p-12 shadow-2xl mb-12 border border-white/30"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -300,16 +282,16 @@ export function Partners({ className = '' }: PartnersProps) {
           </div>
         </div>
 
-        {/* Partner Grid Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        {/* Partner Navigation Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {partners.map((partner, index) => (
             <button
               key={partner.id}
               onClick={() => handlePartnerSelect(index)}
-              className={`group p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+              className={`p-4 rounded-xl transition-all duration-300 backdrop-blur-sm border ${
                 index === currentPartnerIndex
-                  ? 'bg-blue-600 text-white shadow-lg scale-105'
-                  : 'bg-white hover:bg-gray-50 shadow-md hover:shadow-lg'
+                  ? 'bg-blue-600/20 border-blue-400/50 shadow-lg scale-105'
+                  : 'bg-white/40 border-white/30 hover:bg-white/60 hover:scale-105'
               }`}
             >
               <div className="text-center">
@@ -326,46 +308,6 @@ export function Partners({ className = '' }: PartnersProps) {
               </div>
             </button>
           ))}
-        </div>
-
-        {/* Auto-play indicator */}
-        <div className="text-center">
-          <div className="inline-flex items-center space-x-2 text-sm text-gray-500">
-            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              isHovered 
-                ? 'bg-orange-400 animate-pulse' 
-                : isAutoPlay 
-                  ? 'bg-green-400 animate-pulse' 
-                  : 'bg-gray-300'
-            }`}></div>
-            <span>
-              {isHovered ? 'Tạm dừng' : isAutoPlay ? 'Tự động chuyển đổi' : 'Thủ công'} •{' '}
-              <span className="font-semibold text-blue-600">
-                {currentPartnerIndex + 1}/{partners.length}
-              </span>{' '}
-              đối tác
-            </span>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="text-3xl font-bold text-blue-600 mb-2">{partners.length}+</div>
-            <div className="text-gray-600 font-medium">Đối Tác Chiến Lược</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="text-3xl font-bold text-blue-600 mb-2">50+</div>
-            <div className="text-gray-600 font-medium">Thương Hiệu</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="text-3xl font-bold text-blue-600 mb-2">100%</div>
-            <div className="text-gray-600 font-medium">Chính Hãng</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="text-3xl font-bold text-blue-600 mb-2">24/7</div>
-            <div className="text-gray-600 font-medium">Hỗ Trợ</div>
-          </div>
         </div>
       </div>
     </section>

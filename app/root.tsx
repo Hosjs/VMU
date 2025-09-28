@@ -33,7 +33,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body
+        className="min-h-screen relative"
+        style={{
+          backgroundImage: 'url("/images/background-app.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        {/* Global Background Overlay */}
+        <div
+          className="fixed inset-0 bg-white/70 backdrop-blur-sm"
+          style={{ zIndex: -1 }}
+        ></div>
+
         <PageTransitionProvider>
           {children}
         </PageTransitionProvider>

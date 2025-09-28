@@ -142,9 +142,9 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen relative">
       {/* Header Section */}
-      <header className="bg-white shadow-lg sticky top-0 z-40">
+      <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-white/30">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <CompanyLogo />
@@ -192,33 +192,37 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section - Cải tiến chuyên nghiệp hơn */}
-      <section className="py-20 md:py-32 relative overflow-hidden">
-        {/* Background Elements */}
+      {/* Hero Section - Giữ ảnh riêng */}
+      <section className="py-20 md:py-32 relative overflow-hidden min-h-screen flex items-center">
+        {/* Background Image với overlay riêng */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-200/30 to-transparent rounded-full -translate-y-48 translate-x-48"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-indigo-200/20 to-transparent rounded-full translate-y-40 -translate-x-40"></div>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url("/images/1.jpg")'
+            }}
+          ></div>
+          <div className="absolute inset-0 bg-black/15"></div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center max-w-5xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-8">
+            <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-8">
               <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
               <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dịch vụ ô tô chuyên nghiệp</span>
             </div>
 
             {/* Main Title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gray-800 mb-8 leading-tight">
-              Đối Tác <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Toàn Diện</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-8 leading-tight drop-shadow-2xl">
+              Đối Tác <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Toàn Diện</span>
               <br />
               Cho Xe Của Bạn
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Chúng tôi cung cấp <strong className="text-blue-600">giải pháp hoàn chỉnh</strong> cho mọi nhu cầu về xe ô tô -
+            <p className="text-xl md:text-2xl text-gray-100 mb-12 max-w-4xl mx-auto leading-relaxed drop-shadow-lg">
+              Chúng tôi cung cấp <strong className="text-blue-300">giải pháp hoàn chỉnh</strong> cho mọi nhu cầu về xe ô tô -
               từ những dịch vụ cơ bản đến các dịch vụ chuyên biệt với chất lượng đẳng cấp quốc tế.
             </p>
 
@@ -226,7 +230,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
               <button
                 onClick={() => handleBookingClick()}
-                className="group relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-5 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25 min-w-[200px]"
+                className="group relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-5 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/50 min-w-[200px]"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
                   <span>📞</span>
@@ -237,7 +241,7 @@ export default function Home() {
 
               <button
                 onClick={handleConsultationClick}
-                className="group border-2 border-blue-600 text-blue-600 px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 hover:scale-105 shadow-lg min-w-[200px]"
+                className="group border-2 border-white/80 text-white px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-white/10 hover:border-white transition-all duration-300 hover:scale-105 shadow-lg min-w-[200px] backdrop-blur-sm"
               >
                 <span className="flex items-center justify-center space-x-2">
                   <span>💬</span>
@@ -248,33 +252,36 @@ export default function Home() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">6</div>
-                <div className="text-gray-600 font-medium">Dịch Vụ Chính</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
+                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">6</div>
+                <div className="text-gray-200 font-medium">Dịch Vụ Chính</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">10+</div>
-                <div className="text-gray-600 font-medium">Năm Kinh Nghiệm</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
+                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">10+</div>
+                <div className="text-gray-200 font-medium">Năm Kinh Nghiệm</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">5000+</div>
-                <div className="text-gray-600 font-medium">Khách Hàng</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
+                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">5000+</div>
+                <div className="text-gray-200 font-medium">Khách Hàng</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-blue-600 mb-2">24/7</div>
-                <div className="text-gray-600 font-medium">Hỗ Trợ</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
+                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">24/7</div>
+                <div className="text-gray-200 font-medium">Hỗ Trợ</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Carousel Section */}
-      <section id="services" className="py-24 bg-white">
-        <div className="container mx-auto px-6">
+      {/* Services Carousel Section - Background riêng */}
+      <section id="services" className="py-24 relative">
+        {/* Background riêng cho section này - giảm opacity */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/70 to-indigo-100/70 backdrop-blur-sm"></div>
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-full mb-6">
-              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+            <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-6">
+              <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
               <span className="text-sm font-semibold text-blue-600 uppercase tracking-wide">Dịch vụ của chúng tôi</span>
             </div>
 
@@ -297,106 +304,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-20 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold mb-6">Tại Sao Chọn Chúng Tôi?</h3>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-              Với 6 dịch vụ chuyên biệt, chúng tôi cam kết mang đến giải pháp toàn diện
-              cho mọi nhu cầu của xe ô tô
-            </p>
-          </div>
+      {/* Strategic Partners - Background riêng */}
+      <section id="strategic-partners" className="py-20 relative overflow-hidden">
+        {/* Background riêng với gradient đậm - giảm opacity */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-purple-600/90 backdrop-blur-md"></div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MechanicIcon size={40} color="#FFFFFF" />
-              </div>
-              <h4 className="text-xl font-bold mb-3">Đội Ngũ Chuyên Nghiệp</h4>
-              <p className="text-blue-100">10+ năm kinh nghiệm, được đào tạo bài bản và cập nhật công nghệ thường xuyên</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <SpeedIcon size={40} color="#FFFFFF" />
-              </div>
-              <h4 className="text-xl font-bold mb-3">Phục Vụ Nhanh Chóng</h4>
-              <p className="text-blue-100">Cam kết thời gian hoàn thành đúng hẹn, hỗ trợ khẩn cấp 24/7</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <QualityIcon size={40} color="#FFFFFF" />
-              </div>
-              <h4 className="text-xl font-bold mb-3">Chất Lượng Đảm Bảo</h4>
-              <p className="text-blue-100">Sử dụng 100% phụ tùng chính hãng, quy trình chuẩn nhà sản xuất</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <PhoneIcon size={40} color="#FFFFFF" />
-              </div>
-              <h4 className="text-xl font-bold mb-3">Hỗ Trợ Tận Tâm</h4>
-              <p className="text-blue-100">Tư vấn miễn phí, theo dõi xe sau dịch vụ, hỗ trợ khách hàng chu đáo</p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">10+</div>
-              <div className="text-blue-100">Năm Kinh Nghiệm</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">5000+</div>
-              <div className="text-blue-100">Khách Hàng Tin Tưởng</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">50+</div>
-              <div className="text-blue-100">Hãng Xe Hỗ Trợ</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">24/7</div>
-              <div className="text-blue-100">Hỗ Trợ Khẩn Cấp</div>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Partners Section */}
-      <Partners />
-
-      {/* Strategic Partners Highlight Section - NEW */}
-      <section id="strategic-partners" className="py-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white relative overflow-hidden">
-        {/* Background decorations */}
+        {/* Enhanced background decorations */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full"></div>
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/10 rounded-full"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          {/* Header */}
+        <div className="container mx-auto px-6 relative z-10 text-white">
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
               <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
               <span className="text-sm font-semibold uppercase tracking-wide">Đối tác chiến lược</span>
             </div>
 
-            <button
-              onClick={scrollToPartners}
-              className="group text-4xl md:text-6xl font-bold mb-6 hover:scale-105 transition-all duration-300 cursor-pointer"
-            >
-              🌟 Đối Tác Chiến Lược Hàng Đầu
-              <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="inline-flex items-center space-x-2 text-base font-normal text-blue-200">
-                  <span>Click để xem chi tiết</span>
-                  <svg className="w-4 h-4 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </button>
+            <h2 className="text-4xl md:text-6xl font-bold mb-6">
+              🌟 Đối Tác Chiến Lược
+              <br /><span className="text-yellow-300">Hàng Đầu</span>
+            </h2>
 
             <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed mb-8">
               Chúng tôi tự hào hợp tác cùng <strong className="text-yellow-400">2 đơn vị uy tín hàng đầu</strong>
@@ -553,7 +483,7 @@ export default function Home() {
 
             <button
               onClick={handleConsultationClick}
-              className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg"
+              className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg hover:scale-105 transform duration-300"
             >
               💬 Tư Vấn Miễn Phí Ngay
             </button>
@@ -561,9 +491,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
+      {/* Partners Section - Background riêng với ảnh 2.png */}
+      <section className="py-20 relative">
+        {/* Background với ảnh 2.png */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url("/images/2.png")'
+          }}
+        ></div>
+
+        {/* Overlay giảm opacity xuống 20% để ảnh nền hiển thị rõ hơn */}
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]"></div>
+
+        <div className="relative z-10">
+          <Partners />
+        </div>
+      </section>
+
+      {/* Testimonials - Background riêng */}
+      <section id="testimonials" className="py-20 relative">
+        {/* Background riêng - giảm opacity */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100/75 to-blue-50/75 backdrop-blur-sm"></div>
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-gray-800 mb-4">Khách Hàng Nói Gì</h3>
             <p className="text-xl text-gray-600">Những đánh giá thực tế từ khách hàng đã trải nghiệm dịch vụ</p>
@@ -588,12 +539,99 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Location Section với Google Map */}
-      <LocationSection />
+      {/* About Section - Background riêng */}
+      <section id="about" className="py-20 relative">
+        {/* Background trắng riêng - giảm opacity */}
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 to-blue-50/30"></div>
 
-      {/* Contact Section */}
-      <section id="contact" className="py-20 bg-white">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-full mb-6">
+              <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+              <span className="text-sm font-semibold text-blue-600 uppercase tracking-wide">Về chúng tôi</span>
+            </div>
+
+            <h3 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+              Tại Sao Chọn
+              <br /><span className="text-blue-600">Chúng Tôi?</span>
+            </h3>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Với 6 dịch vụ chuyên biệt, chúng tôi cam kết mang đến giải pháp toàn diện
+              cho mọi nhu cầu của xe ô tô với chất lượng đẳng cấp quốc tế.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center group">
+              <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors duration-300">
+                <MechanicIcon size={40} color="#3B82F6" />
+              </div>
+              <h4 className="text-xl font-bold mb-3 text-gray-800">Đội Ngũ Chuyên Nghiệp</h4>
+              <p className="text-gray-600 leading-relaxed">10+ năm kinh nghiệm, được đào tạo bài bản và cập nhật công nghệ thường xuyên</p>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors duration-300">
+                <SpeedIcon size={40} color="#10B981" />
+              </div>
+              <h4 className="text-xl font-bold mb-3 text-gray-800">Phục Vụ Nhanh Chóng</h4>
+              <p className="text-gray-600 leading-relaxed">Cam kết thời gian hoàn thành đúng hẹn, hỗ trợ khẩn cấp 24/7</p>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors duration-300">
+                <QualityIcon size={40} color="#8B5CF6" />
+              </div>
+              <h4 className="text-xl font-bold mb-3 text-gray-800">Chất Lượng Đảm Bảo</h4>
+              <p className="text-gray-600 leading-relaxed">Sử dụng 100% phụ tùng chính hãng, quy trình chuẩn nhà sản xuất</p>
+            </div>
+
+            <div className="text-center group">
+              <div className="bg-orange-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-200 transition-colors duration-300">
+                <PhoneIcon size={40} color="#F59E0B" />
+              </div>
+              <h4 className="text-xl font-bold mb-3 text-gray-800">Hỗ Trợ Tận Tâm</h4>
+              <p className="text-gray-600 leading-relaxed">Tư vấn miễn phí, theo dõi xe sau dịch vụ, hỗ trợ khách hàng chu đáo</p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl font-bold text-blue-600 mb-2">10+</div>
+              <div className="text-gray-700 font-medium">Năm Kinh Nghiệm</div>
+            </div>
+            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl font-bold text-green-600 mb-2">5000+</div>
+              <div className="text-gray-700 font-medium">Khách Hàng Tin Tưởng</div>
+            </div>
+            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl font-bold text-purple-600 mb-2">50+</div>
+              <div className="text-gray-700 font-medium">Hãng Xe Hỗ Trợ</div>
+            </div>
+            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="text-4xl font-bold text-orange-600 mb-2">24/7</div>
+              <div className="text-gray-700 font-medium">Hỗ Trợ Khẩn Cấp</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Location Section - Background riêng */}
+      <section className="relative">
+        <div className="absolute inset-0 bg-white/85 backdrop-blur-sm"></div>
+
+        <div className="relative z-10">
+          <LocationSection />
+        </div>
+      </section>
+
+      {/* Contact Section - Background riêng */}
+      <section id="contact" className="py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80 backdrop-blur-sm"></div>
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
               <h3 className="text-3xl font-bold text-gray-800 mb-6">Liên Hệ Với Chúng Tôi</h3>
@@ -670,9 +708,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="container mx-auto px-6">
+      {/* Footer - Background riêng */}
+      <footer className="py-12 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-md"></div>
+
+        <div className="container mx-auto px-6 relative z-10 text-white">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <CompanyLogo />
