@@ -143,9 +143,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Header Section */}
+      {/* Header Section - Tối ưu mobile */}
       <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-white/30">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <CompanyLogo />
 
@@ -158,46 +158,108 @@ export default function Home() {
               <a href="#contact" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Liên Hệ</a>
             </div>
 
-            {/* Mobile menu button */}
+            {/* Mobile menu button - Cải thiện touch */}
             <button
-              className="md:hidden p-2"
+              className="md:hidden p-3 touch-friendly mobile-button rounded-lg hover:bg-gray-100 transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                {isMobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
             </button>
 
-            <div className="flex items-center space-x-3">
+            {/* Phone info - Responsive */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm text-gray-600">Hotline 24/7</p>
-                <p className="text-lg font-bold text-blue-600">0123 456 789</p>
+                <p className="text-xs sm:text-sm text-gray-600">Hotline 24/7</p>
+                <p className="text-base sm:text-lg font-bold text-blue-600">0123 456 789</p>
               </div>
-              <PhoneIcon size={20} color="#3B82F6" />
+              <div className="block sm:hidden">
+                <PhoneIcon size={20} color="#3B82F6" />
+              </div>
+              <div className="hidden sm:block">
+                <PhoneIcon size={20} color="#3B82F6" />
+              </div>
             </div>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation - Cải thiện */}
           {isMobileMenuOpen && (
-            <div className="md:hidden mt-4 py-4 border-t border-gray-200">
-              <div className="flex flex-col space-y-4">
-                <a href="#services" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Dịch Vụ</a>
-                <a href="/products" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Sản Phẩm</a>
-                <a href="#about" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Về Chúng Tôi</a>
-                <a href="#testimonials" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Đánh Giá</a>
-                <a href="#contact" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Liên Hệ</a>
+            <div className="md:hidden mt-4 pb-4 border-t border-gray-200 animate-fade-in">
+              <div className="flex flex-col space-y-4 pt-4">
+                <a
+                  href="#services"
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-lg hover:bg-gray-50 touch-friendly"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  🛠️ Dịch Vụ
+                </a>
+                <a
+                  href="/products"
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-lg hover:bg-gray-50 touch-friendly"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  📦 Sản Phẩm
+                </a>
+                <a
+                  href="#about"
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-lg hover:bg-gray-50 touch-friendly"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  ℹ️ Về Chúng Tôi
+                </a>
+                <a
+                  href="#testimonials"
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-lg hover:bg-gray-50 touch-friendly"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  ⭐ Đánh Giá
+                </a>
+                <a
+                  href="#contact"
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium py-2 px-2 rounded-lg hover:bg-gray-50 touch-friendly"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  📞 Liên Hệ
+                </a>
+                {/* Mobile quick actions */}
+                <div className="flex flex-col space-y-2 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleBookingClick();
+                    }}
+                    className="bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:bg-blue-700 transition-colors"
+                  >
+                    📅 Đặt Lịch Ngay
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleCallClick();
+                    }}
+                    className="bg-green-600 text-white py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:bg-green-700 transition-colors"
+                  >
+                    📞 Gọi: 0123 456 789
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </div>
       </header>
 
-      {/* Hero Section - Giữ ảnh riêng */}
-      <section className="py-20 md:py-32 relative overflow-hidden min-h-screen flex items-center">
-        {/* Background Image với overlay riêng */}
+      {/* Hero Section - Tối ưu mobile với background responsive */}
+      <section className="py-12 sm:py-20 md:py-32 relative overflow-hidden min-h-screen flex items-center">
+        {/* Background Image với overlay riêng - Mobile optimized */}
         <div className="absolute inset-0">
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            className="absolute inset-0 responsive-bg-hero mobile-bg-size"
             style={{
               backgroundImage: 'url("/images/1.png")'
             }}
@@ -205,32 +267,32 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/15"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center max-w-5xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-8">
+            {/* Badge - Mobile responsive */}
+            <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full shadow-lg mb-6 sm:mb-8">
               <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
-              <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dịch vụ ô tô chuyên nghiệp</span>
+              <span className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide">Dịch vụ ô tô chuyên nghiệp</span>
             </div>
 
-            {/* Main Title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-8 leading-tight drop-shadow-2xl">
+            {/* Main Title - Mobile responsive */}
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 sm:mb-8 leading-tight drop-shadow-2xl">
               Đối Tác <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Toàn Diện</span>
               <br />
               Cho Xe Của Bạn
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-gray-100 mb-12 max-w-4xl mx-auto leading-relaxed drop-shadow-lg">
+            {/* Subtitle - Mobile responsive */}
+            <p className="text-base sm:text-xl md:text-2xl text-gray-100 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed drop-shadow-lg mobile-text-scale">
               Chúng tôi cung cấp <strong className="text-blue-300">giải pháp hoàn chỉnh</strong> cho mọi nhu cầu về xe ô tô -
               từ những dịch vụ cơ bản đến các dịch vụ chuyên biệt với chất lượng đẳng cấp quốc tế.
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
+            {/* CTA Buttons - Mobile responsive */}
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4 md:space-x-6 mb-12 sm:mb-16 px-2 sm:px-0">
               <button
                 onClick={() => handleBookingClick()}
-                className="group relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-5 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/50 min-w-[200px]"
+                className="group relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 sm:px-10 py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/50 w-full sm:w-auto sm:min-w-[200px] touch-friendly mobile-button"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
                   <span>📞</span>
@@ -241,7 +303,7 @@ export default function Home() {
 
               <button
                 onClick={handleConsultationClick}
-                className="group border-2 border-white/80 text-white px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-white/10 hover:border-white transition-all duration-300 hover:scale-105 shadow-lg min-w-[200px] backdrop-blur-sm"
+                className="group border-2 border-white/80 text-white px-6 sm:px-10 py-4 sm:py-5 rounded-2xl text-base sm:text-lg font-semibold hover:bg-white/10 hover:border-white transition-all duration-300 hover:scale-105 shadow-lg w-full sm:w-auto sm:min-w-[200px] backdrop-blur-sm touch-friendly mobile-button"
               >
                 <span className="flex items-center justify-center space-x-2">
                   <span>💬</span>
@@ -250,70 +312,72 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
-                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">6</div>
-                <div className="text-gray-200 font-medium">Dịch Vụ Chính</div>
+            {/* Stats - Mobile responsive grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-4 sm:py-6 px-2 sm:px-4 mobile-card-spacing">
+                <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-blue-300 mb-1 sm:mb-2">6</div>
+                <div className="text-gray-200 font-medium text-xs sm:text-sm md:text-base">Dịch Vụ Chính</div>
               </div>
-              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
-                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">10+</div>
-                <div className="text-gray-200 font-medium">Năm Kinh Nghiệm</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-4 sm:py-6 px-2 sm:px-4 mobile-card-spacing">
+                <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-blue-300 mb-1 sm:mb-2">10+</div>
+                <div className="text-gray-200 font-medium text-xs sm:text-sm md:text-base">Năm Kinh Nghiệm</div>
               </div>
-              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
-                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">5000+</div>
-                <div className="text-gray-200 font-medium">Khách Hàng</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-4 sm:py-6 px-2 sm:px-4 mobile-card-spacing">
+                <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-blue-300 mb-1 sm:mb-2">5000+</div>
+                <div className="text-gray-200 font-medium text-xs sm:text-sm md:text-base">Khách Hàng</div>
               </div>
-              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-6 px-4">
-                <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">24/7</div>
-                <div className="text-gray-200 font-medium">Hỗ Trợ</div>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl py-4 sm:py-6 px-2 sm:px-4 mobile-card-spacing">
+                <div className="text-2xl sm:text-4xl md:text-5xl font-bold text-blue-300 mb-1 sm:mb-2">24/7</div>
+                <div className="text-gray-200 font-medium text-xs sm:text-sm md:text-base">Hỗ Trợ</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Carousel Section - Background riêng */}
-      <section id="services" className="py-24 relative">
-        {/* Background riêng cho section này - giảm opacity */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/70 to-indigo-100/70 backdrop-blur-sm"></div>
+      {/* Services Carousel Section - Mobile responsive background */}
+      <section id="services" className="py-12 sm:py-20 md:py-24 relative">
+        {/* Background riêng cho section này - Mobile optimized */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/70 to-indigo-100/70 backdrop-blur-sm mobile-gradient-fix"></div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-6">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-full shadow-lg mb-4 sm:mb-6">
               <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
-              <span className="text-sm font-semibold text-blue-600 uppercase tracking-wide">Dịch vụ của chúng tôi</span>
+              <span className="text-xs sm:text-sm font-semibold text-blue-600 uppercase tracking-wide">Dịch vụ của chúng tôi</span>
             </div>
 
-            <h2 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold text-gray-800 mb-4 sm:mb-6">
               Khám Phá Các
               <br /><span className="text-blue-600">Dịch Vụ Chuyên Nghiệp</span>
             </h2>
 
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mobile-text-scale px-2">
               Mỗi dịch vụ được thiết kế để đáp ứng hoàn hảo nhu cầu cụ thể của xe và chủ xe,
               với quy trình chuẩn quốc tế và đội ngũ chuyên gia hàng đầu.
             </p>
           </div>
 
-          {/* Services Carousel */}
-          <ServicesCarousel
-            onServiceSelect={handleServiceSelect}
-            onConsultationClick={handleConsultationClick}
-          />
+          {/* Services Carousel - Mobile optimized */}
+          <div className="mobile-carousel-container">
+            <ServicesCarousel
+              onServiceSelect={handleServiceSelect}
+              onConsultationClick={handleConsultationClick}
+            />
+          </div>
         </div>
       </section>
 
-      {/* Strategic Partners - Background riêng */}
-      <section id="strategic-partners" className="py-20 relative overflow-hidden">
-        {/* Background riêng với gradient đậm - giảm opacity */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-purple-600/90 backdrop-blur-md"></div>
+      {/* Strategic Partners - Mobile responsive background */}
+      <section id="strategic-partners" className="py-12 sm:py-20 relative overflow-hidden">
+        {/* Background riêng với gradient đậm - Mobile optimized */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-indigo-600/90 to-purple-600/90 backdrop-blur-md mobile-gradient-fix"></div>
 
-        {/* Enhanced background decorations */}
+        {/* Enhanced background decorations - Mobile responsive */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full blur-3xl bg-decoration"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl bg-decoration"></div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10 text-white">
@@ -491,46 +555,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Partners Section - Background riêng với ảnh 2.png */}
-      <section className="py-20 relative">
-        {/* Background với ảnh 2.png */}
+      {/* Partners Section - Background riêng với ảnh 2.png - Mobile optimized */}
+      <section className="py-12 sm:py-20 relative">
+        {/* Background với ảnh 2.png - Mobile responsive */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 responsive-bg-section section-bg-mobile"
           style={{
             backgroundImage: 'url("/images/2.png")'
           }}
         ></div>
 
-        {/* Overlay giảm opacity xuống 20% để ảnh nền hiển thị rõ hơn */}
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]"></div>
+        {/* Overlay giảm opacity - Mobile friendly */}
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] mobile-gradient-fix"></div>
 
         <div className="relative z-10">
           <Partners />
         </div>
       </section>
 
-      {/* Testimonials - Background riêng */}
-      <section id="testimonials" className="py-20 relative">
-        {/* Background riêng - giảm opacity */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-100/75 to-blue-50/75 backdrop-blur-sm"></div>
+      {/* Testimonials - Mobile responsive background */}
+      <section id="testimonials" className="py-12 sm:py-20 relative">
+        {/* Background riêng - Mobile optimized */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100/75 to-blue-50/75 backdrop-blur-sm mobile-gradient-fix"></div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-gray-800 mb-4">Khách Hàng Nói Gì</h3>
-            <p className="text-xl text-gray-600">Những đánh giá thực tế từ khách hàng đã trải nghiệm dịch vụ</p>
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Khách Hàng Nói Gì</h3>
+            <p className="text-base sm:text-xl text-gray-600 mobile-text-scale">Những đánh giá thực tế từ khách hàng đã trải nghiệm dịch vụ</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+              <div key={index} className="bg-white p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow mobile-card-spacing touch-friendly">
                 <div className="flex mb-3">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-lg">⭐</span>
+                    <span key={i} className="text-yellow-400 text-base sm:text-lg">⭐</span>
                   ))}
                 </div>
-                <p className="text-gray-700 italic mb-4 text-sm">"{testimonial.comment}"</p>
-                <div className="border-t pt-4">
-                  <p className="font-semibold text-gray-800 text-sm">{testimonial.name}</p>
+                <p className="text-gray-700 italic mb-4 text-xs sm:text-sm leading-relaxed">"{testimonial.comment}"</p>
+                <div className="border-t pt-3 sm:pt-4">
+                  <p className="font-semibold text-gray-800 text-xs sm:text-sm">{testimonial.name}</p>
                   <p className="text-blue-600 font-medium text-xs">{testimonial.service}</p>
                 </div>
               </div>
@@ -539,97 +603,97 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section - Background riêng */}
-      <section id="about" className="py-20 relative">
-        {/* Background trắng riêng - giảm opacity */}
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 to-blue-50/30"></div>
+      {/* About Section - Mobile responsive background */}
+      <section id="about" className="py-12 sm:py-20 relative">
+        {/* Background trắng riêng - Mobile optimized */}
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm mobile-gradient-fix"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 to-blue-50/30 mobile-gradient-fix"></div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-full mb-6">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-flex items-center space-x-2 bg-blue-50 px-3 sm:px-4 py-2 rounded-full mb-4 sm:mb-6">
               <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
-              <span className="text-sm font-semibold text-blue-600 uppercase tracking-wide">Về chúng tôi</span>
+              <span className="text-xs sm:text-sm font-semibold text-blue-600 uppercase tracking-wide">Về chúng tôi</span>
             </div>
 
-            <h3 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
+            <h3 className="text-2xl sm:text-4xl md:text-6xl font-bold text-gray-800 mb-4 sm:mb-6">
               Tại Sao Chọn
               <br /><span className="text-blue-600">Chúng Tôi?</span>
             </h3>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mobile-text-scale">
               Với 6 dịch vụ chuyên biệt, chúng tôi cam kết mang đến giải pháp toàn diện
               cho mọi nhu cầu của xe ô tô với chất lượng đẳng cấp quốc tế.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center group">
-              <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors duration-300">
-                <MechanicIcon size={40} color="#3B82F6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <div className="text-center group mobile-card-spacing">
+              <div className="bg-blue-100 w-16 sm:w-20 h-16 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:bg-blue-200 transition-colors duration-300">
+                <MechanicIcon size={32} color="#3B82F6" className="sm:w-10 sm:h-10" />
               </div>
-              <h4 className="text-xl font-bold mb-3 text-gray-800">Đội Ngũ Chuyên Nghiệp</h4>
-              <p className="text-gray-600 leading-relaxed">10+ năm kinh nghiệm, được đào tạo bài bản và cập nhật công nghệ thường xuyên</p>
+              <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Đội Ngũ Chuyên Nghiệp</h4>
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">10+ năm kinh nghiệm, được đào tạo bài bản và cập nhật công nghệ thường xuyên</p>
             </div>
 
-            <div className="text-center group">
-              <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors duration-300">
-                <SpeedIcon size={40} color="#10B981" />
+            <div className="text-center group mobile-card-spacing">
+              <div className="bg-green-100 w-16 sm:w-20 h-16 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:bg-green-200 transition-colors duration-300">
+                <SpeedIcon size={32} color="#10B981" className="sm:w-10 sm:h-10" />
               </div>
-              <h4 className="text-xl font-bold mb-3 text-gray-800">Phục Vụ Nhanh Chóng</h4>
-              <p className="text-gray-600 leading-relaxed">Cam kết thời gian hoàn thành đúng hẹn, hỗ trợ khẩn cấp 24/7</p>
+              <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Phục Vụ Nhanh Chóng</h4>
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">Cam kết thời gian hoàn thành đúng hẹn, hỗ trợ khẩn cấp 24/7</p>
             </div>
 
-            <div className="text-center group">
-              <div className="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors duration-300">
-                <QualityIcon size={40} color="#8B5CF6" />
+            <div className="text-center group mobile-card-spacing">
+              <div className="bg-purple-100 w-16 sm:w-20 h-16 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:bg-purple-200 transition-colors duration-300">
+                <QualityIcon size={32} color="#8B5CF6" className="sm:w-10 sm:h-10" />
               </div>
-              <h4 className="text-xl font-bold mb-3 text-gray-800">Chất Lượng Đảm Bảo</h4>
-              <p className="text-gray-600 leading-relaxed">Sử dụng 100% phụ tùng chính hãng, quy trình chuẩn nhà sản xuất</p>
+              <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Chất Lượng Đảm Bảo</h4>
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">Sử dụng 100% phụ tùng chính hãng, quy trình chuẩn nhà sản xuất</p>
             </div>
 
-            <div className="text-center group">
-              <div className="bg-orange-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-orange-200 transition-colors duration-300">
-                <PhoneIcon size={40} color="#F59E0B" />
+            <div className="text-center group mobile-card-spacing">
+              <div className="bg-orange-100 w-16 sm:w-20 h-16 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:bg-orange-200 transition-colors duration-300">
+                <PhoneIcon size={32} color="#F59E0B" className="sm:w-10 sm:h-10" />
               </div>
-              <h4 className="text-xl font-bold mb-3 text-gray-800">Hỗ Trợ Tận Tâm</h4>
-              <p className="text-gray-600 leading-relaxed">Tư vấn miễn phí, theo dõi xe sau dịch vụ, hỗ trợ khách hàng chu đáo</p>
+              <h4 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-gray-800">Hỗ Trợ Tận Tâm</h4>
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">Tư vấn miễn phí, theo dõi xe sau dịch vụ, hỗ trợ khách hàng chu đáo</p>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="text-4xl font-bold text-blue-600 mb-2">10+</div>
-              <div className="text-gray-700 font-medium">Năm Kinh Nghiệm</div>
+          {/* Stats - Mobile responsive */}
+          <div className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 text-center">
+            <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 mobile-card-spacing">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-600 mb-1 sm:mb-2">10+</div>
+              <div className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Năm Kinh Nghiệm</div>
             </div>
-            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="text-4xl font-bold text-green-600 mb-2">5000+</div>
-              <div className="text-gray-700 font-medium">Khách Hàng Tin Tưởng</div>
+            <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 mobile-card-spacing">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600 mb-1 sm:mb-2">5000+</div>
+              <div className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Khách Hàng Tin Tưởng</div>
             </div>
-            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="text-4xl font-bold text-purple-600 mb-2">50+</div>
-              <div className="text-gray-700 font-medium">Hãng Xe Hỗ Trợ</div>
+            <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 mobile-card-spacing">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-purple-600 mb-1 sm:mb-2">50+</div>
+              <div className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Hãng Xe Hỗ Trợ</div>
             </div>
-            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="text-4xl font-bold text-orange-600 mb-2">24/7</div>
-              <div className="text-gray-700 font-medium">Hỗ Trợ Khẩn Cấp</div>
+            <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 mobile-card-spacing">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-orange-600 mb-1 sm:mb-2">24/7</div>
+              <div className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Hỗ Trợ Khẩn Cấp</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Location Section - Background riêng */}
+      {/* Location Section - Background riêng - Mobile optimized */}
       <section className="relative">
-        <div className="absolute inset-0 bg-white/85 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-white/85 backdrop-blur-sm mobile-gradient-fix"></div>
 
         <div className="relative z-10">
           <LocationSection />
         </div>
       </section>
 
-      {/* Contact Section - Background riêng */}
-      <section id="contact" className="py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80 backdrop-blur-sm"></div>
+      {/* Contact Section - Background riêng - Mobile optimized */}
+      <section id="contact" className="py-12 sm:py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80 backdrop-blur-sm mobile-gradient-fix"></div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -708,9 +772,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - Background riêng */}
+      {/* Footer - Background riêng - Mobile optimized */}
       <footer className="py-12 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-md"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-md mobile-gradient-fix"></div>
 
         <div className="container mx-auto px-6 relative z-10 text-white">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

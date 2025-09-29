@@ -20,16 +20,18 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
-  // Sử dụng data từ file services.ts và thêm icon
+  // Sử dụng data từ file services.ts và thêm icon - Mobile responsive icon sizes
   const services: ServiceData[] = MAIN_SERVICES.map(service => ({
     ...service,
-    icon: service.id === 1 ? <RegistrationIcon size={120} color="#10B981" /> :
-          service.id === 2 ? <InsuranceIcon size={120} color="#3B82F6" /> :
-          service.id === 3 ? <CarWashIcon size={120} color="#8B5CF6" /> :
-          service.id === 4 ? <ToolsIcon size={120} color="#F59E0B" /> :
-          service.id === 5 ? <MaintenanceIcon size={120} color="#10B981" /> :
-          service.id === 6 ? <EngineIcon size={120} color="#EF4444" /> : null
+    icon: service.id === 1 ? <RegistrationIcon size={80} color="#10B981" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32" /> :
+          service.id === 2 ? <InsuranceIcon size={80} color="#3B82F6" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32" /> :
+          service.id === 3 ? <CarWashIcon size={80} color="#8B5CF6" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32" /> :
+          service.id === 4 ? <ToolsIcon size={80} color="#F59E0B" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32" /> :
+          service.id === 5 ? <MaintenanceIcon size={80} color="#10B981" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32" /> :
+          service.id === 6 ? <EngineIcon size={80} color="#EF4444" className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32" /> : null
   }));
 
   // Auto slide every 5 seconds - pause when hovered
@@ -43,23 +45,53 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
     return () => clearInterval(interval);
   }, [isAutoPlay, isHovered, services.length]);
 
-  // Wheel scroll handler
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      // Swipe left - next slide
+      setCurrentSlide((prev) => (prev + 1) % services.length);
+      setIsAutoPlay(false);
+      setTimeout(() => setIsAutoPlay(true), 8000);
+    } else if (distance < -minSwipeDistance) {
+      // Swipe right - previous slide
+      setCurrentSlide((prev) => (prev - 1 + services.length) % services.length);
+      setIsAutoPlay(false);
+      setTimeout(() => setIsAutoPlay(true), 8000);
+    }
+
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  // Wheel scroll handler for desktop
   const handleWheel = (e: React.WheelEvent) => {
-    // Prevent page scrolling when interacting with the carousel
+    // Only handle wheel events on desktop (when touch is not available)
+    if ('ontouchstart' in window) return;
+
     e.preventDefault();
     e.stopPropagation();
 
     const delta = e.deltaY;
 
     if (delta > 0) {
-      // Scroll down - next slide
       setCurrentSlide((prev) => (prev + 1) % services.length);
     } else {
-      // Scroll up - previous slide
       setCurrentSlide((prev) => (prev - 1 + services.length) % services.length);
     }
 
-    // Pause auto-play temporarily when user scrolls
     setIsAutoPlay(false);
     setTimeout(() => setIsAutoPlay(true), 8000);
   };
@@ -99,16 +131,19 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
 
   return (
     <div
-      className="relative w-full"
+      className="relative w-full mobile-carousel-container"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Main Carousel Container */}
-      <div className={`relative bg-gradient-to-br ${currentService.bgColor} rounded-3xl overflow-hidden shadow-2xl transition-all duration-1000 ease-in-out ${isHovered ? 'scale-[1.02]' : ''}`}>
-        {/* Scroll hint overlay */}
-        {isHovered && (
-          <div className="absolute top-4 right-4 bg-black/20 text-white px-3 py-2 rounded-full text-sm animate-fade-in z-10">
+      {/* Main Carousel Container - Mobile responsive */}
+      <div className={`relative bg-gradient-to-br ${currentService.bgColor} rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl transition-all duration-1000 ease-in-out ${isHovered ? 'scale-[1.01] sm:scale-[1.02]' : ''}`}>
+        {/* Scroll hint overlay - Desktop only */}
+        {isHovered && !('ontouchstart' in window) && (
+          <div className="absolute top-4 right-4 bg-black/20 text-white px-3 py-2 rounded-full text-sm animate-fade-in z-10 hidden sm:block">
             <div className="flex items-center space-x-2">
               <svg className="w-4 h-4 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -118,59 +153,71 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
           </div>
         )}
 
+        {/* Mobile swipe hint */}
+        {'ontouchstart' in window && (
+          <div className="absolute top-4 right-4 bg-black/20 text-white px-3 py-2 rounded-full text-xs sm:text-sm animate-fade-in z-10 sm:hidden">
+            <div className="flex items-center space-x-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+              </svg>
+              <span>Vuốt để xem</span>
+            </div>
+          </div>
+        )}
+
         <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
 
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-white/20 to-transparent rounded-full -translate-y-48 translate-x-48"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-white/10 to-transparent rounded-full translate-y-32 -translate-x-32"></div>
+        {/* Decorative Elements - Responsive */}
+        <div className="absolute top-0 right-0 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-bl from-white/20 to-transparent rounded-full -translate-y-24 sm:-translate-y-32 md:-translate-y-48 translate-x-24 sm:translate-x-32 md:translate-x-48"></div>
+        <div className="absolute bottom-0 left-0 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-gradient-to-tr from-white/10 to-transparent rounded-full translate-y-16 sm:translate-y-24 md:translate-y-32 -translate-x-16 sm:-translate-x-24 md:-translate-x-32"></div>
 
-        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-12 p-8 lg:p-16 min-h-[500px]">
-          {/* Left Side - Content */}
-          <div className="flex flex-col justify-center space-y-6 z-10">
-            <div className="space-y-4">
-              <div className="inline-flex items-center space-x-3">
+        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 md:gap-12 p-4 sm:p-6 md:p-8 lg:p-16 min-h-[400px] sm:min-h-[450px] md:min-h-[500px]">
+          {/* Left Side - Content - Mobile responsive */}
+          <div className="flex flex-col justify-center space-y-4 sm:space-y-6 z-10">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="inline-flex items-center space-x-2 sm:space-x-3">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  className="w-6 sm:w-8 h-6 sm:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm"
                   style={{ backgroundColor: currentService.accentColor }}
                 >
                   {currentService.id}
                 </div>
                 <span
-                  className="text-sm font-semibold uppercase tracking-wider"
+                  className="text-xs sm:text-sm font-semibold uppercase tracking-wider"
                   style={{ color: currentService.accentColor }}
                 >
                   {currentService.subtitle}
                 </span>
               </div>
 
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
                 {currentService.title}
               </h2>
 
-              <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed max-w-lg mobile-text-scale">
                 {currentService.description}
               </p>
             </div>
 
-            {/* Features */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Features - Mobile responsive grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {currentService.features.map((feature, index) => (
-                <div key={index} className="flex items-center space-x-2">
+                <div key={index} className="flex items-start space-x-2">
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full mt-2 flex-shrink-0"
                     style={{ backgroundColor: currentService.accentColor }}
                   ></div>
-                  <span className="text-sm text-gray-700 font-medium">{feature}</span>
+                  <span className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed">{feature}</span>
                 </div>
               ))}
             </div>
 
-            {/* Price & Actions */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4">
+            {/* Price & Actions - Mobile responsive */}
+            <div className="flex flex-col space-y-4 pt-4">
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wide">Giá dịch vụ</p>
+                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide">Giá dịch vụ</p>
                 <p
-                  className="text-2xl font-bold"
+                  className="text-xl sm:text-2xl font-bold"
                   style={{ color: currentService.accentColor }}
                 >
                   {currentService.price}
@@ -180,17 +227,17 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={() => onServiceSelect(currentService.title)}
-                  className="px-6 py-3 rounded-xl text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                  className="px-4 sm:px-6 py-3 rounded-xl text-white font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 touch-friendly mobile-button"
                   style={{ backgroundColor: currentService.accentColor }}
                 >
-                  <InfoDetailIcon size={20} color="#ffffff" />
-                  <span>Chi Tiết Dịch Vụ</span>
+                  <InfoDetailIcon size={16} color="#ffffff" className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Chi Tiết Dịch Vụ</span>
                 </button>
 
                 {currentService.isSpecialService ? (
                   <button
                     onClick={onConsultationClick}
-                    className="px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 hover:bg-white/10"
+                    className="px-4 sm:px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 hover:bg-white/10 touch-friendly mobile-button text-sm sm:text-base"
                     style={{
                       borderColor: currentService.accentColor,
                       color: currentService.accentColor
@@ -201,136 +248,101 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
                 ) : (
                   <button
                     onClick={() => onServiceSelect(currentService.title)}
-                    className="px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 hover:bg-white/10"
-                    style={{
-                      borderColor: currentService.accentColor,
-                      color: currentService.accentColor
-                    }}
+                    className="px-4 sm:px-6 py-3 bg-white/20 backdrop-blur-sm text-gray-700 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 touch-friendly mobile-button text-sm sm:text-base"
                   >
-                    📅 Đặt Lịch
+                    💰 Xem Báo Giá
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Side - Icon & Visual */}
-          <div className="flex items-center justify-center lg:justify-end">
+          {/* Right Side - Icon & Visual - Mobile responsive */}
+          <div className="flex flex-col items-center justify-center space-y-4 sm:space-y-6 z-10 order-first lg:order-last">
             <div className="relative">
-              {/* Icon Container */}
-              <div className="relative transform transition-all duration-1000 hover:scale-110">
-                <div className="w-80 h-80 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shadow-2xl border border-white/30">
-                  <div className={`transform transition-transform duration-500 ${isHovered ? 'rotate-12 scale-110' : ''}`}>
-                    {currentService.icon}
-                  </div>
-                </div>
+              {/* Icon container - Mobile responsive */}
+              <div className="relative z-10 transform hover:scale-110 transition-transform duration-300">
+                {currentService.icon}
+              </div>
 
-                {/* Floating Elements - Enhanced animation when hovered */}
-                <div
-                  className={`absolute -top-4 -right-4 w-8 h-8 rounded-full transition-all duration-300 ${isHovered ? 'animate-bounce scale-125' : 'animate-pulse'}`}
-                  style={{ backgroundColor: `${currentService.accentColor}40` }}
-                ></div>
-                <div
-                  className={`absolute -bottom-6 -left-6 w-6 h-6 rounded-full transition-all duration-300 ${isHovered ? 'animate-ping scale-125' : 'animate-pulse'}`}
-                  style={{ backgroundColor: `${currentService.accentColor}60` }}
-                ></div>
-                <div
-                  className={`absolute top-1/2 -left-8 w-4 h-4 rounded-full transition-all duration-300 ${isHovered ? 'animate-bounce scale-150' : 'animate-ping'}`}
-                  style={{ backgroundColor: `${currentService.accentColor}30` }}
-                ></div>
+              {/* Glowing background - Responsive */}
+              <div
+                className="absolute inset-0 rounded-full blur-xl sm:blur-2xl opacity-20 scale-150"
+                style={{ backgroundColor: currentService.accentColor }}
+              ></div>
+            </div>
+
+            {/* Service highlights - Mobile responsive */}
+            <div className="text-center space-y-2 sm:space-y-3">
+              <div className="flex flex-wrap justify-center gap-2">
+                <span
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium text-white"
+                  style={{ backgroundColor: currentService.accentColor + '20', color: currentService.accentColor }}
+                >
+                  ✅ Chất lượng cao
+                </span>
+                <span
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium text-white"
+                  style={{ backgroundColor: currentService.accentColor + '20', color: currentService.accentColor }}
+                >
+                  ⚡ Nhanh chóng
+                </span>
+                <span
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium text-white"
+                  style={{ backgroundColor: currentService.accentColor + '20', color: currentService.accentColor }}
+                >
+                  🛡️ Bảo hành
+                </span>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
-          <div
-            className="h-full transition-all duration-300 ease-out"
-            style={{
-              width: `${((currentSlide + 1) / services.length) * 100}%`,
-              backgroundColor: currentService.accentColor
-            }}
-          ></div>
-        </div>
-
-        {/* Hover Navigation Hints */}
-        {isHovered && (
-          <div className="absolute inset-y-0 left-4 right-4 flex items-center justify-between pointer-events-none">
-            <div className="bg-black/20 text-white px-3 py-2 rounded-full text-sm animate-fade-in">
-              ← Trước
-            </div>
-            <div className="bg-black/20 text-white px-3 py-2 rounded-full text-sm animate-fade-in">
-              Sau →
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between mt-8">
-        {/* Dots Navigation */}
-        <div className="flex space-x-3">
-          {services.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-150 ${
-                index === currentSlide 
-                  ? 'scale-125 shadow-lg' 
-                  : 'bg-gray-300 hover:bg-gray-400'
-              }`}
-              style={{
-                backgroundColor: index === currentSlide ? currentService.accentColor : undefined
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Arrow Navigation */}
-        <div className="flex items-center space-x-4">
+      {/* Navigation Dots - Mobile responsive */}
+      <div className="flex justify-center items-center space-x-2 sm:space-x-3 mt-6 sm:mt-8">
+        {services.map((_, index) => (
           <button
-            onClick={prevSlide}
-            className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-          >
-            <svg className="w-5 h-5 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <button
-            onClick={nextSlide}
-            className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-          >
-            <svg className="w-5 h-5 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          {/* Auto-play indicator - Enhanced */}
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              isHovered 
-                ? 'bg-orange-400 animate-pulse' 
-                : isAutoPlay 
-                  ? 'bg-green-400 animate-pulse' 
-                  : 'bg-gray-300'
-            }`}></div>
-            <span className="hidden sm:inline">
-              {isHovered ? 'Tạm dừng' : isAutoPlay ? 'Tự động' : 'Thủ công'}
-            </span>
-          </div>
-        </div>
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`transition-all duration-300 rounded-full touch-friendly ${
+              index === currentSlide
+                ? 'w-8 sm:w-12 h-2 sm:h-3 bg-blue-600'
+                : 'w-2 sm:w-3 h-2 sm:h-3 bg-gray-300 hover:bg-gray-400'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
       </div>
 
-      {/* Service Counter */}
-      <div className="text-center mt-6">
-        <p className="text-gray-500 text-sm">
-          <span className="font-semibold" style={{ color: currentService.accentColor }}>
-            {currentSlide + 1}
-          </span>
-          {' '}/ {services.length} dịch vụ chuyên nghiệp
-        </p>
+      {/* Navigation Arrows - Desktop only */}
+      <div className="hidden lg:block">
+        <button
+          onClick={prevSlide}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-20 hover:scale-110"
+          aria-label="Previous service"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <button
+          onClick={nextSlide}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-20 hover:scale-110"
+          aria-label="Next service"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Service Counter - Mobile responsive */}
+      <div className="text-center mt-4 sm:mt-6">
+        <span className="text-xs sm:text-sm text-gray-500">
+          Dịch vụ {currentSlide + 1} / {services.length}
+        </span>
       </div>
     </div>
   );

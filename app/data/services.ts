@@ -1,10 +1,10 @@
-// Define service data structure without importing components
+// Define service data structure
 export interface ServiceData {
   id: number;
   title: string;
   subtitle: string;
   description: string;
-  icon: any; // Use any instead of React.ReactNode to avoid React dependency
+  icon: any;
   price: string;
   isSpecialService?: boolean;
   features: string[];
@@ -104,188 +104,168 @@ export const MAIN_SERVICES: ServiceData[] = [
   },
   {
     id: 3,
-    title: "Làm Sơn Sửa Bảo Hiểm",
-    subtitle: "Phục hồi xe như mới sau tai nạn",
-    description: "Dịch vụ sơn sửa chuyên nghiệp cho xe bảo hiểm với quy trình chuẩn, sử dụng sơn chính hãng, khôi phục xe như ban đầu.",
+    title: "Sơn Sửa Bảo Hiểm",
+    subtitle: "Sơn phục hồi như xe mới",
+    description: "Dịch vụ sơn sửa chuyên nghiệp với công nghệ hiện đại, phục hồi xe sau tai nạn về trạng thái như mới. Hỗ trợ làm thủ tục bảo hiểm.",
     icon: null,
     price: "Liên hệ",
-    isSpecialService: true,
     features: [
-      "Sơn sửa theo tiêu chuẩn bảo hiểm",
+      "Sơn phục hồi hoàn toàn sau tai nạn",
       "Sử dụng sơn chính hãng",
-      "Tháo lắp chuyên nghiệp",
-      "Sơn phủ hoàn thiện",
-      "Bàn giao xe như mới",
-      "Bảo hành chất lượng sơn"
+      "Công nghệ sơn hiện đại",
+      "Hỗ trợ làm thủ tục bảo hiểm",
+      "Bảo hành sơn 2 năm",
+      "Giao xe đúng hẹn"
     ],
     bgColor: "from-purple-50 to-violet-100",
     accentColor: "#8B5CF6",
     details: {
       supportedBrands: [
-        "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "BMW",
-        "Mercedes", "Audi", "Lexus", "Infiniti", "Volvo", "Tất cả hãng"
+        "Tất cả các hãng xe", "Mercedes", "BMW", "Audi", "Lexus",
+        "Toyota", "Honda", "Mazda", "Ford", "Hyundai"
       ],
       carTypes: [
-        "Xe con", "SUV", "MPV", "Pickup", "Xe sang", "Xe thể thao",
-        "Xe tải nhẹ", "Xe đã qua sử dụng"
+        "Xe con cao cấp", "SUV/CUV", "Xe thể thao", "Xe sang",
+        "Xe cổ điển", "Xe độ"
       ],
       features: [
-        "Định giá thiệt hại theo chuẩn bảo hiểm",
-        "Tháo lắp chi tiết bị hư hỏng",
-        "Gò đập chỉnh hình thân xe",
-        "Sơn lót, sơn phủ bằng sơn chính hãng",
-        "Lắp ráp và kiểm tra chất lượng",
-        "Đánh bóng và hoàn thiện"
+        "Đánh bóng và làm mới toàn bộ xe",
+        "Sơn chống trầy xước cao cấp",
+        "Phục hồi màu sơn nguyên bản",
+        "Xử lý chống rỉ sét chuyên nghiệp",
+        "Bảo vệ sơn bằng nano coating",
+        "Kiểm tra chất lượng nhiều lần"
       ],
-      warranty: "6-12 tháng",
-      duration: "3-7 ngày tùy mức độ hư hỏng",
+      warranty: "2 năm bảo hành sơn",
+      duration: "5-10 ngày làm việc",
       gallery: []
     }
   },
   {
     id: 4,
-    title: "Mua Phụ Tùng Ô Tô",
-    subtitle: "Đối tác chiến lược Phụ Tùng Việt Nga",
-    description: "Cung cấp phụ tùng chính hãng cho tất cả các hãng xe thông qua đối tác chiến lược Phụ Tùng Ô Tô Việt Nga với giá cạnh tranh, giao hàng nhanh, bảo hành chính thức.",
+    title: "Phụ Tùng Ô Tô",
+    subtitle: "Đối tác Phụ Tùng Việt Nga",
+    description: "Cung cấp phụ tùng chính hãng cho tất cả các loại xe với giá cạnh tranh thông qua đối tác chiến lược Phụ Tùng Ô Tô Việt Nga và các thương hiệu uy tín khác.",
     icon: null,
     price: "Liên hệ",
-    isSpecialService: false,
+    isSpecialService: true,
     features: [
-      "🏪 Đối tác chiến lược Phụ Tùng Việt Nga",
-      "Phụ tùng chính hãng 100%",
-      "Giá cạnh tranh nhất thị trường",
-      "Giao hàng tận nơi trong ngày",
-      "Tư vấn lựa chọn phù hợp",
-      "Hỗ trợ lắp đặt chuyên nghiệp"
+      "🏪 Đối tác chính: Phụ Tùng Ô Tô Việt Nga",
+      "🛢️ Castrol - Dầu nhớt cao cấp",
+      "🚗 Hyundai Mobis - Phụ tùng gầm, vỏ, máy (4-45 chỗ)",
+      "⚙️ Mando - Đồ gầm, đồ vỏ, đồ máy",
+      "⚡ Koyo - Đại lý cấp 1 vòng bi chính hãng tại Hải Phòng",
+      "🔧 Valeo - Bàn ép, lá côn chuyên nghiệp"
     ],
-    bgColor: "from-amber-50 to-yellow-100",
+    bgColor: "from-amber-50 to-orange-100",
     accentColor: "#F59E0B",
     details: {
       supportedBrands: [
-        "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "BMW",
-        "Mercedes", "Audi", "Volkswagen", "Peugeot", "Renault",
-        "Lexus", "Infiniti", "Acura", "Volvo", "Jaguar", "Land Rover"
+        "Castrol (Dầu nhớt)", "Hyundai Mobis", "Mando", "Koyo",
+        "Valeo (Bàn ép, lá côn)", "Bosch (Gạt mưa, má phanh, bugi)",
+        "Mahle (Lọc động cơ, lọc điều hòa, bugi, má phanh)", "Và nhiều thương hiệu khác"
       ],
       carTypes: [
-        "Xe con các loại", "SUV/CUV", "MPV", "Pickup", "Xe tải nhẹ",
-        "Xe sang", "Xe thể thao", "Xe hybrid", "Xe cũ", "Xe độ"
+        "Xe từ 4 chỗ đến 45 chỗ", "Xe con", "SUV/CUV", "MPV",
+        "Xe tải nhẹ", "Xe khách", "Xe chuyên dùng"
       ],
       features: [
-        "🏪 ĐỐI TÁC CHIẾN LƯỢC: Phụ Tùng Ô Tô Việt Nga - Nhà phân phối uy tín",
-        "Lọc dầu, lọc gió, lọc nhiên liệu các loại hãng",
-        "Má phanh, đĩa phanh, dầu phanh chính hãng",
-        "Lốp xe các thương hiệu nổi tiếng (Michelin, Bridgestone)",
-        "Ắc quy, bugi, dây curoa chính hãng",
-        "Đèn xe, gương xe, kính xe đầy đủ các loại"
+        "🏪 ĐỐI TÁC CHÍNH: Phụ Tùng Ô Tô Việt Nga - Nhà phân phối uy tín",
+        "Phụ tùng chính hãng 100%",
+        "Castrol: Dầu nhớt cao cấp với công nghệ tiên tiến",
+        "Hyundai Mobis: Đồ gầm, vỏ, máy cho xe 4-45 chỗ",
+        "Koyo: Đại lý cấp 1 vòng bi chính hãng tại Hải Phòng",
+        "Bosch & Mahle: Gạt mưa, má phanh, bugi, lọc các loại"
       ],
-      warranty: "6-24 tháng tùy sản phẩm",
-      duration: "Giao hàng trong ngày hoặc 24h",
+      warranty: "6-24 tháng tùy loại phụ tùng",
+      duration: "Giao hàng trong ngày",
       gallery: []
     }
   },
   {
     id: 5,
-    title: "Bảo Dưỡng Định Kỳ Các Cấp",
+    title: "Bảo Dưỡng Định Kỳ",
     subtitle: "Bảo dưỡng chuẩn nhà sản xuất",
-    description: "Dịch vụ bảo dưỡng định kỳ theo chuẩn nhà sản xuất cho tất cả các cấp: 5.000km, 10.000km, 20.000km, 40.000km...",
+    description: "Dịch vụ bảo dưỡng định kỳ theo chuẩn nhà sản xuất với phụ tùng chính hãng, giúp xe vận hành ổn định và tiết kiệm nhiên liệu.",
     icon: null,
     price: "Liên hệ",
-    isSpecialService: false,
     features: [
-      "Bảo dưỡng cấp 1: 5.000-10.000km",
-      "Bảo dưỡng cấp 2: 15.000-20.000km",
-      "Bảo dưỡng cấp 3: 30.000-40.000km",
-      "Bảo dưỡng cấp 4: 60.000km trở lên",
-      "Sử dụng dầu nhớt chính hãng",
-      "Kiểm tra tổng thể 56 hạng mục"
+      "Bảo dưỡng theo chuẩn nhà sản xuất",
+      "Sử dụng phụ tùng và dầu nhớt chính hãng",
+      "Kiểm tra toàn diện 50 hạng mục",
+      "Cập nhật lịch bảo dưỡng tiếp theo",
+      "Tư vấn tình trạng xe chi tiết",
+      "Bảo hành dịch vụ 6 tháng"
     ],
     bgColor: "from-green-50 to-emerald-100",
     accentColor: "#10B981",
     details: {
       supportedBrands: [
         "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Isuzu",
-        "Daewoo", "Ssangyong", "Peugeot", "Renault", "Fiat"
+        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Subaru"
       ],
       carTypes: [
-        "Xe con 4-5 chỗ", "SUV/CUV", "MPV 7-9 chỗ", "Pickup",
-        "Xe tải nhẹ dưới 3.5T", "Xe van/minibus", "Xe hybrid"
+        "Xe con các loại", "SUV/CUV", "MPV", "Pickup truck",
+        "Xe hybrid", "Xe điện"
       ],
       features: [
-        "Thay dầu động cơ + lọc dầu theo chuẩn nhà sản xuất",
-        "Kiểm tra và bổ sung dầu các hệ thống (phanh, lái, làm mát)",
-        "Thay lọc gió, lọc nhiên liệu theo chu kỳ quy định",
-        "Kiểm tra hệ thống phanh và độ mòn lốp xe",
-        "Test ắc quy và hệ thống điện toàn xe",
-        "Vệ sinh động cơ và rửa xe miễn phí"
+        "Thay dầu động cơ và lọc dầu",
+        "Kiểm tra và thay lọc gió, lọc nhiên liệu",
+        "Kiểm tra hệ thống phanh và lốp xe",
+        "Kiểm tra hệ thống điện và đèn",
+        "Kiểm tra hệ thống làm mát và điều hòa",
+        "Vệ sinh buồng đốt và kim phun"
       ],
-      warranty: "3-6 tháng hoặc 5.000-10.000km",
-      duration: "2-4 giờ tùy cấp độ bảo dưỡng",
+      warranty: "6 tháng hoặc 10.000km",
+      duration: "2-4 giờ",
       gallery: []
     }
   },
   {
     id: 6,
-    title: "Sửa Chữa Toàn Diện Ngoài Bảo Hiểm",
-    subtitle: "Trung tâm sửa chữa chuyên nghiệp đa dịch vụ",
-    description: "Trung tâm sửa chữa tổng thể với đầy đủ trang thiết bị hiện đại, đội ngũ thợ lành nghề, chuyên sửa chữa mọi hư hỏng từ động cơ đến thân vỏ.",
+    title: "Sửa Chữa Ngoài Bảo Hiểm",
+    subtitle: "Sửa chữa chuyên nghiệp toàn diện",
+    description: "Dịch vụ sửa chữa chuyên nghiệp cho tất cả các hạng mục: Sửa chữa máy, gầm, điện, điều hòa và các hệ thống khác với đội ngũ thợ giàu kinh nghiệm.",
     icon: null,
     price: "Liên hệ",
-    isSpecialService: false,
     features: [
-      "🔧 Sửa chữa động cơ: Đại tu, sửa chữa piston, xilanh, trục khuỷu",
-      "⚙️ Sửa chữa hộp số: Hộp số sàn, tự động, ly hợp, bán trục",
-      "🔌 Sửa chữa hệ thống điện: Máy phát, ma tơ khởi động, đánh lửa",
-      "❄️ Sửa chữa điều hòa: Nạp gas, thay lọc, sửa giàn lạnh",
-      "🚗 Sửa chữa gầm xe: Thay thế cao su, bi rotuyn, cần góp",
-      "🎨 Sơn gò thân xe: Chỉnh hình, sơn phủ, đánh bóng chuyên nghiệp"
+      "🔧 Sửa chữa động cơ và hộp số",
+      "⚙️ Sửa chữa hệ thống gầm bệ",
+      "⚡ Sửa chữa hệ thống điện",
+      "❄️ Sửa chữa hệ thống điều hòa",
+      "🛠️ Sửa chữa hệ thống phanh",
+      "🔩 Và nhiều hạng mục khác"
     ],
     bgColor: "from-red-50 to-rose-100",
     accentColor: "#EF4444",
     details: {
       supportedBrands: [
-        "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Isuzu",
-        "BMW", "Mercedes", "Audi", "Lexus", "Infiniti", "Volvo",
-        "Peugeot", "Renault", "Fiat", "Tất cả các hãng xe"
+        "Tất cả các hãng xe", "Xe Nhật", "Xe Hàn", "Xe Âu", "Xe Mỹ",
+        "Xe cổ", "Xe độ", "Xe thương mại"
       ],
       carTypes: [
-        "Xe con 4-9 chỗ", "SUV/CUV các loại", "MPV 7-16 chỗ", "Pickup truck",
-        "Xe tải nhẹ dưới 5T", "Xe sang", "Xe thể thao", "Xe cũ", "Xe độ",
-        "Xe tai nạn", "Xe hybrid", "Xe chuyên dùng"
+        "Xe con mọi loại", "SUV/CUV", "MPV", "Pickup truck",
+        "Xe tải", "Xe khách", "Xe chuyên dùng"
       ],
       features: [
-        "🔧 SỬA CHỮA ĐỘNG CƠ: Đại tu động cơ, thay piston, xilanh, sửa trục khuỷu",
-        "⚙️ SỬA CHỮA HỘP SỐ: Hộp số sàn/tự động, ly hợp, bán trục, cầu trước/sau",
-        "🚘 SỬA CHỮA GẦM XE: Thay cao su cân bằng, bi rotuyn, cần góp, giảm xóc",
-        "🔌 HỆ THỐNG ĐIỆN: Máy phát điện, ma tơ khởi động, hệ thống đánh lửa",
-        "❄️ ĐIỀU HÒA Ô TÔ: Nạp gas R134a/R1234yf, thay lọc gió, sửa giàn lạnh",
-        "🎨 SƠN GÒ CHUYÊN NGHIỆP: Chỉnh hình thân xe, sơn phủ hoàn thiện",
-        "🛞 DỊCH VỤ LỐP XE: Vá vỏ không săm, thay lốp mới, cân bằng động",
-        "🔍 CHẨN ĐOÁN LỖI: Máy scan đa hãng, kiểm tra 50+ hạng mục"
+        "🔧 SỬA CHỮA ĐỘNG CƠ: Đại tu, sửa chữa các hỏng hóc",
+        "⚙️ SỬA CHỮA GẦM BỆ: Thay thế giảm xóc, cầu trước/sau",
+        "⚡ SỬA CHỮA HỆ THỐNG ĐIỆN: Máy phát, má từ, hệ thống đánh lửa",
+        "❄️ SỬA CHỮA ĐIỀU HÒA: Block lạnh, dàn nóng, hệ thống gas",
+        "🛠️ SỬA CHỮA PHANH: Má phanh, đĩa phanh, hệ thống phanh ABS",
+        "🔩 HỢP TÁC với các Gara uy tín tại Hải Phòng (Hải An, Lê Chân, Hồng Bàng, Kiến An)"
       ],
-      warranty: "3-12 tháng tùy hạng mục sửa chữa",
-      duration: "1-7 ngày tùy mức độ hư hỏng và phức tạp",
+      warranty: "3-12 tháng tùy hạng mục",
+      duration: "1-7 ngày tùy mức độ",
       gallery: []
     }
   }
 ];
 
-// Helper functions
-export const getServiceById = (id: number): ServiceData | undefined => {
-  return MAIN_SERVICES.find(service => service.id === id);
-};
-
-export const getServiceByTitle = (title: string): ServiceData | undefined => {
+export function getServiceByTitle(title: string): ServiceData | undefined {
   return MAIN_SERVICES.find(service => service.title === title);
-};
+}
 
-export const getSpecialServices = (): ServiceData[] => {
-  return MAIN_SERVICES.filter(service => service.isSpecialService);
-};
-
-export const getRegularServices = (): ServiceData[] => {
-  return MAIN_SERVICES.filter(service => !service.isSpecialService);
-};
+export function getServiceById(id: number): ServiceData | undefined {
+  return MAIN_SERVICES.find(service => service.id === id);
+}
