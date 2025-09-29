@@ -269,11 +269,10 @@ export default function Products() {
 
       {/* Hero Section with animations */}
       <section className="py-16 text-center relative">
-        {/* Background với ảnh 3.jpg */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: 'url("/images/3.jpg")',
+            backgroundImage: 'url("/images/3.png")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
