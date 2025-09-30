@@ -5,7 +5,7 @@ import { CompanyLogo } from "~/components/Logo";
 import { BookingModal } from "~/components/BookingModal";
 import { ConsultationModal } from "~/components/ConsultationModal";
 import { SkeletonLoader } from "~/components/Loading";
-import { ServicesCarousel } from "~/components/ServicesCarousel";
+import { ServicesList } from "~/components/ServicesList";
 import { Partners } from "~/components/Partners";
 import { GoogleMap, LocationSection } from "~/components/GoogleMap";
 import { usePageTransition } from "~/components/PageTransition";
@@ -21,7 +21,8 @@ import {
   PhoneIcon,
   MechanicIcon,
   SpeedIcon,
-  QualityIcon
+  QualityIcon,
+  ArrowDownIcon
 } from "~/components/Icons";
 
 interface ServiceDetail {
@@ -337,8 +338,8 @@ export default function Home() {
 
       {/* Services Carousel Section - Mobile responsive background */}
       <section id="services" className="py-12 sm:py-20 md:py-24 relative">
-        {/* Background riêng cho section này - Mobile optimized */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/70 to-indigo-100/70 backdrop-blur-sm mobile-gradient-fix"></div>
+        {/* Background riêng cho section này - Mobile optimized với opacity thấp */}
+        <div className="absolute inset-0 section-overlay-blue mobile-gradient-fix"></div>
 
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-12 sm:mb-16">
@@ -360,7 +361,7 @@ export default function Home() {
 
           {/* Services Carousel - Mobile optimized */}
           <div className="mobile-carousel-container">
-            <ServicesCarousel
+            <ServicesList
               onServiceSelect={handleServiceSelect}
               onConsultationClick={handleConsultationClick}
             />
@@ -557,16 +558,17 @@ export default function Home() {
 
       {/* Partners Section - Background riêng với ảnh 2.png - Mobile optimized */}
       <section className="py-12 sm:py-20 relative">
-        {/* Background với ảnh 2.png - Mobile responsive */}
+        {/* Background với ảnh 2.png - Mobile responsive với opacity thấp */}
         <div
           className="absolute inset-0 responsive-bg-section section-bg-mobile"
           style={{
-            backgroundImage: 'url("/images/2.png")'
+            backgroundImage: 'url("/images/2.png")',
+            opacity: 0.4
           }}
         ></div>
 
         {/* Overlay giảm opacity - Mobile friendly */}
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] mobile-gradient-fix"></div>
+        <div className="absolute inset-0 section-overlay mobile-gradient-fix"></div>
 
         <div className="relative z-10">
           <Partners />
@@ -684,7 +686,7 @@ export default function Home() {
 
       {/* Location Section - Background riêng - Mobile optimized */}
       <section className="relative">
-        <div className="absolute inset-0 bg-white/85 backdrop-blur-sm mobile-gradient-fix"></div>
+        <div className="absolute inset-0 section-overlay mobile-gradient-fix"></div>
 
         <div className="relative z-10">
           <LocationSection />
@@ -693,7 +695,7 @@ export default function Home() {
 
       {/* Contact Section - Background riêng - Mobile optimized */}
       <section id="contact" className="py-12 sm:py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-indigo-100/80 backdrop-blur-sm mobile-gradient-fix"></div>
+        <div className="absolute inset-0 section-overlay-blue mobile-gradient-fix"></div>
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">

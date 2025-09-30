@@ -807,17 +807,15 @@ export function QualityIcon({ className = '', size = 24, color = '#D97706' }: Ic
 
       {/* Sparkle effects */}
       <g opacity="0.8">
-        <path d="M6 6l1-1 1 1-1 1-1-1z" fill="#FFD700"/>
-        <path d="M18 6l1-1 1 1-1 1-1-1z" fill="#FFD700"/>
-        <circle cx="4" cy="16" r="0.5" fill="#FFD700"/>
-        <circle cx="20" cy="16" r="0.5" fill="#FFD700"/>
+        <path d="M6 6l1-1 1 1-1 1-1-1zM18 6l1-1 1 1-1 1-1-1z" fill="#FFD700"/>
+        <path d="M4 16l1-1 1 1-1 1-1-1zM20 16l1-1 1 1-1 1-1-1z" fill="#FFD700"/>
       </g>
 
       <defs>
         <linearGradient id="star-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FFD700" stopOpacity="0.9"/>
-          <stop offset="50%" stopColor={color} stopOpacity="0.7"/>
-          <stop offset="100%" stopColor={color} stopOpacity="0.5"/>
+          <stop offset="50%" stopColor={color} stopOpacity="0.8"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.6"/>
         </linearGradient>
         <linearGradient id="star-inner" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FEF3C7" stopOpacity="0.8"/>
@@ -959,6 +957,97 @@ export function ArrowDownIcon({ className = '', size = 24, color = '#3B82F6' }: 
           <stop offset="0%" stopColor={color} stopOpacity="0.9"/>
           <stop offset="100%" stopColor={color} stopOpacity="0.7"/>
         </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// Arrow Right Icon - Chuyên nghiệp cho nút action
+export function ArrowRightIcon({ className = '', size = 24, color = '#3B82F6' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={{ filter: 'drop-shadow(0 1px 4px rgba(59, 130, 246, 0.2))' }}
+    >
+      <path
+        d="M9 18l6-6-6-6"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+// Check Icon - Chuyên nghiệp cho danh sách tính năng
+export function CheckIcon({ className = '', size = 24, color = '#10B981' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={{ filter: 'drop-shadow(0 1px 4px rgba(16, 185, 129, 0.3))' }}
+    >
+      <circle cx="12" cy="12" r="11" fill="url(#check-gradient)" stroke={color} strokeWidth="1" />
+      <path
+        d="M8 12.5l2.5 2.5L16 9"
+        stroke="#fff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+
+      <defs>
+        <linearGradient id="check-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.9"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.7"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// Star Icon - Premium cho service badge
+export function StarIcon({ className = '', size = 24, color = '#F59E0B' }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={{ filter: 'drop-shadow(0 2px 6px rgba(245, 158, 11, 0.3))' }}
+    >
+      <path
+        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+        fill="url(#star-gradient)"
+        stroke={color}
+        strokeWidth="0.5"
+      />
+      <path
+        d="M12 6l1.5 3L17 9.5l-2.5 2.5L15 16l-3-1.5L9 16l.5-4L7 9.5l3.5-.5L12 6z"
+        fill="#fff"
+        opacity="0.4"
+      />
+
+      <defs>
+        <linearGradient id="star-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFD700" stopOpacity="0.9"/>
+          <stop offset="50%" stopColor={color} stopOpacity="0.8"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.6"/>
+        </linearGradient>
       </defs>
     </svg>
   );

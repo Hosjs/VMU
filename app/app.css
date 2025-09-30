@@ -34,18 +34,20 @@
     padding: 1rem;
   }
 
-  /* Mobile Background Optimization */
+  /* Mobile Background Optimization - FIX CHÍNH */
   .mobile-bg-size {
     background-size: cover !important;
     background-position: center center !important;
     background-attachment: scroll !important;
+    background-repeat: no-repeat !important;
   }
 
-  /* Mobile Section Background Fix */
+  /* Mobile Section Background Fix - QUAN TRỌNG */
   .section-bg-mobile {
-    background-size: 150% auto !important;
+    background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
+    background-attachment: scroll !important;
   }
 
   /* Mobile Background Decorative Elements */
@@ -54,39 +56,60 @@
     opacity: 0.3 !important;
   }
 
-  /* Mobile Gradient Background */
+  /* Mobile Gradient Background - FIX SECTIONS - GIẢM OPACITY */
   .mobile-gradient-fix {
     background-attachment: scroll !important;
     background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    min-height: auto !important;
+    /* Giảm opacity để background chính hiện ra */
+    opacity: 0.6 !important;
   }
 }
 
-/* Responsive Background Classes */
-.responsive-bg-hero {
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
+/* Desktop và Tablet */
+@media (min-width: 769px) {
+  .responsive-bg-hero {
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+  }
+
+  .responsive-bg-section {
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
 }
 
+/* Mobile - Background được fix hoàn toàn */
 @media (max-width: 768px) {
   .responsive-bg-hero {
     background-size: cover;
     background-position: center center;
     background-attachment: scroll;
-  }
-}
-
-.responsive-bg-section {
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-}
-
-@media (max-width: 768px) {
-  .responsive-bg-section {
-    background-size: 120% auto;
-    background-position: center center;
     background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+
+  .responsive-bg-section {
+    background-size: 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+  }
+
+  /* Fix cho tất cả sections có background */
+  section[class*="bg-gradient"] {
+    background-attachment: scroll !important;
+  }
+
+  /* Fix cho absolute positioned backgrounds - GIẢM OPACITY */
+  .absolute.inset-0[style*="background"] {
+    background-attachment: scroll !important;
+    background-size: 100% 100% !important;
+    opacity: 0.3 !important;
   }
 }
 
@@ -102,88 +125,38 @@
   }
 }
 
-@media (max-width: 480px) {
-  .bg-decoration {
-    transform: scale(0.5);
-    opacity: 0.3;
-  }
+/* FIX BACKGROUND SECTIONS - GIẢM OPACITY ĐỂ BACKGROUND CHÍNH HIỆN RA */
+/* Section overlays giảm opacity */
+.section-overlay {
+  background: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(2px);
 }
 
-/* Touch improvements for all devices */
+.section-overlay-blue {
+  background: rgba(59, 130, 246, 0.05) !important;
+  backdrop-filter: blur(1px);
+}
+
+.section-overlay-gradient {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(139, 92, 246, 0.03)) !important;
+  backdrop-filter: blur(1px);
+}
+
+/* Touch-friendly elements */
 .touch-friendly {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Mobile navigation improvements */
-@media (max-width: 768px) {
-  .mobile-nav-menu {
-    position: fixed;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    z-index: 50;
-    transform: translateY(-100%);
-    transition: transform 0.3s ease-in-out;
-  }
-
-  .mobile-nav-menu.open {
-    transform: translateY(0);
-  }
+/* Smooth animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Modal Portal Animations */
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes backdropFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Modal Portal Classes */
-.modal-portal-backdrop {
-  animation: backdropFadeIn 0.2s ease-out forwards;
-}
-
-.animate-in {
-  animation: modalFadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* Ensure modal is always on top and interactive */
-#modal-root {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 999999 !important;
-  pointer-events: auto !important;
-}
-
-#modal-root:empty {
-  display: none !important;
-}
-
-/* Page transition animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -191,124 +164,11 @@
   }
 }
 
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
+/* Loading spinner */
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Modal specific animations */
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Card hover animation */
-@keyframes cardHover {
-  from {
-    transform: translateY(0);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-  to {
-    transform: translateY(-5px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  }
-}
-
-/* Page transition classes */
-.page-enter {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-.page-exit {
-  animation: fadeOut 0.3s ease-in forwards;
-}
-
-.slide-in-right {
-  animation: slideInRight 0.5s ease-out forwards;
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.5s ease-out forwards;
-}
-
-.slide-up {
-  animation: slideUp 0.6s ease-out forwards;
-}
-
-.scale-in {
-  animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-.modal-enter {
-  animation: modalEnter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* Card hover effect */
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  animation: cardHover 0.3s ease forwards;
-}
-
-/* Loading spinner animations */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -318,306 +178,110 @@
   }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+/* Enhanced card hover effects */
+.hover-card-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
 }
 
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(-25%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: none;
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
+/* Service List specific optimizations */
+.service-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
-/* Progress bar animation */
-@keyframes progressFill {
-  from {
-    width: 0%;
-  }
-  to {
-    width: var(--progress);
-  }
-}
-
-.progress-bar {
-  animation: progressFill 0.3s ease-out forwards;
-}
-
-/* Button hover effects */
-.btn-hover {
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.btn-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* Stagger animation for form elements */
-.stagger-item {
-  animation: slideUp 0.5s ease-out forwards;
-  animation-delay: var(--stagger-delay, 0s);
-}
-
-.stagger-item:nth-child(1) { --stagger-delay: 0.1s; }
-.stagger-item:nth-child(2) { --stagger-delay: 0.2s; }
-.stagger-item:nth-child(3) { --stagger-delay: 0.3s; }
-.stagger-item:nth-child(4) { --stagger-delay: 0.4s; }
-.stagger-item:nth-child(5) { --stagger-delay: 0.5s; }
-.stagger-item:nth-child(6) { --stagger-delay: 0.6s; }
-
-/* Modal overlay styles */
-.modal-overlay {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Focus states for accessibility */
-button:focus,
-a:focus,
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-}
-
-/* Mobile responsive improvements */
 @media (max-width: 768px) {
-  .btn-hover:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-hover:hover {
-    transform: none;
-    animation: none;
-  }
-
-  .animate-in {
-    animation: modalFadeIn 0.2s ease-out forwards;
+  .service-list-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 }
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.8) !important;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .scroll-behavior {
-    scroll-behavior: auto !important;
-  }
-}
-
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-
-html,
-body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
-}
-
-/* Custom animations for enhanced user experience */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Animation classes */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.6s ease-out forwards;
-}
-
-.slide-in-right {
-  animation: slideInRight 0.6s ease-out forwards;
-}
-
-.slide-up {
-  animation: slideUp 0.6s ease-out forwards;
-}
-
-.scale-in {
-  animation: scaleIn 0.5s ease-out forwards;
-}
-
-.modal-enter {
-  animation: modalEnter 0.3s ease-out forwards;
-}
-
-/* Stagger animation for items */
-.stagger-item:nth-child(1) { animation-delay: 0.1s; }
-.stagger-item:nth-child(2) { animation-delay: 0.2s; }
-.stagger-item:nth-child(3) { animation-delay: 0.3s; }
-.stagger-item:nth-child(4) { animation-delay: 0.4s; }
-.stagger-item:nth-child(5) { animation-delay: 0.5s; }
-.stagger-item:nth-child(6) { animation-delay: 0.6s; }
-.stagger-item:nth-child(7) { animation-delay: 0.7s; }
-.stagger-item:nth-child(8) { animation-delay: 0.8s; }
 
 /* Button hover effects */
-.btn-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.btn-primary {
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #3B82F6, #1E40AF);
 }
 
-.btn-hover:hover {
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1E40AF, #1E3A8A);
   transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgb(59 130 246 / 0.4);
 }
 
-/* Card hover effects */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Icon animations */
+.icon-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-/* Floating action button effects */
-.fab {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.fab:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+/* Professional shadows */
+.shadow-professional {
+  box-shadow: 0 10px 40px -10px rgb(0 0 0 / 0.1);
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+.shadow-professional-hover:hover {
+  box-shadow: 0 20px 60px -10px rgb(0 0 0 / 0.15);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* Mobile navigation improvements */
+@media (max-width: 768px) {
+  .mobile-nav {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
+/* Button click prevention fix */
+button {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #3b82f6;
-  border-radius: 4px;
+button:hover {
+  transform: scale(1.02);
+  transition: all 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
+button:active {
+  transform: scale(0.98);
+}
+
+/* Ensure buttons are clickable */
+.service-card-button {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Optimize for different screen sizes */
+@media (max-width: 480px) {
+  .mobile-text-scale {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+  }
+
+  .mobile-card-spacing {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
 }

@@ -65,13 +65,13 @@ export const MAIN_SERVICES: ServiceData[] = [
   {
     id: 2,
     title: "Bảo Hiểm TNDS & Vật Chất",
-    subtitle: "Đối tác chính thức DBV Insurance",
+    subtitle: "🛡️ Đối tác chính thức DBV Insurance",
     description: "Cung cấp bảo hiểm Trách nhiệm Dân sự bắt buộc và Bảo hiểm Vật chất với mức phí cạnh tranh nhất thị trường thông qua đối tác chiến lược DBV Insurance.",
     icon: null,
     price: "Liên hệ",
     isSpecialService: true,
     features: [
-      "🛡️ Đối tác chính thức DBV Insurance",
+      "🛡️ ĐỐI TÁC CHÍNH THỨC: DBV Insurance",
       "TNDS bắt buộc theo quy định",
       "TNDS tự nguyện mức bồi thường cao",
       "Bảo hiểm Vật chất (thân vỏ xe)",
@@ -82,7 +82,7 @@ export const MAIN_SERVICES: ServiceData[] = [
     accentColor: "#3B82F6",
     details: {
       supportedBrands: [
-        "Tất cả các hãng xe", "Xe con", "Xe tải", "Xe khách",
+        "🛡️ DBV Insurance - Đối tác chính thức", "Tất cả các hãng xe", "Xe con", "Xe tải", "Xe khách",
         "Xe chuyên dùng", "Xe máy", "Moto phân khối lớn"
       ],
       carTypes: [
@@ -144,13 +144,13 @@ export const MAIN_SERVICES: ServiceData[] = [
   {
     id: 4,
     title: "Phụ Tùng Ô Tô",
-    subtitle: "Đối tác Phụ Tùng Việt Nga",
-    description: "Cung cấp phụ tùng chính hãng cho tất cả các loại xe với giá cạnh tranh thông qua đối tác chiến lược Phụ Tùng Ô Tô Việt Nga và các thương hiệu uy tín khác.",
+    subtitle: "🏪 Đối tác Phụ Tùng Việt Nga",
+    description: "Cung cấp phụ tùng chính hãng cho tất cả các loại xe với giá cạnh tranh thông qua đối tác chiến lược Phụ Tùng Ô Tô Việt Nga và các thương hiệu uy tín quốc tế.",
     icon: null,
     price: "Liên hệ",
     isSpecialService: true,
     features: [
-      "🏪 Đối tác chính: Phụ Tùng Ô Tô Việt Nga",
+      "🏪 ĐỐI TÁC CHÍNH: Phụ Tùng Ô Tô Việt Nga",
       "🛢️ Castrol - Dầu nhớt cao cấp",
       "🚗 Hyundai Mobis - Phụ tùng gầm, vỏ, máy (4-45 chỗ)",
       "⚙️ Mando - Đồ gầm, đồ vỏ, đồ máy",
@@ -161,9 +161,10 @@ export const MAIN_SERVICES: ServiceData[] = [
     accentColor: "#F59E0B",
     details: {
       supportedBrands: [
+        "🏪 Phụ Tùng Ô Tô Việt Nga - Đối tác chính thức",
         "Castrol (Dầu nhớt)", "Hyundai Mobis", "Mando", "Koyo",
         "Valeo (Bàn ép, lá côn)", "Bosch (Gạt mưa, má phanh, bugi)",
-        "Mahle (Lọc động cơ, lọc điều hòa, bugi, má phanh)", "Và nhiều thương hiệu khác"
+        "Mahle (Lọc động cơ, lọc điều hòa, bugi, má phanh)", "Và nhiều thương hiệu lớn khác"
       ],
       carTypes: [
         "Xe từ 4 chỗ đến 45 chỗ", "Xe con", "SUV/CUV", "MPV",
@@ -223,9 +224,9 @@ export const MAIN_SERVICES: ServiceData[] = [
   },
   {
     id: 6,
-    title: "Sửa Chữa Ngoài Bảo Hiểm",
-    subtitle: "Sửa chữa chuyên nghiệp toàn diện",
-    description: "Dịch vụ sửa chữa chuyên nghiệp cho tất cả các hạng mục: Sửa chữa máy, gầm, điện, điều hòa và các hệ thống khác với đội ngũ thợ giàu kinh nghiệm.",
+    title: "Sửa Chữa Toàn Diện",
+    subtitle: "Sửa chữa chuyên nghiệp mọi hạng mục",
+    description: "Dịch vụ sửa chữa chuyên nghiệp toàn diện: Sửa chữa máy, gầm, điện, điều hòa và tất cả các hệ thống khác. Hợp tác với các đơn vị Gara uy tín tại Hải Phòng.",
     icon: null,
     price: "Liên hệ",
     features: [
@@ -234,7 +235,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "⚡ Sửa chữa hệ thống điện",
       "❄️ Sửa chữa hệ thống điều hòa",
       "🛠️ Sửa chữa hệ thống phanh",
-      "🔩 Và nhiều hạng mục khác"
+      "🤝 Hợp tác Gara uy tín Hải Phòng"
     ],
     bgColor: "from-red-50 to-rose-100",
     accentColor: "#EF4444",
@@ -253,7 +254,7 @@ export const MAIN_SERVICES: ServiceData[] = [
         "⚡ SỬA CHỮA HỆ THỐNG ĐIỆN: Máy phát, má từ, hệ thống đánh lửa",
         "❄️ SỬA CHỮA ĐIỀU HÒA: Block lạnh, dàn nóng, hệ thống gas",
         "🛠️ SỬA CHỮA PHANH: Má phanh, đĩa phanh, hệ thống phanh ABS",
-        "🔩 HỢP TÁC với các Gara uy tín tại Hải Phòng (Hải An, Lê Chân, Hồng Bàng, Kiến An)"
+        "🤝 HỢP TÁC với các Gara uy tín tại Hải Phòng (Hải An, Lê Chân, Hồng Bàng, Kiến An)"
       ],
       warranty: "3-12 tháng tùy hạng mục",
       duration: "1-7 ngày tùy mức độ",
