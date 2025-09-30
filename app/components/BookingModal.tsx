@@ -355,11 +355,19 @@ export function BookingModal({ isOpen, onClose, selectedService = '' }: BookingM
                 <h4 className="font-semibold text-gray-800 mb-2">🌟 Đối tác tin cậy</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
-                    <span>🛡️</span>
+                    <img
+                      src="/images/DBV.png"
+                      alt="DBV Insurance logo"
+                      className="w-5 h-5 object-contain"
+                    />
                     <span><strong>DBV Insurance</strong> - Bảo hiểm chính thức</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span>🏪</span>
+                    <img
+                      src="/images/phutung.png"
+                      alt="Phụ Tùng Việt Nga logo"
+                      className="w-5 h-5 object-contain"
+                    />
                     <span><strong>Phụ Tùng Việt Nga</strong> - Phụ tùng chính hãng</span>
                   </div>
                 </div>

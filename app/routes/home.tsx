@@ -405,8 +405,12 @@ export default function Home() {
             <div className="group bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-3xl">🛡️</span>
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center p-3">
+                    <img
+                      src="/images/DBV.png"
+                      alt="DBV Insurance logo"
+                      className="w-10 h-10 object-contain"
+                    />
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white">DBV Insurance</h3>
@@ -462,8 +466,19 @@ export default function Home() {
             <div className="group bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-                    <span className="text-3xl">🏪</span>
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center p-2">
+                    <img
+                      src="/images/phutung.png"
+                      alt="Phụ Tùng Việt Nga logo"
+                      className="w-12 h-12 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                    <span className="text-2xl hidden">🏪</span>
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white">Phụ Tùng Ô Tô Việt Nga</h3>
@@ -523,26 +538,69 @@ export default function Home() {
             </p>
 
             <div className="flex flex-wrap justify-center items-center gap-6 mb-8">
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">🛢️ Castrol</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/castrol.png"
+                  alt="Castrol logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Castrol</span>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">🚗 Hyundai Mobis</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/hyundai.png"
+                  alt="Hyundai Mobis logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Hyundai Mobis</span>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">⚙️ Mando</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/mando.png"
+                  alt="Mando logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Mando</span>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">⚡ Koyo</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/koyo.png"
+                  alt="Koyo logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Koyo</span>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">🔧 Valeo</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/valeo.png"
+                  alt="Valeo logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Valeo</span>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">🛠️ Bosch</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/bosch.png"
+                  alt="Bosch logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Bosch</span>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-sm font-semibold">🔍 Mahle</span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/mahle.png"
+                  alt="Mahle logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Mahle</span>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full flex items-center space-x-2">
+                <img
+                  src="/images/toyota.png"
+                  alt="Toyota logo"
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="text-sm font-semibold">Toyota</span>
               </div>
             </div>
 

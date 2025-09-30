@@ -140,7 +140,16 @@ export function ServicesCarousel({ onServiceSelect, onConsultationClick }: Servi
       onTouchEnd={handleTouchEnd}
     >
       {/* Main Carousel Container - Mobile responsive */}
-      <div className={`relative bg-gradient-to-br ${currentService.bgColor} rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl transition-all duration-1000 ease-in-out ${isHovered ? 'scale-[1.01] sm:scale-[1.02]' : ''}`}>
+      <div className={`relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl transition-all duration-1000 ease-in-out ${isHovered ? 'scale-[1.01] sm:scale-[1.02]' : ''}`}>
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-60 transition-opacity duration-1000"
+          style={{ backgroundImage: `url('${currentService.backgroundImage}')` }}
+        ></div>
+
+        {/* Overlay để đảm bảo text dễ đọc */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/50"></div>
+
         {/* Scroll hint overlay - Desktop only */}
         {isHovered && !('ontouchstart' in window) && (
           <div className="absolute top-4 right-4 bg-black/20 text-white px-3 py-2 rounded-full text-sm animate-fade-in z-10 hidden sm:block">

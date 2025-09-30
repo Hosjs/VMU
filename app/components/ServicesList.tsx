@@ -71,8 +71,14 @@ export function ServicesList({ onServiceSelect, onConsultationClick }: ServicesL
             onMouseEnter={() => setHoveredService(service.id)}
             onMouseLeave={() => setHoveredService(null)}
           >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${service.bgColor} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-55 group-hover:opacity-65 transition-opacity duration-300"
+              style={{ backgroundImage: `url('${service.backgroundImage}')` }}
+            ></div>
+
+            {/* Overlay để đảm bảo text dễ đọc */}
+            <div className="absolute inset-0 bg-white/55 group-hover:bg-white/45 transition-colors duration-300"></div>
 
             {/* Special Service Badge */}
             {service.isSpecialService && (

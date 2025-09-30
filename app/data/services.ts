@@ -9,6 +9,7 @@ export interface ServiceData {
   isSpecialService?: boolean;
   features: string[];
   bgColor: string;
+  backgroundImage: string; // Thêm thuộc tính mới cho ảnh background
   accentColor: string;
   details: {
     supportedBrands: string[];
@@ -38,6 +39,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "Hỗ trợ sửa chữa nếu xe không đạt"
     ],
     bgColor: "from-emerald-50 to-teal-100",
+    backgroundImage: "/images/dangkiem.png",
     accentColor: "#10B981",
     details: {
       supportedBrands: [
@@ -79,6 +81,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "Hỗ trợ làm thủ tục bồi thường nhanh chóng"
     ],
     bgColor: "from-blue-50 to-indigo-100",
+    backgroundImage: "/images/baohiem.png",
     accentColor: "#3B82F6",
     details: {
       supportedBrands: [
@@ -118,6 +121,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "Giao xe đúng hẹn"
     ],
     bgColor: "from-purple-50 to-violet-100",
+    backgroundImage: "/images/sonsua.png",
     accentColor: "#8B5CF6",
     details: {
       supportedBrands: [
@@ -158,6 +162,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "🔧 Valeo - Bàn ép, lá côn chuyên nghiệp"
     ],
     bgColor: "from-amber-50 to-orange-100",
+    backgroundImage: "/images/phutungoto.png",
     accentColor: "#F59E0B",
     details: {
       supportedBrands: [
@@ -199,6 +204,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "Bảo hành dịch vụ 6 tháng"
     ],
     bgColor: "from-green-50 to-emerald-100",
+    backgroundImage: "/images/baoduong.png",
     accentColor: "#10B981",
     details: {
       supportedBrands: [
@@ -238,6 +244,7 @@ export const MAIN_SERVICES: ServiceData[] = [
       "🤝 Hợp tác Gara uy tín Hải Phòng"
     ],
     bgColor: "from-red-50 to-rose-100",
+    backgroundImage: "/images/suachua.png",
     accentColor: "#EF4444",
     details: {
       supportedBrands: [

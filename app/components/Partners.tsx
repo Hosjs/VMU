@@ -25,7 +25,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 1,
       name: "Castrol Vietnam",
-      logo: "🛢️",
+      logo: "/images/castrol.png",
       category: "Dầu nhớt cao cấp",
       description: "Thương hiệu dầu nhớt hàng đầu thế giới với công nghệ Titanium FST tiên tiến",
       website: "castrol.com.vn",
@@ -36,7 +36,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 2,
       name: "Hyundai Mobis",
-      logo: "🚗",
+      logo: "/images/hyundai.png",
       category: "Phụ tùng chính hãng",
       description: "Nhà cung cấp phụ tùng chính hãng cho tất cả dòng xe Hyundai và KIA",
       website: "mobis.hyundai.com",
@@ -47,7 +47,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 3,
       name: "Mando Corporation",
-      logo: "⚙️",
+      logo: "/images/mando.png",
       category: "Hệ thống gầm & vỏ xe",
       description: "Chuyên gia hàng đầu về đồ gầm, đồ vỏ và đồ máy cho mọi loại xe từ 4-45 chỗ",
       website: "mando.com",
@@ -58,7 +58,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 4,
       name: "Koyo Bearings Hải Phòng",
-      logo: "⚡",
+      logo: "/images/koyo.png",
       category: "Vòng bi chính hãng",
       description: "Đại lý cấp 1 tại Hải Phòng về vòng bi chính hãng Koyo - Thương hiệu Nhật Bản",
       website: "koyo.co.jp",
@@ -69,7 +69,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 5,
       name: "Valeo Vietnam",
-      logo: "🔧",
+      logo: "/images/valeo.png",
       category: "Hệ thống ly hợp & phanh",
       description: "Chuyên gia về bàn ép, lá côn và các hệ thống truyền động",
       website: "valeo.com",
@@ -80,7 +80,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 6,
       name: "Bosch Vietnam",
-      logo: "🛠️",
+      logo: "/images/bosch.png",
       category: "Phụ tùng đa ngành",
       description: "Thương hiệu Đức hàng đầu về gạt mưa, má phanh, bugi và các sản phẩm ô tô",
       website: "bosch.com.vn",
@@ -91,7 +91,7 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 7,
       name: "Mahle Filter Systems",
-      logo: "🔍",
+      logo: "/images/mahle.png",
       category: "Hệ thống lọc & bugi",
       description: "Chuyên gia về lọc động cơ, lọc điều hòa, bugi và má phanh chất lượng cao",
       website: "mahle.com",
@@ -102,57 +102,24 @@ export function Partners({ className = '' }: PartnersProps) {
     {
       id: 8,
       name: "Phụ Tùng Ô Tô Việt Nga",
-      logo: "🏪",
-      category: "Nhà phân phối phụ tùng",
-      description: "Đối tác chiến lược cung cấp phụ tùng chính hãng với mạng lưới rộng khắp",
-      website: "phuтungviетnga.com",
+      logo: "/images/phutung.png",
+      category: "Đối tác chiến lược chính",
+      description: "Đối tác chính thức về phụ tùng ô tô với kho hàng đa dạng và giá cả cạnh tranh",
+      website: "phutungvietnha.com",
       established: "2010",
-      products: ["Phụ tùng đa hãng", "Dầu nhớt", "Lốp xe", "Ắc quy", "Phụ kiện ô tô"],
-      highlight: "⭐ ĐỐI TÁC CHIẾN LƯỢC - Nhà phân phối phụ tùng uy tín"
+      products: ["Phụ tùng đa hãng", "Phụ tùng chính hãng", "Phụ tùng OEM", "Tư vấn kỹ thuật"],
+      highlight: "ĐỐI TÁC CHIẾN LƯỢC - Phụ tùng ô tô đa dạng, giá tốt"
     },
     {
       id: 9,
       name: "DBV Insurance",
-      logo: "🛡️",
-      category: "Bảo hiểm ô tô",
-      description: "Đơn vị bảo hiểm uy tín chuyên cung cấp bảo hiểm TNDS và Vật chất cho ô tô",
-      website: "dbv.com.vn",
+      logo: "/images/DBV.png",
+      category: "Đối tác bảo hiểm chính thức",
+      description: "Đơn vị bảo hiểm uy tín với dịch vụ TNDS và vật chất chuyên nghiệp",
+      website: "dbvinsurance.com.vn",
       established: "2008",
-      products: ["TNDS bắt buộc", "TNDS tự nguyện", "Bảo hiểm vật chất", "Bảo hiểm người"],
-      highlight: "⭐ ĐỐI TÁC BẢO HIỂM CHÍNH - Đơn vị bảo hiểm uy tín"
-    },
-    {
-      id: 10,
-      name: "Mạng Lưới Gara Hải Phòng",
-      logo: "🔗",
-      category: "Hợp tác sửa chữa",
-      description: "Mạng lưới hợp tác với các gara uy tín tại các phường: Hải An, Lê Chân, Hồng Bàng, Kiến An",
-      website: "gara-haiphong.vn",
-      established: "2015",
-      products: ["Sửa chữa chuyên sâu", "Đại tu động cơ", "Sơn gò", "Bảo dưỡng"],
-      highlight: "⭐ HỢP TÁC SĐỬA CHỮA - Gara uy tín lâu đời tại Hải Phòng"
-    },
-    {
-      id: 11,
-      name: "Toyota Motor Vietnam",
-      logo: "🚘",
-      category: "Xe ô tô & Phụ tùng",
-      description: "Hãng xe hàng đầu Việt Nam với chất lượng và độ tin cậy cao",
-      website: "toyota.com.vn",
-      established: "1937",
-      products: ["Xe con", "SUV", "Phụ tùng chính hãng", "Dịch vụ bảo dưỡng"],
-      highlight: "Thương hiệu xe được tin dùng nhất Việt Nam"
-    },
-    {
-      id: 12,
-      name: "Nhiều Thương Hiệu Lớn Khác",
-      logo: "🌟",
-      category: "Đa thương hiệu",
-      description: "Hợp tác với nhiều thương hiệu lớn khác để đảm bảo cung cấp đầy đủ các sản phẩm chất lượng",
-      website: "partners.network",
-      established: "2020",
-      products: ["Phụ tùng đa hãng", "Dầu nhớt", "Lốp xe", "Phụ kiện", "Dịch vụ"],
-      highlight: "Mạng lưới đối tác rộng khắp - Đảm bảo nguồn hàng ổn định"
+      products: ["TNDS bắt buộc", "TNDS tự nguyện", "Bảo hiểm vật chất", "Cứu hộ 24/7"],
+      highlight: "ĐỐI TÁC CHÍNH THỨC - Bảo hiểm ô tô toàn diện"
     }
   ];
 
@@ -215,15 +182,14 @@ export function Partners({ className = '' }: PartnersProps) {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Partner Info */}
-            <div className="p-8 lg:p-12 flex flex-col justify-center">
+            <div className="flex flex-col justify-center">
               <div className="mb-6">
-                <div className="text-6xl mb-4">{currentPartner.logo}</div>
                 <div className="inline-block bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold mb-4">
                   {currentPartner.category}
                 </div>
-                <h3 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+                <h3 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
                   {currentPartner.name}
                 </h3>
                 <p className="text-gray-600 text-lg leading-relaxed mb-4">
@@ -259,12 +225,31 @@ export function Partners({ className = '' }: PartnersProps) {
               </div>
             </div>
 
-            {/* Partner Visual */}
-            <div className="bg-gradient-to-br from-blue-100 to-indigo-200 p-8 lg:p-12 flex items-center justify-center">
+            {/* Partner Logo Display */}
+            <div className="bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl p-8 lg:p-12 flex items-center justify-center">
               <div className="text-center">
-                <div className={`text-9xl mb-6 transition-transform duration-500 ${isHovered ? 'scale-110 rotate-12' : ''}`}>
-                  {currentPartner.logo}
+                {/* Logo Container */}
+                <div className={`w-48 h-48 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-6 transition-transform duration-500 ${isHovered ? 'scale-110 rotate-3' : ''}`}>
+                  <img
+                    src={currentPartner.logo}
+                    alt={`${currentPartner.name} logo`}
+                    className="w-36 h-36 object-contain"
+                    onError={(e) => {
+                      // Fallback nếu ảnh không load được
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div
+                    className="w-36 h-36 hidden items-center justify-center text-6xl text-gray-400"
+                    style={{display: 'none'}}
+                  >
+                    🏢
+                  </div>
                 </div>
+
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
                   <h4 className="text-2xl font-bold text-gray-800 mb-2">{currentPartner.name}</h4>
                   <p className="text-gray-600">Đối tác chiến lược từ {currentPartner.established}</p>
@@ -274,40 +259,95 @@ export function Partners({ className = '' }: PartnersProps) {
           </div>
 
           {/* Progress indicator */}
-          <div className="bg-gray-100 h-1">
+          <div className="mt-8 bg-gray-200 rounded-full h-2">
             <div
-              className="h-full bg-blue-600 transition-all duration-300 ease-out"
+              className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${((currentPartnerIndex + 1) / partners.length) * 100}%` }}
             ></div>
           </div>
         </div>
 
         {/* Partner Navigation Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4">
           {partners.map((partner, index) => (
             <button
               key={partner.id}
               onClick={() => handlePartnerSelect(index)}
-              className={`p-4 rounded-xl transition-all duration-300 backdrop-blur-sm border ${
+              className={`group p-4 rounded-xl transition-all duration-300 backdrop-blur-sm border ${
                 index === currentPartnerIndex
                   ? 'bg-blue-600/20 border-blue-400/50 shadow-lg scale-105'
                   : 'bg-white/40 border-white/30 hover:bg-white/60 hover:scale-105'
               }`}
             >
               <div className="text-center">
-                <div className={`text-3xl mb-2 transition-transform duration-300 group-hover:scale-110 ${
-                  index === currentPartnerIndex ? 'animate-bounce' : ''
+                {/* Partner Logo Thumbnail */}
+                <div className={`w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center mx-auto mb-2 transition-transform duration-300 group-hover:scale-110 ${
+                  index === currentPartnerIndex ? 'ring-2 ring-blue-400' : ''
                 }`}>
-                  {partner.logo}
+                  <img
+                    src={partner.logo}
+                    alt={`${partner.name} logo`}
+                    className="w-12 h-12 object-contain"
+                    onError={(e) => {
+                      // Fallback nếu ảnh không load được
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div
+                    className="w-12 h-12 hidden items-center justify-center text-2xl text-gray-400"
+                    style={{display: 'none'}}
+                  >
+                    🏢
+                  </div>
                 </div>
-                <p className={`text-xs font-semibold ${
-                  index === currentPartnerIndex ? 'text-white' : 'text-gray-700'
+
+                <p className={`text-xs font-semibold truncate ${
+                  index === currentPartnerIndex ? 'text-blue-600' : 'text-gray-700'
                 }`}>
-                  {partner.name.split(' ')[0]}
+                  {partner.name.split(' ').slice(0, 2).join(' ')}
                 </p>
+
+                {/* Active indicator */}
+                {index === currentPartnerIndex && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                )}
               </div>
             </button>
           ))}
+        </div>
+
+        {/* Partner Summary */}
+        <div className="mt-16 text-center">
+          <div className="bg-white/50 backdrop-blur-md rounded-2xl p-8 shadow-lg border border-white/30">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              Cam Kết Chất Lượng Từ Các Đối Tác Uy Tín
+            </h3>
+            <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
+              Với mạng lưới đối tác mạnh mẽ, chúng tôi đảm bảo cung cấp các sản phẩm chính hãng,
+              chất lượng cao với giá cả cạnh tranh. Từ dầu nhớt Castrol đến phụ tùng Hyundai Mobis,
+              từ vòng bi Koyo đến hệ thống Bosch - mỗi sản phẩm đều được chọn lọc kỹ càng.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-3">
+              <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
+                ✓ Sản phẩm chính hãng 100%
+              </span>
+              <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold">
+                ✓ Bảo hành đầy đủ
+              </span>
+              <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">
+                ✓ Giá cả cạnh tranh
+              </span>
+              <span className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-semibold">
+                ✓ Hỗ trợ kỹ thuật
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -225,8 +225,12 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white p-4 rounded-lg shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">🛡️</span>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-2 border border-gray-200">
+                      <img
+                        src="/images/DBV.png"
+                        alt="DBV Insurance logo"
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
                     <div>
                       <h4 className="font-bold text-blue-600">DBV Insurance</h4>
@@ -236,8 +240,12 @@ export function ConsultationModal({ isOpen, onClose }: ConsultationModalProps) {
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                      <span className="text-2xl">🏪</span>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-2 border border-gray-200">
+                      <img
+                        src="/images/phutung.png"
+                        alt="Phụ Tùng Việt Nga logo"
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
                     <div>
                       <h4 className="font-bold text-amber-600">Phụ Tùng Việt Nga</h4>
