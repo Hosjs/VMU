@@ -209,7 +209,7 @@ export const MAIN_SERVICES: ServiceData[] = [
     details: {
       supportedBrands: [
         "Toyota", "Honda", "Mazda", "Ford", "Hyundai", "KIA",
-        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Subaru"
+        "Mitsubishi", "Nissan", "Chevrolet", "Suzuki", "Subaru","Tất cả các hãng xe khác"
       ],
       carTypes: [
         "Xe con các loại", "SUV/CUV", "MPV", "Pickup truck",
@@ -223,7 +223,7 @@ export const MAIN_SERVICES: ServiceData[] = [
         "Kiểm tra hệ thống làm mát và điều hòa",
         "Vệ sinh buồng đốt và kim phun"
       ],
-      warranty: "6 tháng hoặc 10.000km",
+      warranty: "6 tháng hoặc 100.000km",
       duration: "2-4 giờ",
       gallery: []
     }
