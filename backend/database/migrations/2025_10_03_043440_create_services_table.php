@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name'); // Tên dịch vụ
             $table->string('code')->unique(); // Mã dịch vụ
             $table->text('description')->nullable(); // Mô tả dịch vụ
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('category_id'); // Không dùng foreignId
 
             // Giá báo cho khách hàng
             $table->decimal('quote_price', 15, 2)->default(0); // Giá báo cho khách
@@ -25,7 +25,11 @@ return new class extends Migration
 
             $table->string('unit')->default('lần'); // Đơn vị tính
             $table->integer('estimated_time')->default(60); // Thời gian ước tính (phút)
-            $table->json('images')->nullable(); // Hình ảnh dịch vụ
+
+            // Thay JSON images bằng cột đơn giản
+            $table->string('main_image')->nullable(); // Ảnh chính
+            $table->text('gallery_images')->nullable(); // Danh sách URL ảnh phụ, cách nhau bởi dấu |
+
             $table->text('notes')->nullable(); // Ghi chú
 
             // Bảo hành

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('brand_id')->constrained('vehicle_brands')->onDelete('cascade');
-            $table->foreignId('model_id')->constrained('vehicle_models')->onDelete('cascade');
+            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('brand_id');
+            $table->unsignedBigInteger('model_id');
 
             $table->string('license_plate')->unique(); // Biển số xe
             $table->string('vin')->nullable()->unique(); // Số khung
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->date('next_maintenance')->nullable(); // Lần bảo dưỡng tiếp theo
             $table->integer('maintenance_interval')->default(10000); // Chu kỳ bảo dưỡng (km)
 
-            $table->json('images')->nullable(); // Hình ảnh xe
+            $table->text('image_urls')->nullable(); // Thay JSON bằng text
             $table->text('notes')->nullable(); // Ghi chú về xe
             $table->boolean('is_active')->default(true);
             $table->timestamps();

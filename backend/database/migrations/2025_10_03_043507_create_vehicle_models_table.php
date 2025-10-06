@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // Tên dòng xe
             $table->string('slug'); // URL-friendly name
-            $table->foreignId('brand_id')->constrained('vehicle_brands')->onDelete('cascade');
+            $table->unsignedBigInteger('brand_id');
             $table->string('type')->nullable(); // Loại xe: sedan, suv, hatchback, etc.
             $table->integer('year_start')->nullable(); // Năm bắt đầu sản xuất
             $table->integer('year_end')->nullable(); // Năm kết thúc sản xuất
             $table->string('engine_type')->nullable(); // Loại động cơ
             $table->string('fuel_type')->nullable(); // Loại nhiên liệu
-            $table->json('images')->nullable(); // Hình ảnh xe
+            $table->text('image_urls')->nullable(); // Thay JSON bằng text
             $table->text('description')->nullable(); // Mô tả
             $table->boolean('is_active')->default(true);
             $table->timestamps();

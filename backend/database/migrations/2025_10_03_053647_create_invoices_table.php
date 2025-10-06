@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->string('invoice_number')->unique(); // Số hóa đơn
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('vehicle_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('vehicle_id')->nullable();
 
             // QUAN TRỌNG: Kiểm soát nguồn xuất và quyền truy cập
             $table->enum('issuer', ['thang_truong', 'viet_nga'])->default('thang_truong'); // Ai xuất hóa đơn
             $table->boolean('admin_only_access')->default(false); // Chỉ admin được xem/sửa
-            $table->foreignId('issuing_warehouse_id')->nullable()->constrained('warehouses')->onDelete('set null'); // Kho xuất hóa đơn
+            $table->unsignedBigInteger('issuing_warehouse_id')->nullable(); // Kho xuất hóa đơn
 
             // Thông tin cơ bản
             $table->date('invoice_date'); // Ngày lập hóa đơn
@@ -59,8 +59,8 @@ return new class extends Migration
             $table->enum('payment_status', ['unpaid', 'partial', 'paid', 'overpaid'])->default('unpaid');
 
             // Người tạo và xử lý
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->datetime('approved_at')->nullable();
 
             // Ghi chú
@@ -68,8 +68,8 @@ return new class extends Migration
             $table->text('customer_notes')->nullable(); // Ghi chú cho khách hàng
             $table->text('terms_conditions')->nullable(); // Điều khoản và điều kiện
 
-            // File đính kèm
-            $table->json('attachments')->nullable(); // File hóa đơn PDF, hình ảnh
+            // File đính kèm - thay JSON bằng text
+            $table->text('attachment_urls')->nullable(); // URL file, ngăn cách bởi |
 
             $table->timestamps();
 

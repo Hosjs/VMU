@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('direct_sale_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('direct_sale_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('direct_sale_id');
+            $table->unsignedBigInteger('product_id');
 
             // Thông tin sản phẩm (snapshot tại thời điểm bán)
             $table->string('product_name');
@@ -27,26 +27,26 @@ return new class extends Migration
             $table->string('unit');
 
             // Giá bán - THÔNG TIN NHẠY CẢM
-            $table->decimal('unit_price', 15, 2); // Giá bán đơn vị
-            $table->decimal('line_total', 15, 2); // Thành tiền
-            $table->decimal('discount_amount', 15, 2)->default(0); // Giảm giá cho dòng này
+            $table->decimal('unit_price', 15, 2);
+            $table->decimal('line_total', 15, 2);
+            $table->decimal('discount_amount', 15, 2)->default(0);
 
             // Giá vốn - CHỈ ADMIN XEM
-            $table->decimal('unit_cost', 15, 2); // Giá vốn đơn vị
-            $table->decimal('total_cost', 15, 2); // Tổng giá vốn
-            $table->decimal('line_profit', 15, 2); // Lợi nhuận dòng
-            $table->decimal('profit_margin', 5, 2); // % lợi nhuận
+            $table->decimal('unit_cost', 15, 2);
+            $table->decimal('total_cost', 15, 2);
+            $table->decimal('line_profit', 15, 2);
+            $table->decimal('profit_margin', 5, 2);
 
             // Thuế
-            $table->decimal('tax_rate', 5, 2)->default(10); // % thuế VAT
-            $table->decimal('tax_amount', 15, 2)->default(0); // Tiền thuế
-            $table->boolean('is_tax_exempt')->default(false); // Miễn thuế
+            $table->decimal('tax_rate', 5, 2)->default(10);
+            $table->decimal('tax_amount', 15, 2)->default(0);
+            $table->boolean('is_tax_exempt')->default(false);
 
             // Thông tin kho
-            $table->string('warehouse_location')->nullable(); // Vị trí lấy hàng trong kho
-            $table->string('batch_number')->nullable(); // Số lô
-            $table->string('serial_number')->nullable(); // Số serial
-            $table->date('expiry_date')->nullable(); // Hạn sử dụng
+            $table->string('warehouse_location')->nullable();
+            $table->string('batch_number')->nullable();
+            $table->string('serial_number')->nullable();
+            $table->date('expiry_date')->nullable();
 
             // Bảo hành (nếu có)
             $table->boolean('has_warranty')->default(false);
@@ -56,15 +56,15 @@ return new class extends Migration
 
             // Trạng thái và xử lý
             $table->enum('status', ['pending', 'picked', 'packed', 'delivered', 'returned'])->default('pending');
-            $table->foreignId('picked_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('picked_by')->nullable();
             $table->datetime('picked_at')->nullable();
 
             // Ghi chú
             $table->text('notes')->nullable();
-            $table->text('customer_notes')->nullable(); // Ghi chú cho khách hàng
+            $table->text('customer_notes')->nullable();
 
             // Theo dõi xuất kho
-            $table->foreignId('stock_movement_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('stock_movement_id')->nullable();
 
             $table->timestamps();
 

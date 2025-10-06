@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female', 'other'])->nullable();
 
             // Liên kết với user account (nếu có đăng ký tài khoản)
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('user_id')->nullable();
 
             // Thông tin bảo hiểm
             $table->string('insurance_company')->nullable(); // Công ty bảo hiểm
@@ -30,7 +30,7 @@ return new class extends Migration
 
             // Ghi chú và lịch sử
             $table->text('notes')->nullable(); // Ghi chú về khách hàng
-            $table->json('preferences')->nullable(); // Sở thích, yêu cầu đặc biệt
+            $table->text('preferences')->nullable(); // Thay JSON bằng text: key=value|key=value
 
             $table->boolean('is_active')->default(true);
             $table->timestamps();

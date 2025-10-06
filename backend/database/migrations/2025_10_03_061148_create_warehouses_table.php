@@ -25,32 +25,32 @@ return new class extends Migration
             $table->string('postal_code')->nullable();
 
             // Thông tin liên hệ
-            $table->string('contact_person')->nullable(); // Người phụ tr책
+            $table->string('contact_person')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
 
             // Liên kết với provider (nếu là kho của đối tác)
-            $table->foreignId('provider_id')->nullable()->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('provider_id')->nullable();
 
             // Cấu hình kho
             $table->boolean('is_main_warehouse')->default(false); // Việt Nga = true
-            $table->boolean('can_receive_transfers')->default(true); // Có thể nhận hàng chuyển kho
-            $table->boolean('can_send_transfers')->default(true); // Có thể gửi hàng chuyển kho
-            $table->integer('priority_order')->default(1); // Thứ tự ưu tiên lấy hàng (1 = ưu tiên cao nhất)
+            $table->boolean('can_receive_transfers')->default(true);
+            $table->boolean('can_send_transfers')->default(true);
+            $table->integer('priority_order')->default(1);
 
             // Thông tin thuế
-            $table->boolean('tax_exempt_transfers')->default(true); // Chuyển kho không tính thuế
-            $table->string('tax_registration')->nullable(); // Mã đăng ký thuế
+            $table->boolean('tax_exempt_transfers')->default(true);
+            $table->string('tax_registration')->nullable();
 
             // Trạng thái
             $table->boolean('is_active')->default(true);
-            $table->datetime('last_inventory_date')->nullable(); // Lần kiểm kê cuối
+            $table->datetime('last_inventory_date')->nullable();
 
             // Người quản lý
-            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('manager_id')->nullable();
 
             $table->text('notes')->nullable();
-            $table->json('operating_hours')->nullable(); // Giờ hoạt động
+            $table->text('operating_hours')->nullable(); // Format: Mon:08:00-17:00|Tue:08:00-17:00
 
             $table->timestamps();
 

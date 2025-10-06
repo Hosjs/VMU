@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('user_roles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('role_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('role_id');
             $table->timestamp('assigned_at')->useCurrent();
-            $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null'); // Ai phân quyền
+            $table->unsignedBigInteger('assigned_by')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('direct_sales', function (Blueprint $table) {
             $table->id();
-            $table->string('sale_number')->unique(); // Số phiếu bán trực tiếp
-            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade'); // Phải là kho Việt Nga
+            $table->string('sale_number')->unique();
+            $table->unsignedBigInteger('warehouse_id'); // Phải là kho Việt Nga
 
             // Thông tin khách hàng (có thể là khách lẻ)
-            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null'); // Khách hàng đã đăng ký
-            $table->string('customer_name'); // Tên khách (có thể khác với customer_id)
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->string('customer_name');
             $table->string('customer_phone')->nullable();
-            $table->string('customer_id_number')->nullable(); // CCCD/CMND
+            $table->string('customer_id_number')->nullable();
             $table->text('customer_address')->nullable();
 
             // Phân loại bán hàng
@@ -28,16 +28,16 @@ return new class extends Migration
             // retail: bán lẻ, wholesale: bán sỉ, employee: bán cho nhân viên, internal: sử dụng nội bộ
 
             // Tài chính - CHỈ ADMIN ĐƯỢC XEM
-            $table->decimal('subtotal', 15, 2); // Tổng tiền trước thuế
-            $table->decimal('discount_amount', 15, 2)->default(0); // Giảm giá
-            $table->decimal('discount_percent', 5, 2)->default(0); // % giảm giá
-            $table->decimal('tax_amount', 15, 2)->default(0); // Thuế VAT
-            $table->decimal('total_amount', 15, 2); // Tổng tiền cuối
+            $table->decimal('subtotal', 15, 2);
+            $table->decimal('discount_amount', 15, 2)->default(0);
+            $table->decimal('discount_percent', 5, 2)->default(0);
+            $table->decimal('tax_amount', 15, 2)->default(0);
+            $table->decimal('total_amount', 15, 2);
 
             // Chi phí và lợi nhuận - THÔNG TIN NHẠY CẢM
-            $table->decimal('total_cost', 15, 2); // Tổng giá vốn
-            $table->decimal('gross_profit', 15, 2); // Lợi nhuận gộp
-            $table->decimal('profit_margin', 5, 2); // % lợi nhuận
+            $table->decimal('total_cost', 15, 2);
+            $table->decimal('gross_profit', 15, 2);
+            $table->decimal('profit_margin', 5, 2);
 
             // Thanh toán
             $table->enum('payment_method', ['cash', 'transfer', 'card', 'credit'])->default('cash');
@@ -52,13 +52,13 @@ return new class extends Migration
 
             // Phê duyệt
             $table->enum('approval_status', ['draft', 'pending', 'approved', 'rejected'])->default('draft');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->datetime('approved_at')->nullable();
             $table->text('approval_notes')->nullable();
 
             // Nhân viên xử lý
-            $table->foreignId('salesperson_id')->constrained('users')->onDelete('cascade'); // Nhân viên bán
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade'); // Người tạo phiếu
+            $table->unsignedBigInteger('salesperson_id');
+            $table->unsignedBigInteger('created_by');
 
             // Thời gian
             $table->datetime('sale_date'); // Ngày bán
@@ -69,8 +69,8 @@ return new class extends Migration
             $table->text('customer_notes')->nullable(); // Ghi chú cho khách
             $table->text('internal_memo')->nullable(); // Memo nội bộ (chỉ admin)
 
-            // Tài liệu
-            $table->json('attachments')->nullable(); // Hóa đơn, biên lai
+            // Tài liệu - thay JSON bằng text
+            $table->text('attachment_urls')->nullable(); // URL hóa đơn, biên lai, ngăn cách bởi |
 
             $table->timestamps();
 
@@ -79,7 +79,6 @@ return new class extends Migration
             $table->index(['visibility_level', 'is_confidential']);
             $table->index(['salesperson_id', 'sale_date']);
             $table->index(['customer_id', 'sale_date']);
-            $table->index(['approval_status', 'created_at']);
         });
     }
 

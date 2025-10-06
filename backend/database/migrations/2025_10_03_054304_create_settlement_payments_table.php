@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('settlement_payments', function (Blueprint $table) {
             $table->id();
             $table->string('payment_number')->unique(); // Số phiếu chi
-            $table->foreignId('settlement_id')->constrained()->onDelete('cascade');
-            $table->foreignId('provider_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('settlement_id');
+            $table->unsignedBigInteger('provider_id')->nullable();
 
             // Thông tin thanh toán
             $table->decimal('amount', 15, 2); // Số tiền thanh toán
@@ -34,9 +34,9 @@ return new class extends Migration
             $table->enum('approval_status', ['pending', 'approved', 'rejected'])->default('pending');
 
             // Thông tin xử lý
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade'); // Người tạo phiếu chi
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null'); // Người phê duyệt
-            $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null'); // Người thực hiện thanh toán
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->unsignedBigInteger('processed_by')->nullable();
 
             $table->datetime('approved_at')->nullable();
             $table->text('approval_notes')->nullable(); // Ghi chú phê duyệt
@@ -44,7 +44,7 @@ return new class extends Migration
 
             // Ghi chú và tài liệu
             $table->text('notes')->nullable();
-            $table->json('attachments')->nullable(); // Chứng từ thanh toán, ảnh chụp
+            $table->text('attachment_urls')->nullable(); // Thay JSON bằng text
 
             // Xác nhận từ đối tác
             $table->boolean('provider_confirmed')->default(false);

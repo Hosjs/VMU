@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('transfer_number')->unique(); // Số phiếu chuyển kho
 
             // Kho gửi và kho nhận
-            $table->foreignId('from_warehouse_id')->constrained('warehouses')->onDelete('cascade');
-            $table->foreignId('to_warehouse_id')->constrained('warehouses')->onDelete('cascade');
+            $table->unsignedBigInteger('from_warehouse_id');
+            $table->unsignedBigInteger('to_warehouse_id');
 
             // Thông tin chuyển kho
             $table->enum('type', ['internal', 'inter_company']); // internal: trong cùng công ty, inter_company: giữa các đơn vị
@@ -25,7 +25,7 @@ return new class extends Migration
             // restock: bổ sung hàng, customer_request: theo yêu cầu khách, maintenance: bảo trì, return: trả hàng
 
             // Liên kết với đơn hàng (nếu chuyển kho cho đơn hàng cụ thể)
-            $table->foreignId('order_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('order_id')->nullable();
 
             // Trạng thái chuyển kho
             $table->enum('status', ['draft', 'pending', 'in_transit', 'received', 'completed', 'cancelled'])->default('draft');
@@ -49,19 +49,19 @@ return new class extends Migration
             $table->decimal('insurance_cost', 15, 2)->default(0); // Chi phí bảo hiểm
 
             // Người xử lý
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade'); // Người tạo phiếu
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null'); // Người duyệt
-            $table->foreignId('sent_by')->nullable()->constrained('users')->onDelete('set null'); // Người gửi
-            $table->foreignId('received_by')->nullable()->constrained('users')->onDelete('set null'); // Người nhận
+            $table->unsignedBigInteger('created_by'); // Người tạo phiếu
+            $table->unsignedBigInteger('approved_by')->nullable(); // Người duyệt
+            $table->unsignedBigInteger('sent_by')->nullable(); // Người gửi
+            $table->unsignedBigInteger('received_by')->nullable(); // Người nhận
 
             $table->datetime('approved_at')->nullable();
             $table->datetime('sent_at')->nullable();
             $table->datetime('received_at')->nullable();
 
-            // Ghi chú và tài liệu
+            // Ghi chú và tài liệu - thay JSON bằng text
             $table->text('notes')->nullable();
             $table->text('shipping_instructions')->nullable(); // Hướng dẫn vận chuyển
-            $table->json('attachments')->nullable(); // Phiếu xuất, phiếu nhập, ảnh
+            $table->text('attachment_urls')->nullable(); // URL phiếu xuất, phiếu nhập, ảnh, ngăn cách bởi |
 
             $table->timestamps();
 

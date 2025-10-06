@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('warehouse_stocks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('warehouse_id');
+            $table->unsignedBigInteger('product_id');
 
             // Số lượng tồn kho
             $table->integer('quantity')->default(0); // Số lượng hiện tại

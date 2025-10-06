@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('stock_transfer_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('stock_transfer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('stock_transfer_id');
+            $table->unsignedBigInteger('product_id');
 
             // Số lượng chuyển
             $table->integer('requested_quantity'); // Số lượng yêu cầu chuyển
@@ -45,13 +45,14 @@ return new class extends Migration
             $table->text('packing_notes')->nullable(); // Ghi chú đóng gói
 
             // Người xử lý
-            $table->foreignId('packed_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('received_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('packed_by')->nullable();
+            $table->unsignedBigInteger('received_by')->nullable();
             $table->datetime('packed_at')->nullable();
             $table->datetime('received_at')->nullable();
 
             $table->text('notes')->nullable();
-            $table->json('quality_check')->nullable(); // Kết quả kiểm tra chất lượng
+            $table->text('quality_check_result')->nullable(); // Kết quả kiểm tra: passed/failed
+            $table->text('quality_check_notes')->nullable(); // Ghi chú kiểm tra chất lượng
 
             $table->timestamps();
 

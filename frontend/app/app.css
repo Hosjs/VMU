@@ -1,287 +1,92 @@
 @import "tailwindcss";
 
-/* Mobile-First Responsive Utilities */
-@media (max-width: 768px) {
-  /* Ensure text is readable on mobile */
-  .mobile-text-scale {
-    font-size: clamp(0.875rem, 2.5vw, 1rem);
-    line-height: 1.5;
-  }
+@theme {
+  --color-primary: #1e40af;
+  --color-secondary: #7c3aed;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+}
 
-  /* Mobile carousel touch improvements */
-  .mobile-carousel-container {
-    touch-action: pan-x pan-y;
-    -webkit-overflow-scrolling: touch;
-  }
+* {
+  box-sizing: border-box;
+}
 
-  /* Mobile hero section improvements */
-  .mobile-hero-padding {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-  }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
 
-  /* Mobile button improvements */
-  .mobile-button {
-    min-height: 44px;
-    touch-action: manipulation;
-  }
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
 
-  /* Mobile card spacing */
-  .mobile-card-spacing {
-    margin-bottom: 1rem;
-    padding: 1rem;
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  /* Mobile Background Optimization - FIX CHÍNH */
-  .mobile-bg-size {
-    background-size: cover !important;
-    background-position: center center !important;
-    background-attachment: scroll !important;
-    background-repeat: no-repeat !important;
-  }
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
 
-  /* Mobile Section Background Fix - QUAN TRỌNG */
-  .section-bg-mobile {
-    background-size: 100% 100% !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-  }
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
 
-  /* Mobile Background Decorative Elements */
-  .mobile-bg-decorative {
-    transform: scale(0.6) !important;
-    opacity: 0.3 !important;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 
-  /* Mobile Gradient Background - FIX SECTIONS - GIẢM OPACITY */
-  .mobile-gradient-fix {
-    background-attachment: scroll !important;
-    background-size: 100% 100% !important;
-    background-repeat: no-repeat !important;
-    min-height: auto !important;
-    /* Giảm opacity để background chính hiện ra */
-    opacity: 0.6 !important;
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
-/* Desktop và Tablet */
-@media (min-width: 769px) {
-  .responsive-bg-hero {
-    background-size: cover;
-    background-position: center center;
-    background-attachment: fixed;
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
   }
-
-  .responsive-bg-section {
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* Mobile - Background được fix hoàn toàn */
-@media (max-width: 768px) {
-  .responsive-bg-hero {
-    background-size: cover;
-    background-position: center center;
-    background-attachment: scroll;
-    background-repeat: no-repeat;
-    min-height: 100vh;
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
   }
-
-  .responsive-bg-section {
-    background-size: 100% auto;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-attachment: scroll;
-  }
-
-  /* Fix cho tất cả sections có background */
-  section[class*="bg-gradient"] {
-    background-attachment: scroll !important;
-  }
-
-  /* Fix cho absolute positioned backgrounds - GIẢM OPACITY */
-  .absolute.inset-0[style*="background"] {
-    background-attachment: scroll !important;
-    background-size: 100% 100% !important;
-    opacity: 0.3 !important;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* Background Decorative Elements Responsive */
-.bg-decoration {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-@media (max-width: 768px) {
-  .bg-decoration {
-    transform: scale(0.7);
-    opacity: 0.4;
-  }
-}
-
-/* FIX BACKGROUND SECTIONS - GIẢM OPACITY ĐỂ BACKGROUND CHÍNH HIỆN RA */
-/* Section overlays giảm opacity */
-.section-overlay {
-  background: rgba(255, 255, 255, 0.3) !important;
-  backdrop-filter: blur(2px);
-}
-
-.section-overlay-blue {
-  background: rgba(59, 130, 246, 0.05) !important;
-  backdrop-filter: blur(1px);
-}
-
-.section-overlay-gradient {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(139, 92, 246, 0.03)) !important;
-  backdrop-filter: blur(1px);
-}
-
-/* Touch-friendly elements */
-.touch-friendly {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Smooth animations */
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out;
 }
 
-/* Loading spinner */
-.animate-spin {
-  animation: spin 1s linear infinite;
+.animate-slide-in-down {
+  animation: slideInDown 0.3s ease-out;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Enhanced card hover effects */
-.hover-card-lift:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-}
-
-/* Service List specific optimizations */
-.service-list-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-@media (max-width: 768px) {
-  .service-list-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-/* Button hover effects */
-.btn-primary {
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #3B82F6, #1E40AF);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #1E40AF, #1E3A8A);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgb(59 130 246 / 0.4);
-}
-
-/* Icon animations */
-.icon-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Professional shadows */
-.shadow-professional {
-  box-shadow: 0 10px 40px -10px rgb(0 0 0 / 0.1);
-}
-
-.shadow-professional-hover:hover {
-  box-shadow: 0 20px 60px -10px rgb(0 0 0 / 0.15);
-}
-
-/* Mobile navigation improvements */
-@media (max-width: 768px) {
-  .mobile-nav {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-}
-
-/* Button click prevention fix */
-button {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-  user-select: none;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
-}
-
-button:hover {
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-/* Ensure buttons are clickable */
-.service-card-button {
-  position: relative;
-  z-index: 10;
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-/* Optimize for different screen sizes */
-@media (max-width: 480px) {
-  .mobile-text-scale {
-    font-size: clamp(0.75rem, 2vw, 0.875rem);
-  }
-
-  .mobile-card-spacing {
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
-}

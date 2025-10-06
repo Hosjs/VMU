@@ -18,14 +18,14 @@ return new class extends Migration
             $table->text('message'); // Nội dung thông báo
 
             // Người nhận và người gửi
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade'); // Người nhận
-            $table->json('recipient_roles')->nullable(); // Vai trò người nhận (admin, manager, etc.)
-            $table->foreignId('sender_id')->nullable()->constrained('users')->onDelete('set null'); // Người gửi
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->text('recipient_roles')->nullable(); // Vai trò người nhận, ngăn cách bởi dấu phẩy: admin,manager
+            $table->unsignedBigInteger('sender_id')->nullable();
 
             // Dữ liệu liên quan
             $table->string('notifiable_type')->nullable(); // Model liên quan
-            $table->bigInteger('notifiable_id')->nullable(); // ID của model liên quan
-            $table->json('data')->nullable(); // Dữ liệu bổ sung
+            $table->bigInteger('notifiable_id')->nullable();
+            $table->text('additional_data')->nullable(); // Dữ liệu bổ sung dạng key=value|key=value
 
             // Trạng thái
             $table->boolean('is_read')->default(false);

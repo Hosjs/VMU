@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('warehouse_id');
+            $table->unsignedBigInteger('product_id');
 
             // Loại giao dịch
             $table->enum('type', ['in', 'out', 'transfer_in', 'transfer_out', 'adjustment', 'return']);
@@ -29,10 +29,10 @@ return new class extends Migration
             $table->integer('stock_after')->default(0); // Tồn kho sau khi thực hiện
 
             // Liên kết với các bảng khác
-            $table->foreignId('order_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('stock_transfer_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('direct_sale_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->unsignedBigInteger('stock_transfer_id')->nullable();
+            $table->unsignedBigInteger('invoice_id')->nullable();
+            $table->unsignedBigInteger('direct_sale_id')->nullable();
 
             // Thông tin giao dịch
             $table->string('reference_number')->nullable(); // Số chứng từ liên quan
@@ -50,11 +50,14 @@ return new class extends Migration
             $table->decimal('tax_rate', 5, 2)->default(0);
 
             // Người thực hiện
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('created_by');
             $table->datetime('movement_date'); // Thời gian thực hiện giao dịch
 
             $table->text('notes')->nullable();
-            $table->json('metadata')->nullable(); // Dữ liệu bổ sung (batch number, serial number, etc.)
+            // Thay JSON metadata bằng text
+            $table->text('batch_number')->nullable(); // Số lô
+            $table->text('serial_numbers')->nullable(); // Số serial, ngăn cách bởi dấu phẩy
+            $table->date('expiry_date')->nullable(); // Ngày hết hạn (nếu có)
 
             $table->timestamps();
 

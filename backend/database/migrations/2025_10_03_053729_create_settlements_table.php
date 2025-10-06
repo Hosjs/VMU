@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('settlements', function (Blueprint $table) {
             $table->id();
             $table->string('settlement_number')->unique(); // Số phiếu quyết toán
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('provider_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('invoice_id')->nullable();
+            $table->unsignedBigInteger('provider_id')->nullable();
 
             // Thông tin đơn vị nhận sửa chữa/cung cấp
             $table->string('provider_name'); // Tên đơn vị
@@ -62,21 +62,21 @@ return new class extends Migration
             $table->date('payment_date')->nullable();
 
             // Người xử lý
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('accountant_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->unsignedBigInteger('accountant_id')->nullable();
             $table->datetime('approved_at')->nullable();
 
-            // Ghi chú và tài liệu
+            // Ghi chú và tài liệu - thay JSON bằng text
             $table->text('notes')->nullable(); // Ghi chú nội bộ
             $table->text('provider_notes')->nullable(); // Ghi chú từ đối tác
-            $table->json('attachments')->nullable(); // Hóa đơn, chứng từ
-            $table->json('work_evidence')->nullable(); // Bằng chứng hoàn thành công việc
+            $table->text('attachment_urls')->nullable(); // URL hóa đơn, chứng từ, ngăn cách bởi |
+            $table->text('work_evidence_urls')->nullable(); // URL bằng chứng hoàn thành, ngăn cách bởi |
 
             $table->timestamps();
 
             $table->index(['order_id', 'status']);
-            $table->index(['provider_code', 'status']);
+            $table->index(['provider_id', 'status']);
             $table->index(['payment_status', 'payment_due_date']);
             $table->index(['type', 'status']);
             $table->index('settlement_number');

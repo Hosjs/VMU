@@ -30,9 +30,9 @@ return new class extends Migration
             $table->string('bank_account')->nullable();
             $table->string('bank_branch')->nullable();
 
-            // Loại dịch vụ cung cấp
-            $table->json('service_types'); // Các loại dịch vụ: repair, parts, both
-            $table->json('specializations')->nullable(); // Chuyên môn: engine, electrical, bodywork, etc.
+            // Loại dịch vụ cung cấp - thay JSON bằng text
+            $table->text('service_types')->nullable(); // Các loại dịch vụ, ngăn cách bởi dấu phẩy: repair,parts,maintenance
+            $table->text('specializations')->nullable(); // Chuyên môn, ngăn cách bởi dấu phẩy: engine,electrical,bodywork
 
             // Điều khoản hợp tác
             $table->decimal('commission_rate', 5, 2)->default(0); // % hoa hồng
@@ -52,10 +52,10 @@ return new class extends Migration
 
             // Ghi chú
             $table->text('notes')->nullable();
-            $table->json('attachments')->nullable(); // Hợp đồng, giấy phép
+            $table->text('attachment_urls')->nullable(); // URL hợp đồng, giấy phép, ngăn cách bởi |
 
             // Người quản lý
-            $table->foreignId('managed_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('managed_by')->nullable();
 
             $table->timestamps();
 

@@ -13,42 +13,42 @@ return new class extends Migration
     {
         Schema::create('warranties', function (Blueprint $table) {
             $table->id();
-            $table->string('warranty_number')->unique(); // Số bảo hành
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('order_item_id')->constrained()->onDelete('cascade');
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('vehicle_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('warranty_number')->unique();
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('order_item_id');
+            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('vehicle_id')->nullable();
 
             // Thông tin bảo hành
-            $table->enum('type', ['service', 'product']); // Loại bảo hành
-            $table->string('item_name'); // Tên dịch vụ/sản phẩm được bảo hành
-            $table->string('item_code'); // Mã dịch vụ/sản phẩm
+            $table->enum('type', ['service', 'product']);
+            $table->string('item_name');
+            $table->string('item_code');
 
             // Thời hạn bảo hành
-            $table->date('start_date'); // Ngày bắt đầu bảo hành
-            $table->date('end_date'); // Ngày hết hạn bảo hành
-            $table->integer('warranty_months'); // Số tháng bảo hành
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->integer('warranty_months');
 
-            // Điều kiện bảo hành
-            $table->text('warranty_terms')->nullable(); // Điều kiện bảo hành
-            $table->json('covered_issues')->nullable(); // Các vấn đề được bảo hành
-            $table->json('excluded_issues')->nullable(); // Các vấn đề không được bảo hành
+            // Điều kiện bảo hành - thay JSON bằng text
+            $table->text('warranty_terms')->nullable();
+            $table->text('covered_issues')->nullable(); // Danh sách vấn đề được bảo hành, ngăn cách bởi |
+            $table->text('excluded_issues')->nullable(); // Danh sách vấn đề không được bảo hành, ngăn cách bởi |
 
             // Trạng thái
             $table->enum('status', ['active', 'expired', 'used', 'cancelled'])->default('active');
 
             // Thông tin sử dụng bảo hành
-            $table->integer('usage_count')->default(0); // Số lần đã sử dụng
-            $table->integer('max_usage')->nullable(); // Số lần tối đa có thể sử dụng
+            $table->integer('usage_count')->default(0);
+            $table->integer('max_usage')->nullable();
 
-            $table->text('notes')->nullable(); // Ghi chú
-            $table->json('attachments')->nullable(); // File đính kèm (giấy tờ bảo hành)
+            $table->text('notes')->nullable();
+            $table->text('attachment_urls')->nullable(); // URL file đính kèm, ngăn cách bởi |
 
             $table->timestamps();
 
             $table->index(['customer_id', 'status']);
             $table->index(['vehicle_id', 'status']);
-            $table->index(['end_date', 'status']); // Để nhắc nhở sắp hết hạn
+            $table->index(['end_date', 'status']);
             $table->index('warranty_number');
         });
     }

@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->string('payment_number')->unique(); // Số phiếu thu
-            $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('invoice_id');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('customer_id');
 
             // Thông tin thanh toán
             $table->decimal('amount', 15, 2); // Số tiền thanh toán
@@ -39,20 +39,20 @@ return new class extends Migration
             $table->enum('verification_status', ['unverified', 'verified', 'disputed'])->default('unverified');
 
             // Thông tin xử lý
-            $table->foreignId('received_by')->constrained('users')->onDelete('cascade'); // Nhân viên thu tiền
-            $table->foreignId('verified_by')->nullable()->constrained('users')->onDelete('set null'); // Người xác nhận
+            $table->unsignedBigInteger('received_by'); // Nhân viên thu tiền
+            $table->unsignedBigInteger('verified_by')->nullable(); // Người xác nhận
             $table->datetime('verified_at')->nullable();
 
-            // Ghi chú và tài liệu
+            // Ghi chú và tài liệu - thay JSON bằng text
             $table->text('notes')->nullable(); // Ghi chú
             $table->text('customer_notes')->nullable(); // Ghi chú từ khách hàng
-            $table->json('attachments')->nullable(); // Biên lai, ảnh chụp
+            $table->text('attachment_urls')->nullable(); // URL biên lai, ảnh chụp, ngăn cách bởi |
 
             // Hoàn tiền (nếu có)
             $table->decimal('refund_amount', 15, 2)->default(0);
             $table->date('refund_date')->nullable();
             $table->text('refund_reason')->nullable();
-            $table->foreignId('refunded_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('refunded_by')->nullable();
 
             $table->timestamps();
 

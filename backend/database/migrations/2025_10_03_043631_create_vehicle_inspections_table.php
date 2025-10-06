@@ -13,54 +13,54 @@ return new class extends Migration
     {
         Schema::create('vehicle_inspections', function (Blueprint $table) {
             $table->id();
-            $table->string('inspection_number')->unique(); // Số phiếu kiểm tra
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('vehicle_id')->constrained()->onDelete('cascade');
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->string('inspection_number')->unique();
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('vehicle_id');
+            $table->unsignedBigInteger('customer_id');
 
             // Loại kiểm tra
             $table->enum('type', ['receive', 'return']); // Nhận xe hoặc trả xe
 
             // Thông tin nhân viên
-            $table->foreignId('inspector_id')->constrained('users')->onDelete('cascade'); // Nhân viên kiểm tra
-            $table->foreignId('customer_representative_id')->nullable()->constrained('users')->onDelete('set null'); // Đại diện khách hàng (nếu có)
+            $table->unsignedBigInteger('inspector_id');
+            $table->unsignedBigInteger('customer_representative_id')->nullable();
 
             // Thông tin xe tại thời điểm kiểm tra
-            $table->integer('mileage'); // Số km
-            $table->decimal('fuel_level', 3, 1)->nullable(); // Mức nhiên liệu (0-100%)
+            $table->integer('mileage');
+            $table->decimal('fuel_level', 3, 1)->nullable();
 
-            // Kiểm tra ngoại thất
-            $table->json('exterior_condition'); // Tình trạng ngoại thất
-            $table->json('exterior_damages')->nullable(); // Hư hỏng ngoại thất
+            // Kiểm tra ngoại thất - thay JSON bằng text đơn giản
+            $table->text('exterior_condition')->nullable(); // Format: part:condition|part:condition
+            $table->text('exterior_damages')->nullable(); // Format: part:damage_type:severity|...
 
             // Kiểm tra nội thất
-            $table->json('interior_condition'); // Tình trạng nội thất
-            $table->json('interior_damages')->nullable(); // Hư hỏng nội thất
+            $table->text('interior_condition')->nullable(); // Format: part:condition|part:condition
+            $table->text('interior_damages')->nullable(); // Format: part:damage_type:severity|...
 
             // Kiểm tra chức năng
-            $table->json('functional_checks'); // Kiểm tra các chức năng
-            $table->json('functional_issues')->nullable(); // Vấn đề chức năng
+            $table->text('functional_checks')->nullable(); // Format: function:status|function:status
+            $table->text('functional_issues')->nullable(); // Format: function:issue:severity|...
 
             // Đồ dùng cá nhân trong xe
-            $table->json('personal_items')->nullable(); // Đồ dùng cá nhân
-            $table->json('vehicle_accessories')->nullable(); // Phụ kiện xe
+            $table->text('personal_items')->nullable(); // Danh sách đồ vật, ngăn cách bởi |
+            $table->text('vehicle_accessories')->nullable(); // Danh sách phụ kiện:status, ngăn cách bởi |
 
             // Hình ảnh và video
-            $table->json('images')->nullable(); // Hình ảnh kiểm tra
-            $table->json('videos')->nullable(); // Video kiểm tra
+            $table->text('image_urls')->nullable(); // URL hình ảnh, ngăn cách bởi |
+            $table->text('video_urls')->nullable(); // URL video, ngăn cách bởi |
 
             // Chữ ký xác nhận
-            $table->text('inspector_notes')->nullable(); // Ghi chú của nhân viên kiểm tra
-            $table->text('customer_notes')->nullable(); // Ghi chú của khách hàng
-            $table->boolean('customer_acknowledged')->default(false); // Khách hàng đã xác nhận
+            $table->text('inspector_notes')->nullable();
+            $table->text('customer_notes')->nullable();
+            $table->boolean('customer_acknowledged')->default(false);
             $table->datetime('customer_acknowledged_at')->nullable();
-            $table->string('customer_signature')->nullable(); // Chữ ký điện tử khách hàng
-            $table->string('inspector_signature')->nullable(); // Chữ ký nhân viên
+            $table->string('customer_signature')->nullable();
+            $table->string('inspector_signature')->nullable();
 
             // Trạng thái
             $table->enum('status', ['draft', 'pending_approval', 'approved', 'disputed'])->default('draft');
 
-            $table->datetime('inspection_date'); // Thời gian kiểm tra
+            $table->datetime('inspection_date');
             $table->timestamps();
 
             $table->index(['vehicle_id', 'type']);

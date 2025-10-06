@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('code')->unique(); // Mã sản phẩm
             $table->string('sku')->unique(); // SKU
             $table->text('description')->nullable(); // Mô tả sản phẩm
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('primary_warehouse_id')->nullable()->constrained('warehouses')->onDelete('set null');
+            $table->unsignedBigInteger('category_id'); // Không dùng foreignId
+            $table->unsignedBigInteger('primary_warehouse_id')->nullable();
 
             // Giá báo cho khách hàng
             $table->decimal('quote_price', 15, 2)->default(0); // Giá báo cho khách
@@ -26,7 +26,11 @@ return new class extends Migration
             $table->decimal('settlement_price', 15, 2)->default(0); // Giá thanh toán cho đối tác
 
             $table->string('unit')->default('cái'); // Đơn vị tính
-            $table->json('images')->nullable(); // Hình ảnh sản phẩm
+
+            // Thay JSON images bằng cột đơn giản
+            $table->string('main_image')->nullable(); // Ảnh chính
+            $table->text('gallery_images')->nullable(); // Danh sách URL ảnh phụ, cách nhau bởi dấu |
+
             $table->text('specifications')->nullable(); // Thông số kỹ thuật
 
             // Hệ thống kho mới
@@ -34,7 +38,7 @@ return new class extends Migration
             $table->boolean('track_by_serial')->default(false);
             $table->boolean('track_by_batch')->default(false);
             $table->integer('shelf_life_days')->nullable();
-            $table->boolean('auto_transfer_enabled')->default(true);
+            $table->boolean('auto_transfer_enabled')->default(false);
             $table->integer('transfer_threshold')->default(5);
             $table->boolean('track_stock')->default(true); // Có theo dõi tồn kho không
 
@@ -52,7 +56,6 @@ return new class extends Migration
             $table->index(['category_id', 'is_active']);
             $table->index(['code', 'sku']);
             $table->index(['primary_warehouse_id', 'is_stockable']);
-            $table->index(['track_by_serial', 'track_by_batch']);
         });
     }
 

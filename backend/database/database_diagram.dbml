@@ -1,0 +1,1391 @@
+// Database Schema for Garage Management System
+// Generated from Laravel Migrations
+// Date: October 6, 2025
+
+Project GarageManagement {
+  database_type: 'SQLite'
+  Note: '''
+    # Hệ Thống Quản Lý Garage
+    - Quản lý người dùng và phân quyền
+    - Quản lý khách hàng và xe
+    - Quản lý dịch vụ và sản phẩm
+    - Quản lý đơn hàng và thanh toán
+    - Quản lý kho và chuyển kho
+    - Quản lý đối tác và quyết toán
+  '''
+}
+
+// =====================
+// USER & AUTHENTICATION
+// =====================
+
+Table users {
+  id bigint [pk, increment]
+  name varchar
+  email varchar [unique]
+  phone varchar [null, note: 'Số điện thoại']
+  avatar varchar [null, note: 'Ảnh đại diện']
+  birth_date date [null, note: 'Ngày sinh']
+  gender enum('male','female','other') [null]
+  address text [null, note: 'Địa chỉ']
+  employee_code varchar [unique, null, note: 'Mã nhân viên']
+  position varchar [null, note: 'Chức vụ']
+  department varchar [null, note: 'Phòng ban']
+  hire_date date [null, note: 'Ngày vào làm']
+  salary decimal(15,2) [null, note: 'Lương']
+  is_active boolean [default: true, note: 'Trạng thái hoạt động']
+  notes text [null, note: 'Ghi chú']
+  email_verified_at timestamp [null]
+  password varchar
+  remember_token varchar [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    phone
+    employee_code
+    (is_active, position)
+  }
+}
+
+Table password_reset_tokens {
+  email varchar [pk]
+  token varchar
+  created_at timestamp [null]
+}
+
+Table sessions {
+  id varchar [pk]
+  user_id bigint [null]
+  ip_address varchar(45) [null]
+  user_agent text [null]
+  payload longtext
+  last_activity int
+
+  indexes {
+    user_id
+    last_activity
+  }
+}
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar [unique, note: 'admin, manager, accountant, employee, mechanic']
+  display_name varchar [note: 'Quản trị viên, Quản lý, Kế toán, Nhân viên, Thợ máy']
+  description text [null, note: 'Mô tả quyền']
+  permissions json [null, note: 'Danh sách quyền chi tiết']
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user_roles {
+  id bigint [pk, increment]
+  user_id bigint [note: 'Mỗi user chỉ có 1 role duy nhất']
+  role_id bigint
+  assigned_at timestamp [default: `now()`]
+  assigned_by bigint [null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    user_id [unique]
+    (role_id, is_active)
+  }
+}
+
+// =====================
+// CATEGORIES & SERVICES
+// =====================
+
+Table categories {
+  id bigint [pk, increment]
+  name varchar [note: 'Tên danh mục']
+  slug varchar [unique, note: 'URL-friendly name']
+  description text [null, note: 'Mô tả danh mục']
+  type varchar [default: 'service', note: 'service hoặc product']
+  image varchar [null, note: 'Hình ảnh danh mục']
+  parent_id bigint [null, note: 'Danh mục cha']
+  sort_order int [default: 0, note: 'Thứ tự sắp xếp']
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (type, is_active)
+    (parent_id, sort_order)
+  }
+}
+
+Table services {
+  id bigint [pk, increment]
+  name varchar [note: 'Tên dịch vụ']
+  code varchar [unique, note: 'Mã dịch vụ']
+  description text [null, note: 'Mô tả dịch vụ']
+  category_id bigint
+  quote_price decimal(15,2) [default: 0, note: 'Giá báo cho khách']
+  settlement_price decimal(15,2) [default: 0, note: 'Giá thanh toán cho đối tác']
+  unit varchar [default: 'lần', note: 'Đơn vị tính']
+  estimated_time int [default: 60, note: 'Thời gian ước tính (phút)']
+  main_image varchar [null, note: 'Ảnh chính']
+  gallery_images text [null, note: 'URL ảnh phụ, ngăn cách bởi |']
+  notes text [null]
+  has_warranty boolean [default: false]
+  warranty_months int [default: 0]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (category_id, is_active)
+    code
+  }
+}
+
+Table products {
+  id bigint [pk, increment]
+  name varchar [note: 'Tên sản phẩm']
+  code varchar [unique, note: 'Mã sản phẩm']
+  sku varchar [unique, note: 'SKU']
+  description text [null]
+  category_id bigint
+  primary_warehouse_id bigint [null]
+  quote_price decimal(15,2) [default: 0, note: 'Giá báo cho khách']
+  settlement_price decimal(15,2) [default: 0, note: 'Giá thanh toán cho đối tác']
+  unit varchar [default: 'cái']
+  main_image varchar [null]
+  gallery_images text [null, note: 'URL ảnh, ngăn cách bởi |']
+  specifications text [null, note: 'Thông số kỹ thuật']
+  is_stockable boolean [default: true]
+  track_by_serial boolean [default: false]
+  track_by_batch boolean [default: false]
+  shelf_life_days int [null]
+  auto_transfer_enabled boolean [default: false]
+  transfer_threshold int [default: 5]
+  track_stock boolean [default: true]
+  has_warranty boolean [default: false]
+  warranty_months int [default: 0]
+  supplier_name varchar [null]
+  supplier_code varchar [null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (category_id, is_active)
+    (code, sku)
+    (primary_warehouse_id, is_stockable)
+  }
+}
+
+// =====================
+// VEHICLES
+// =====================
+
+Table vehicle_brands {
+  id bigint [pk, increment]
+  name varchar [unique, note: 'Tên hãng xe']
+  slug varchar [unique]
+  logo varchar [null]
+  country varchar [null, note: 'Quốc gia sản xuất']
+  description text [null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    is_active
+  }
+}
+
+Table vehicle_models {
+  id bigint [pk, increment]
+  name varchar [note: 'Tên dòng xe']
+  slug varchar
+  brand_id bigint
+  type varchar [null, note: 'sedan, suv, hatchback, etc.']
+  year_start int [null, note: 'Năm bắt đầu sản xuất']
+  year_end int [null, note: 'Năm kết thúc sản xuất']
+  engine_type varchar [null]
+  fuel_type varchar [null]
+  image_urls text [null]
+  description text [null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (brand_id, is_active)
+    (type, is_active)
+    (brand_id, slug) [unique]
+  }
+}
+
+Table customers {
+  id bigint [pk, increment]
+  name varchar [note: 'Tên khách hàng']
+  phone varchar [unique, note: 'Số điện thoại (bắt buộc)']
+  email varchar [null]
+  address text [null]
+  birth_date date [null]
+  gender enum('male','female','other') [null]
+  user_id bigint [null, note: 'Liên kết với user account']
+  insurance_company varchar [null]
+  insurance_number varchar [null]
+  insurance_expiry date [null]
+  notes text [null]
+  preferences text [null, note: 'key=value|key=value']
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (phone, is_active)
+    email
+    insurance_expiry
+  }
+}
+
+Table vehicles {
+  id bigint [pk, increment]
+  customer_id bigint
+  brand_id bigint
+  model_id bigint
+  license_plate varchar [unique, note: 'Biển số xe']
+  vin varchar [unique, null, note: 'Số khung']
+  engine_number varchar [null, note: 'Số máy']
+  year int [null, note: 'Năm sản xuất']
+  color varchar [null]
+  mileage int [default: 0, note: 'Số km đã đi']
+  insurance_company varchar [null]
+  insurance_number varchar [null]
+  insurance_expiry date [null]
+  registration_number varchar [null]
+  registration_expiry date [null, note: 'Hạn đăng kiểm']
+  last_maintenance date [null]
+  next_maintenance date [null]
+  maintenance_interval int [default: 10000, note: 'Chu kỳ bảo dưỡng (km)']
+  image_urls text [null]
+  notes text [null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (customer_id, is_active)
+    (brand_id, model_id)
+    license_plate
+    insurance_expiry
+    registration_expiry
+    next_maintenance
+  }
+}
+
+// =====================
+// SERVICE REQUESTS
+// =====================
+
+Table service_requests {
+  id bigint [pk, increment]
+  code varchar [unique, note: 'Mã yêu cầu dịch vụ']
+  customer_name varchar
+  customer_phone varchar
+  customer_email varchar [null]
+  customer_address text [null]
+  customer_id bigint [null, note: 'Liên kết khách hàng đã đăng ký']
+  vehicle_brand varchar [note: 'Hãng xe']
+  vehicle_model varchar [note: 'Dòng xe']
+  vehicle_name varchar [null]
+  license_plate varchar [null]
+  vehicle_year int [null]
+  description text [null]
+  preferred_date datetime [null]
+  status enum('pending','contacted','scheduled','in_progress','completed','cancelled') [default: 'pending']
+  assigned_to bigint [null]
+  admin_handler bigint [null]
+  selected_provider_id bigint [null, note: 'Gara liên kết được chọn']
+  contacted_at datetime [null]
+  scheduled_at datetime [null]
+  admin_notes text [null]
+  attachment_urls text [null, note: 'URL file, ngăn cách bởi |']
+  priority enum('low','normal','high','urgent') [default: 'normal']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (status, priority)
+    (customer_phone, status)
+    (assigned_to, status)
+    preferred_date
+  }
+}
+
+Table service_request_services {
+  id bigint [pk, increment]
+  service_request_id bigint
+  service_id bigint
+  description text [null, note: 'Mô tả chi tiết cho dịch vụ này']
+  priority enum('low','normal','high','urgent') [default: 'normal']
+  quantity int [default: 1]
+  estimated_price decimal(15,2) [null]
+  notes text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (service_request_id, service_id) [unique]
+    service_request_id
+    service_id
+    priority
+  }
+}
+
+// =====================
+// ORDERS & ITEMS
+// =====================
+
+Table orders {
+  id bigint [pk, increment]
+  order_number varchar [unique]
+  customer_id bigint
+  vehicle_id bigint [null]
+  service_request_id bigint [null]
+  type enum('service','product','mixed')
+  status enum('draft','quoted','confirmed','in_progress','completed','delivered','paid','cancelled') [default: 'draft']
+  quote_total decimal(15,2) [default: 0, note: 'Tổng báo giá cho khách']
+  settlement_total decimal(15,2) [default: 0, note: 'Tổng thanh toán cho đối tác']
+  discount decimal(15,2) [default: 0]
+  tax_amount decimal(15,2) [default: 0]
+  final_amount decimal(15,2) [default: 0]
+  payment_status enum('pending','partial','paid','refunded') [default: 'pending']
+  payment_method enum('cash','transfer','card','installment') [null]
+  paid_amount decimal(15,2) [default: 0]
+  salesperson_id bigint [null]
+  technician_id bigint [null, note: 'Kỹ thuật viên chính Thắng Trường']
+  accountant_id bigint [null]
+  partner_provider_id bigint [null, note: 'Gara liên kết nhận sửa']
+  partner_coordinator_id bigint [null, note: 'Người điều phối bên gara liên kết']
+  partner_coordinator_name varchar [null]
+  partner_coordinator_phone varchar [null]
+  quote_date datetime [null]
+  confirmed_date datetime [null]
+  start_date datetime [null]
+  completion_date datetime [null]
+  delivery_date datetime [null]
+  partner_handover_date datetime [null, note: 'Ngày bàn giao cho gara liên kết']
+  partner_return_date datetime [null, note: 'Ngày nhận lại từ gara liên kết']
+  notes text [null]
+  attachment_urls text [null, note: 'URL|URL|URL']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (customer_id, status)
+    (order_number, status)
+    (type, status)
+    payment_status
+    (salesperson_id, status)
+    (partner_provider_id, status)
+  }
+}
+
+Table order_items {
+  id bigint [pk, increment]
+  order_id bigint
+  item_type enum('service','product')
+  service_id bigint [null]
+  product_id bigint [null]
+  item_name varchar
+  item_code varchar
+  item_description text [null]
+  quantity decimal(8,2) [default: 1]
+  unit varchar [default: 'lần']
+  quote_unit_price decimal(15,2) [note: 'Giá báo cho khách']
+  quote_total_price decimal(15,2)
+  settlement_unit_price decimal(15,2) [note: 'Giá quyết toán với đối tác']
+  settlement_total_price decimal(15,2)
+  discount_amount decimal(15,2) [default: 0]
+  discount_percent decimal(5,2) [default: 0]
+  status enum('pending','in_progress','completed','cancelled') [default: 'pending']
+  assigned_technician bigint [null]
+  partner_technician_id bigint [null, note: 'Kỹ thuật viên gara liên kết']
+  partner_technician_name varchar [null]
+  start_time datetime [null]
+  completion_time datetime [null]
+  actual_duration int [null]
+  has_warranty boolean [default: false]
+  warranty_months int [default: 0]
+  warranty_start_date date [null]
+  warranty_end_date date [null]
+  notes text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (order_id, item_type)
+    (service_id, status)
+    (product_id, status)
+    assigned_technician
+    partner_technician_id
+    warranty_end_date
+  }
+}
+
+// =====================
+// INSPECTIONS & WARRANTIES
+// =====================
+
+Table vehicle_inspections {
+  id bigint [pk, increment]
+  inspection_number varchar [unique]
+  order_id bigint
+  vehicle_id bigint
+  customer_id bigint
+  type enum('receive','return') [note: 'Nhận xe hoặc trả xe']
+  inspector_id bigint
+  customer_representative_id bigint [null]
+  mileage int
+  fuel_level decimal(3,1) [null]
+  exterior_condition text [null, note: 'part:condition|part:condition']
+  exterior_damages text [null, note: 'part:damage_type:severity|...']
+  interior_condition text [null]
+  interior_damages text [null]
+  functional_checks text [null, note: 'function:status|function:status']
+  functional_issues text [null]
+  personal_items text [null, note: 'Danh sách đồ vật, ngăn cách bởi |']
+  vehicle_accessories text [null, note: 'phụ kiện:status, ngăn cách bởi |']
+  image_urls text [null]
+  video_urls text [null]
+  inspector_notes text [null]
+  customer_notes text [null]
+  customer_acknowledged boolean [default: false]
+  customer_acknowledged_at datetime [null]
+  customer_signature varchar [null]
+  inspector_signature varchar [null]
+  status enum('draft','pending_approval','approved','disputed') [default: 'draft']
+  inspection_date datetime
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (vehicle_id, type)
+    (order_id, type)
+    (inspector_id, inspection_date)
+    (status, customer_acknowledged)
+  }
+}
+
+Table warranties {
+  id bigint [pk, increment]
+  warranty_number varchar [unique]
+  order_id bigint
+  order_item_id bigint
+  customer_id bigint
+  vehicle_id bigint [null]
+  type enum('service','product')
+  item_name varchar
+  item_code varchar
+  start_date date
+  end_date date
+  warranty_months int
+  warranty_terms text [null]
+  covered_issues text [null, note: 'Danh sách vấn đề, ngăn cách bởi |']
+  excluded_issues text [null]
+  status enum('active','expired','used','cancelled') [default: 'active']
+  usage_count int [default: 0]
+  max_usage int [null]
+  notes text [null]
+  attachment_urls text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (customer_id, status)
+    (vehicle_id, status)
+    (end_date, status)
+    warranty_number
+  }
+}
+
+// =====================
+// INVOICES & PAYMENTS
+// =====================
+
+Table invoices {
+  id bigint [pk, increment]
+  invoice_number varchar [unique]
+  order_id bigint
+  customer_id bigint
+  vehicle_id bigint [null]
+  issuer enum('thang_truong','viet_nga') [default: 'thang_truong', note: 'Ai xuất hóa đơn']
+  admin_only_access boolean [default: false, note: 'Chỉ admin được xem/sửa']
+  issuing_warehouse_id bigint [null]
+  invoice_date date
+  due_date date [null]
+  customer_name varchar
+  customer_phone varchar
+  customer_email varchar [null]
+  customer_address text [null]
+  customer_tax_code varchar [null]
+  vehicle_info varchar [null]
+  subtotal decimal(15,2) [note: 'Tổng tiền trước thuế và giảm giá']
+  discount_amount decimal(15,2) [default: 0]
+  discount_percent decimal(5,2) [default: 0]
+  tax_amount decimal(15,2) [default: 0]
+  tax_percent decimal(5,2) [default: 10]
+  total_amount decimal(15,2)
+  actual_cost decimal(15,2) [null, note: 'CHỈ ADMIN XEM']
+  actual_profit decimal(15,2) [null, note: 'CHỈ ADMIN XEM']
+  partner_settlement_cost decimal(15,2) [default: 0]
+  status enum('draft','sent','viewed','paid','overdue','cancelled') [default: 'draft']
+  paid_amount decimal(15,2) [default: 0]
+  remaining_amount decimal(15,2) [default: 0]
+  payment_status enum('unpaid','partial','paid','overpaid') [default: 'unpaid']
+  created_by bigint
+  approved_by bigint [null]
+  approved_at datetime [null]
+  notes text [null]
+  customer_notes text [null]
+  terms_conditions text [null]
+  attachment_urls text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (customer_id, status)
+    (invoice_date, status)
+    (due_date, payment_status)
+    invoice_number
+    (issuer, admin_only_access)
+    (issuing_warehouse_id, status)
+  }
+}
+
+Table payments {
+  id bigint [pk, increment]
+  payment_number varchar [unique]
+  invoice_id bigint
+  order_id bigint
+  customer_id bigint
+  amount decimal(15,2)
+  payment_method enum('cash','bank_transfer','credit_card','debit_card','digital_wallet','installment','check')
+  payment_date date
+  received_at datetime [null]
+  reference_number varchar [null]
+  bank_name varchar [null]
+  account_number varchar [null]
+  card_last_digits varchar [null]
+  wallet_type varchar [null]
+  status enum('pending','confirmed','failed','refunded','cancelled') [default: 'pending']
+  verification_status enum('unverified','verified','disputed') [default: 'unverified']
+  received_by bigint
+  verified_by bigint [null]
+  verified_at datetime [null]
+  notes text [null]
+  customer_notes text [null]
+  attachment_urls text [null]
+  refund_amount decimal(15,2) [default: 0]
+  refund_date date [null]
+  refund_reason text [null]
+  refunded_by bigint [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (invoice_id, status)
+    (customer_id, payment_date)
+    (payment_method, status)
+    payment_number
+    (received_by, payment_date)
+  }
+}
+
+// =====================
+// PROVIDERS & SETTLEMENTS
+// =====================
+
+Table providers {
+  id bigint [pk, increment]
+  code varchar [unique, note: 'Mã đối tác']
+  name varchar [note: 'Tên đối tác']
+  business_name varchar [null]
+  tax_code varchar [null]
+  contact_person varchar [null]
+  phone varchar [null]
+  email varchar [null]
+  address text [null]
+  website varchar [null]
+  bank_name varchar [null]
+  bank_account varchar [null]
+  bank_branch varchar [null]
+  service_types text [null, note: 'repair,parts,maintenance']
+  specializations text [null, note: 'engine,electrical,bodywork']
+  commission_rate decimal(5,2) [default: 0]
+  payment_terms int [default: 30, note: 'Thời hạn thanh toán (ngày)']
+  credit_limit decimal(15,2) [default: 0]
+  payment_method enum('cash','transfer','check') [default: 'transfer']
+  rating decimal(3,2) [default: 0]
+  completed_orders int [default: 0]
+  average_completion_time decimal(8,2) [default: 0, note: 'Thời gian hoàn thành TB (giờ)']
+  status enum('active','inactive','suspended','blacklisted') [default: 'active']
+  contract_start date [null]
+  contract_end date [null]
+  notes text [null]
+  attachment_urls text [null]
+  managed_by bigint [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (code, status)
+    (status, rating)
+    tax_code
+    managed_by
+  }
+}
+
+Table settlements {
+  id bigint [pk, increment]
+  settlement_number varchar [unique]
+  order_id bigint
+  invoice_id bigint [null]
+  provider_id bigint [null]
+  provider_name varchar
+  provider_code varchar [null]
+  provider_contact varchar [null]
+  provider_phone varchar [null]
+  provider_email varchar [null]
+  provider_address text [null]
+  provider_tax_code varchar [null]
+  provider_bank_account varchar [null]
+  type enum('service','product','mixed')
+  work_description text [null]
+  work_start_date date [null]
+  work_completion_date date [null]
+  settlement_subtotal decimal(15,2)
+  settlement_tax_amount decimal(15,2) [default: 0]
+  settlement_tax_percent decimal(5,2) [default: 10]
+  settlement_total decimal(15,2)
+  commission_amount decimal(15,2) [default: 0]
+  commission_percent decimal(5,2) [default: 0]
+  deduction_amount decimal(15,2) [default: 0]
+  final_payment decimal(15,2)
+  customer_quoted_total decimal(15,2) [null]
+  profit_margin decimal(15,2) [null]
+  profit_percent decimal(5,2) [null]
+  status enum('draft','pending_approval','approved','paid','completed','disputed') [default: 'draft']
+  payment_status enum('unpaid','partial','paid') [default: 'unpaid']
+  paid_amount decimal(15,2) [default: 0]
+  payment_method enum('cash','transfer','check') [null]
+  payment_due_date date [null]
+  payment_date date [null]
+  created_by bigint
+  approved_by bigint [null]
+  accountant_id bigint [null]
+  approved_at datetime [null]
+  notes text [null]
+  provider_notes text [null]
+  attachment_urls text [null]
+  work_evidence_urls text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (order_id, status)
+    (provider_id, status)
+    (payment_status, payment_due_date)
+    (type, status)
+    settlement_number
+  }
+}
+
+Table settlement_payments {
+  id bigint [pk, increment]
+  payment_number varchar [unique]
+  settlement_id bigint
+  provider_id bigint [null]
+  amount decimal(15,2)
+  payment_method enum('cash','bank_transfer','check')
+  payment_date date
+  processed_at datetime [null]
+  reference_number varchar [null]
+  bank_name varchar [null]
+  account_number varchar [null]
+  check_number varchar [null]
+  status enum('pending','processing','completed','failed','cancelled') [default: 'pending']
+  approval_status enum('pending','approved','rejected') [default: 'pending']
+  created_by bigint
+  approved_by bigint [null]
+  processed_by bigint [null]
+  approved_at datetime [null]
+  approval_notes text [null]
+  rejection_reason text [null]
+  notes text [null]
+  attachment_urls text [null]
+  provider_confirmed boolean [default: false]
+  provider_confirmed_at datetime [null]
+  provider_notes text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (settlement_id, status)
+    (provider_id, payment_date)
+    (payment_method, status)
+    payment_number
+    (approval_status, created_at)
+  }
+}
+
+Table partner_vehicle_handovers {
+  id bigint [pk, increment]
+  handover_number varchar [unique, note: 'BG-YYYYMMDD-001']
+  order_id bigint
+  vehicle_id bigint
+  provider_id bigint
+  handover_type enum('delivery','return') [note: 'delivery: giao xe, return: nhận lại xe']
+  delivered_by bigint [null, note: 'Nhân viên Thắng Trường giao xe']
+  delivered_by_name varchar [null]
+  delivered_by_phone varchar [null]
+  received_by_technician bigint [null]
+  received_by_name varchar [note: 'Tên kỹ thuật viên nhận xe']
+  received_by_phone varchar
+  received_by_position varchar [null, note: 'technician, foreman, manager']
+  technician_license_number varchar [null]
+  mileage int
+  fuel_level decimal(3,1) [null]
+  vehicle_condition text [null, note: 'good|fair|poor']
+  included_items text [null, note: 'Đồ dùng kèm theo, ngăn cách bởi |']
+  vehicle_documents text [null, note: 'registration|insurance']
+  work_description text [note: 'Mô tả công việc cần làm']
+  special_instructions text [null]
+  expected_completion datetime [null]
+  handover_image_urls text [null, note: 'URL ảnh xe, ngăn cách bởi |']
+  damage_image_urls text [null]
+  delivered_by_signature varchar [null]
+  received_by_signature varchar [null]
+  is_acknowledged boolean [default: false]
+  acknowledged_at datetime [null]
+  delivery_notes text [null]
+  receive_notes text [null]
+  admin_notes text [null]
+  status enum('draft','pending','confirmed','in_progress','completed','disputed') [default: 'draft']
+  handover_date datetime
+  planned_return_date datetime [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (order_id, handover_type)
+    (provider_id, status)
+    (vehicle_id, handover_date)
+    (delivered_by, handover_date)
+    (received_by_technician, status)
+    (handover_date, status)
+  }
+}
+
+// =====================
+// WAREHOUSE & INVENTORY
+// =====================
+
+Table warehouses {
+  id bigint [pk, increment]
+  code varchar [unique, note: 'VN (Việt Nga), GT1, GT2, etc.']
+  name varchar
+  type enum('main','partner') [note: 'main: Việt Nga, partner: gara liên kết']
+  address text
+  ward varchar [null]
+  district varchar
+  province varchar
+  postal_code varchar [null]
+  contact_person varchar [null]
+  phone varchar [null]
+  email varchar [null]
+  provider_id bigint [null]
+  is_main_warehouse boolean [default: false, note: 'Việt Nga = true']
+  can_receive_transfers boolean [default: true]
+  can_send_transfers boolean [default: true]
+  priority_order int [default: 1]
+  tax_exempt_transfers boolean [default: true]
+  tax_registration varchar [null]
+  is_active boolean [default: true]
+  last_inventory_date datetime [null]
+  manager_id bigint [null]
+  notes text [null]
+  operating_hours text [null, note: 'Mon:08:00-17:00|Tue:08:00-17:00']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (type, is_active)
+    (is_main_warehouse, is_active)
+    provider_id
+  }
+}
+
+Table warehouse_stocks {
+  id bigint [pk, increment]
+  warehouse_id bigint
+  product_id bigint
+  quantity int [default: 0]
+  reserved_quantity int [default: 0]
+  available_quantity int [default: 0]
+  unit_cost decimal(15,2) [default: 0]
+  total_value decimal(15,2) [default: 0]
+  min_stock int [default: 0]
+  max_stock int [default: 0]
+  reorder_point int [default: 0]
+  economic_order_quantity int [default: 0]
+  location_code varchar [null, note: 'A-01-01']
+  shelf varchar [null]
+  row varchar [null]
+  position varchar [null]
+  last_movement_date datetime [null]
+  last_stocktake_date datetime [null]
+  movement_count int [default: 0]
+  is_locked boolean [default: false]
+  is_damaged boolean [default: false]
+  is_expired boolean [default: false]
+  expiry_date date [null]
+  notes text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (warehouse_id, product_id) [unique]
+    (warehouse_id, available_quantity)
+    (product_id, quantity)
+    (min_stock, quantity)
+    location_code
+  }
+}
+
+Table stock_transfers {
+  id bigint [pk, increment]
+  transfer_number varchar [unique]
+  from_warehouse_id bigint
+  to_warehouse_id bigint
+  type enum('internal','inter_company')
+  reason enum('restock','customer_request','maintenance','return','adjustment')
+  order_id bigint [null]
+  status enum('draft','pending','in_transit','received','completed','cancelled') [default: 'draft']
+  transfer_date date
+  expected_arrival date [null]
+  actual_arrival date [null]
+  transport_method varchar [null]
+  tracking_number varchar [null]
+  is_tax_exempt boolean [default: true, note: 'Miễn thuế (chuyển kho nội bộ)']
+  tax_exemption_code varchar [null]
+  tax_amount decimal(15,2) [default: 0]
+  tax_notes text [null]
+  total_cost decimal(15,2) [default: 0]
+  shipping_cost decimal(15,2) [default: 0]
+  insurance_cost decimal(15,2) [default: 0]
+  created_by bigint
+  approved_by bigint [null]
+  sent_by bigint [null]
+  received_by bigint [null]
+  approved_at datetime [null]
+  sent_at datetime [null]
+  received_at datetime [null]
+  notes text [null]
+  shipping_instructions text [null]
+  attachment_urls text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (from_warehouse_id, status)
+    (to_warehouse_id, status)
+    (transfer_date, status)
+    order_id
+    (is_tax_exempt, type)
+  }
+}
+
+Table stock_transfer_items {
+  id bigint [pk, increment]
+  stock_transfer_id bigint
+  product_id bigint
+  requested_quantity int
+  sent_quantity int [default: 0]
+  received_quantity int [default: 0]
+  damaged_quantity int [default: 0]
+  unit_cost decimal(15,2)
+  total_cost decimal(15,2)
+  product_name varchar
+  product_code varchar
+  product_sku varchar
+  from_location varchar [null]
+  to_location varchar [null]
+  status enum('pending','packed','shipped','received','damaged','lost') [default: 'pending']
+  batch_number varchar [null]
+  serial_number varchar [null]
+  expiry_date date [null]
+  packing_notes text [null]
+  packed_by bigint [null]
+  received_by bigint [null]
+  packed_at datetime [null]
+  received_at datetime [null]
+  notes text [null]
+  quality_check_result text [null]
+  quality_check_notes text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (stock_transfer_id, status)
+    (product_id, status)
+    batch_number
+    serial_number
+  }
+}
+
+Table stock_movements {
+  id bigint [pk, increment]
+  warehouse_id bigint
+  product_id bigint
+  type enum('in','out','transfer_in','transfer_out','adjustment','return')
+  quantity int [note: 'Âm nếu xuất, dương nếu nhập']
+  unit_cost decimal(15,2) [default: 0]
+  total_cost decimal(15,2) [default: 0]
+  stock_after int [default: 0]
+  order_id bigint [null]
+  stock_transfer_id bigint [null]
+  invoice_id bigint [null]
+  direct_sale_id bigint [null]
+  reference_number varchar [null]
+  movement_reason enum('sale','purchase','transfer','return','damage','expired','theft','adjustment','direct_sale','service_use')
+  is_taxable boolean [default: true]
+  tax_amount decimal(15,2) [default: 0]
+  tax_rate decimal(5,2) [default: 0]
+  created_by bigint
+  movement_date datetime
+  notes text [null]
+  batch_number text [null]
+  serial_numbers text [null, note: 'Ngăn cách bởi dấu phẩy']
+  expiry_date date [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (warehouse_id, product_id, movement_date)
+    (type, movement_reason)
+    order_id
+    stock_transfer_id
+    (movement_date, created_by)
+  }
+}
+
+Table direct_sales {
+  id bigint [pk, increment]
+  sale_number varchar [unique]
+  warehouse_id bigint [note: 'Phải là kho Việt Nga']
+  customer_id bigint [null]
+  customer_name varchar
+  customer_phone varchar [null]
+  customer_id_number varchar [null]
+  customer_address text [null]
+  sale_type enum('retail','wholesale','employee','internal')
+  subtotal decimal(15,2)
+  discount_amount decimal(15,2) [default: 0]
+  discount_percent decimal(5,2) [default: 0]
+  tax_amount decimal(15,2) [default: 0]
+  total_amount decimal(15,2)
+  total_cost decimal(15,2) [note: 'THÔNG TIN NHẠY CẢM']
+  gross_profit decimal(15,2) [note: 'THÔNG TIN NHẠY CẢM']
+  profit_margin decimal(5,2) [note: 'THÔNG TIN NHẠY CẢM']
+  payment_method enum('cash','transfer','card','credit') [default: 'cash']
+  payment_status enum('pending','paid','partial','credit') [default: 'pending']
+  paid_amount decimal(15,2) [default: 0]
+  payment_due_date date [null]
+  visibility_level enum('admin_only','manager','accountant') [note: 'Quyền truy cập']
+  is_confidential boolean [default: true]
+  approval_status enum('draft','pending','approved','rejected') [default: 'draft']
+  approved_by bigint [null]
+  approved_at datetime [null]
+  approval_notes text [null]
+  salesperson_id bigint
+  created_by bigint
+  sale_date datetime
+  delivery_date datetime [null]
+  notes text [null]
+  customer_notes text [null]
+  internal_memo text [null, note: 'Chỉ admin']
+  attachment_urls text [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (warehouse_id, sale_date)
+    (visibility_level, is_confidential)
+    (salesperson_id, sale_date)
+    (customer_id, sale_date)
+  }
+}
+
+Table direct_sale_items {
+  id bigint [pk, increment]
+  direct_sale_id bigint
+  product_id bigint
+  product_name varchar
+  product_code varchar
+  product_sku varchar
+  product_description text [null]
+  quantity int
+  unit varchar
+  unit_price decimal(15,2) [note: 'NHẠY CẢM']
+  line_total decimal(15,2) [note: 'NHẠY CẢM']
+  discount_amount decimal(15,2) [default: 0]
+  unit_cost decimal(15,2) [note: 'CHỈ ADMIN XEM']
+  total_cost decimal(15,2) [note: 'CHỈ ADMIN XEM']
+  line_profit decimal(15,2) [note: 'CHỈ ADMIN XEM']
+  profit_margin decimal(5,2) [note: 'CHỈ ADMIN XEM']
+  tax_rate decimal(5,2) [default: 10]
+  tax_amount decimal(15,2) [default: 0]
+  is_tax_exempt boolean [default: false]
+  warehouse_location varchar [null]
+  batch_number varchar [null]
+  serial_number varchar [null]
+  expiry_date date [null]
+  has_warranty boolean [default: false]
+  warranty_months int [default: 0]
+  warranty_start_date date [null]
+  warranty_end_date date [null]
+  status enum('pending','picked','packed','delivered','returned') [default: 'pending']
+  picked_by bigint [null]
+  picked_at datetime [null]
+  notes text [null]
+  customer_notes text [null]
+  stock_movement_id bigint [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (direct_sale_id, status)
+    (product_id, picked_at)
+    batch_number
+    serial_number
+    warranty_end_date
+  }
+}
+
+// =====================
+// NOTIFICATIONS
+// =====================
+
+Table notifications {
+  id bigint [pk, increment]
+  type varchar [note: 'service_request, reminder, warranty_expiry, etc.']
+  title varchar
+  message text
+  user_id bigint [null]
+  recipient_roles text [null, note: 'admin,manager']
+  sender_id bigint [null]
+  notifiable_type varchar [null]
+  notifiable_id bigint [null]
+  additional_data text [null, note: 'key=value|key=value']
+  is_read boolean [default: false]
+  read_at datetime [null]
+  priority enum('low','normal','high','urgent') [default: 'normal']
+  is_recurring boolean [default: false]
+  scheduled_at datetime [null]
+  expires_at datetime [null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (user_id, is_read)
+    (type, priority)
+    (notifiable_type, notifiable_id)
+    scheduled_at
+    (is_read, created_at)
+  }
+}
+
+// =====================
+// CACHE & JOBS
+// =====================
+
+Table cache {
+  key varchar [pk]
+  value text
+  expiration int
+}
+
+Table cache_locks {
+  key varchar [pk]
+  owner varchar
+  expiration int
+}
+
+Table jobs {
+  id bigint [pk, increment]
+  queue varchar
+  payload longtext
+  attempts tinyint
+  reserved_at int [null]
+  available_at int
+  created_at int
+
+  indexes {
+    (queue, reserved_at)
+  }
+}
+
+Table job_batches {
+  id varchar [pk]
+  name varchar
+  total_jobs int
+  pending_jobs int
+  failed_jobs int
+  failed_job_ids longtext
+  options text [null]
+  cancelled_at int [null]
+  created_at int
+  finished_at int [null]
+}
+
+Table failed_jobs {
+  id bigint [pk, increment]
+  uuid varchar [unique]
+  connection text
+  queue text
+  payload longtext
+  exception longtext
+  failed_at timestamp [default: `now()`]
+}
+
+// =====================
+// OAUTH (Laravel Passport)
+// =====================
+
+Table oauth_auth_codes {
+  id varchar(100) [pk]
+  user_id bigint
+  client_id bigint
+  scopes text [null]
+  revoked boolean
+  expires_at datetime [null]
+}
+
+Table oauth_access_tokens {
+  id varchar(100) [pk]
+  user_id bigint [null]
+  client_id bigint
+  name varchar [null]
+  scopes text [null]
+  revoked boolean
+  created_at timestamp [null]
+  updated_at timestamp [null]
+  expires_at datetime [null]
+
+  indexes {
+    user_id
+  }
+}
+
+Table oauth_refresh_tokens {
+  id varchar(100) [pk]
+  access_token_id varchar(100)
+  revoked boolean
+  expires_at datetime [null]
+
+  indexes {
+    access_token_id
+  }
+}
+
+Table oauth_clients {
+  id bigint [pk, increment]
+  user_id bigint [null]
+  name varchar
+  secret varchar(100) [null]
+  provider varchar [null]
+  redirect text
+  personal_access_client boolean
+  password_client boolean
+  revoked boolean
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  indexes {
+    user_id
+  }
+}
+
+Table oauth_personal_access_clients {
+  id bigint [pk, increment]
+  client_id bigint
+  created_at timestamp [null]
+  updated_at timestamp [null]
+}
+
+Table oauth_device_codes {
+  id bigint [pk, increment]
+  user_code varchar
+  device_code varchar
+  user_id bigint [null]
+  client_id bigint
+  scopes text [null]
+  expires_at datetime
+  created_at timestamp [null]
+  updated_at timestamp [null]
+  last_used_at datetime [null]
+
+  indexes {
+    user_code
+    device_code
+  }
+}
+
+// =====================
+// RELATIONSHIPS
+// =====================
+
+// Users & Roles
+Ref: user_roles.user_id > users.id
+Ref: user_roles.role_id > roles.id
+Ref: user_roles.assigned_by > users.id
+
+// Categories
+Ref: categories.parent_id > categories.id
+
+// Services & Products
+Ref: services.category_id > categories.id
+Ref: products.category_id > categories.id
+Ref: products.primary_warehouse_id > warehouses.id
+
+// Vehicles
+Ref: vehicle_models.brand_id > vehicle_brands.id
+Ref: customers.user_id > users.id
+Ref: vehicles.customer_id > customers.id
+Ref: vehicles.brand_id > vehicle_brands.id
+Ref: vehicles.model_id > vehicle_models.id
+
+// Service Requests
+Ref: service_requests.customer_id > customers.id
+Ref: service_requests.assigned_to > users.id
+Ref: service_requests.admin_handler > users.id
+Ref: service_requests.selected_provider_id > providers.id
+Ref: service_request_services.service_request_id > service_requests.id
+Ref: service_request_services.service_id > services.id
+
+// Orders
+Ref: orders.customer_id > customers.id
+Ref: orders.vehicle_id > vehicles.id
+Ref: orders.service_request_id > service_requests.id
+Ref: orders.salesperson_id > users.id
+Ref: orders.technician_id > users.id
+Ref: orders.accountant_id > users.id
+Ref: orders.partner_provider_id > providers.id
+Ref: orders.partner_coordinator_id > users.id
+
+// Order Items
+Ref: order_items.order_id > orders.id
+Ref: order_items.service_id > services.id
+Ref: order_items.product_id > products.id
+Ref: order_items.assigned_technician > users.id
+Ref: order_items.partner_technician_id > users.id
+
+// Inspections & Warranties
+Ref: vehicle_inspections.order_id > orders.id
+Ref: vehicle_inspections.vehicle_id > vehicles.id
+Ref: vehicle_inspections.customer_id > customers.id
+Ref: vehicle_inspections.inspector_id > users.id
+Ref: vehicle_inspections.customer_representative_id > users.id
+
+Ref: warranties.order_id > orders.id
+Ref: warranties.order_item_id > order_items.id
+Ref: warranties.customer_id > customers.id
+Ref: warranties.vehicle_id > vehicles.id
+
+// Invoices & Payments
+Ref: invoices.order_id > orders.id
+Ref: invoices.customer_id > customers.id
+Ref: invoices.vehicle_id > vehicles.id
+Ref: invoices.issuing_warehouse_id > warehouses.id
+Ref: invoices.created_by > users.id
+Ref: invoices.approved_by > users.id
+
+Ref: payments.invoice_id > invoices.id
+Ref: payments.order_id > orders.id
+Ref: payments.customer_id > customers.id
+Ref: payments.received_by > users.id
+Ref: payments.verified_by > users.id
+Ref: payments.refunded_by > users.id
+
+// Providers & Settlements
+Ref: providers.managed_by > users.id
+
+Ref: settlements.order_id > orders.id
+Ref: settlements.invoice_id > invoices.id
+Ref: settlements.provider_id > providers.id
+Ref: settlements.created_by > users.id
+Ref: settlements.approved_by > users.id
+Ref: settlements.accountant_id > users.id
+
+Ref: settlement_payments.settlement_id > settlements.id
+Ref: settlement_payments.provider_id > providers.id
+Ref: settlement_payments.created_by > users.id
+Ref: settlement_payments.approved_by > users.id
+Ref: settlement_payments.processed_by > users.id
+
+Ref: partner_vehicle_handovers.order_id > orders.id
+Ref: partner_vehicle_handovers.vehicle_id > vehicles.id
+Ref: partner_vehicle_handovers.provider_id > providers.id
+Ref: partner_vehicle_handovers.delivered_by > users.id
+Ref: partner_vehicle_handovers.received_by_technician > users.id
+
+// Warehouses & Inventory
+Ref: warehouses.provider_id > providers.id
+Ref: warehouses.manager_id > users.id
+
+Ref: warehouse_stocks.warehouse_id > warehouses.id
+Ref: warehouse_stocks.product_id > products.id
+
+Ref: stock_transfers.from_warehouse_id > warehouses.id
+Ref: stock_transfers.to_warehouse_id > warehouses.id
+Ref: stock_transfers.order_id > orders.id
+Ref: stock_transfers.created_by > users.id
+Ref: stock_transfers.approved_by > users.id
+Ref: stock_transfers.sent_by > users.id
+Ref: stock_transfers.received_by > users.id
+
+Ref: stock_transfer_items.stock_transfer_id > stock_transfers.id
+Ref: stock_transfer_items.product_id > products.id
+Ref: stock_transfer_items.packed_by > users.id
+Ref: stock_transfer_items.received_by > users.id
+
+Ref: stock_movements.warehouse_id > warehouses.id
+Ref: stock_movements.product_id > products.id
+Ref: stock_movements.order_id > orders.id
+Ref: stock_movements.stock_transfer_id > stock_transfers.id
+Ref: stock_movements.invoice_id > invoices.id
+Ref: stock_movements.direct_sale_id > direct_sales.id
+Ref: stock_movements.created_by > users.id
+
+Ref: direct_sales.warehouse_id > warehouses.id
+Ref: direct_sales.customer_id > customers.id
+Ref: direct_sales.salesperson_id > users.id
+Ref: direct_sales.created_by > users.id
+Ref: direct_sales.approved_by > users.id
+
+Ref: direct_sale_items.direct_sale_id > direct_sales.id
+Ref: direct_sale_items.product_id > products.id
+Ref: direct_sale_items.picked_by > users.id
+Ref: direct_sale_items.stock_movement_id > stock_movements.id
+
+// Notifications
+Ref: notifications.user_id > users.id
+Ref: notifications.sender_id > users.id
+
+// OAuth
+Ref: oauth_auth_codes.user_id > users.id
+Ref: oauth_access_tokens.user_id > users.id
+Ref: oauth_clients.user_id > users.id
+Ref: oauth_personal_access_clients.client_id > oauth_clients.id
+Ref: oauth_device_codes.user_id > users.id
+

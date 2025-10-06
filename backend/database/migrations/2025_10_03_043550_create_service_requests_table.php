@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('customer_address')->nullable(); // Địa chỉ
 
             // Liên kết với khách hàng đã đăng ký (nếu có)
-            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->unsignedBigInteger('customer_id')->nullable();
 
             // Thông tin xe
             $table->string('vehicle_brand'); // Hãng xe
@@ -31,8 +31,6 @@ return new class extends Migration
             $table->string('license_plate')->nullable(); // Biển số
             $table->integer('vehicle_year')->nullable(); // Năm sản xuất
 
-            // Dịch vụ yêu cầu
-            $table->json('requested_services'); // Danh sách dịch vụ yêu cầu
             $table->text('description')->nullable(); // Mô tả chi tiết vấn đề
             $table->datetime('preferred_date')->nullable(); // Ngày mong muốn
 
@@ -41,10 +39,16 @@ return new class extends Migration
                 ->default('pending');
 
             // Thông tin xử lý
-            $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null'); // Nhân viên được giao
+            $table->unsignedBigInteger('assigned_to')->nullable();
+            $table->unsignedBigInteger('admin_handler')->nullable(); // Admin phụ trách
+            $table->unsignedBigInteger('selected_provider_id')->nullable(); // Gara liên kết được chọn
+
             $table->datetime('contacted_at')->nullable(); // Thời gian liên hệ
             $table->datetime('scheduled_at')->nullable(); // Thời gian hẹn
             $table->text('admin_notes')->nullable(); // Ghi chú của admin
+
+            // File đính kèm - thay JSON bằng text
+            $table->text('attachment_urls')->nullable(); // Danh sách URL file, ngăn cách bởi |
 
             // Priority
             $table->enum('priority', ['low', 'normal', 'high', 'urgent'])->default('normal');
