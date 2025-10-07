@@ -23,42 +23,62 @@ export default function AdminUsers() {
   const [departments, setDepartments] = useState<string[]>([]);
   const [positions, setPositions] = useState<string[]>([]);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
 
   const createModal = useModal();
   const editModal = useModal();
   const deleteModal = useModal();
 
-  // Load roles, departments, positions on mount
+  // Load roles, departments, positions on mount - WRAPPED với error handling
   useEffect(() => {
-    loadRoles();
-    loadDepartments();
-    loadPositions();
+    const initData = async () => {
+      try {
+        console.log('🔵 Loading initial data for Users page...');
+        await Promise.all([
+          loadRoles(),
+          loadDepartments(),
+          loadPositions(),
+        ]);
+        console.log('✅ Initial data loaded successfully');
+      } catch (error) {
+        console.error('❌ Failed to initialize users page:', error);
+        setInitError('Không thể tải dữ liệu khởi tạo. Vui lòng refresh trang.');
+      }
+    };
+
+    initData();
   }, []);
 
   const loadRoles = async () => {
     try {
       const data = await roleService.getRoles({ is_active: true });
-      setRoles(data);
+      setRoles(data || []);
+      console.log('✅ Roles loaded:', data?.length || 0);
     } catch (error) {
-      console.error('Failed to load roles:', error);
+      console.error('❌ Failed to load roles:', error);
+      setRoles([]); // Set empty array thay vì crash
     }
   };
 
   const loadDepartments = async () => {
     try {
       const data = await userService.getDepartments();
-      setDepartments(data);
+      setDepartments(data || []);
+      console.log('✅ Departments loaded:', data?.length || 0);
     } catch (error) {
-      console.error('Failed to load departments:', error);
+      console.error('❌ Failed to load departments:', error);
+      setDepartments([]); // Set empty array thay vì crash
     }
   };
 
   const loadPositions = async () => {
     try {
       const data = await userService.getPositions();
-      setPositions(data);
+      setPositions(data || []);
+      console.log('✅ Positions loaded:', data?.length || 0);
     } catch (error) {
-      console.error('Failed to load positions:', error);
+      console.error('❌ Failed to load positions:', error);
+      setPositions([]); // Set empty array thay vì crash
     }
   };
 
@@ -76,7 +96,28 @@ export default function AdminUsers() {
     sortDirection,
     search,
   } = useTable<AuthUser>({
-    fetchData: (params) => userService.getUsers(params),
+    fetchData: async (params) => {
+      try {
+        console.log('🔵 Fetching users with params:', params);
+        const result = await userService.getUsers(params);
+        console.log('✅ Users fetched:', result.data?.length || 0);
+        return result;
+      } catch (error) {
+        console.error('❌ Failed to fetch users:', error);
+        // Return empty result thay vì throw error để tránh crash
+        return {
+          data: [],
+          meta: {
+            current_page: 1,
+            from: 0,
+            last_page: 1,
+            per_page: 15,
+            to: 0,
+            total: 0,
+          },
+        };
+      }
+    },
     initialPerPage: 15,
     initialSortBy: 'created_at',
     initialSortDirection: 'desc',
@@ -216,7 +257,7 @@ export default function AdminUsers() {
               className="w-full md:w-48"
             >
               <option value="">Tất cả vai trò</option>
-              {roles.map((role) => (
+              {(roles || []).map((role) => (
                 <option key={role.id} value={role.id}>
                   {role.display_name}
                 </option>
@@ -240,23 +281,31 @@ export default function AdminUsers() {
           </Button>
         </div>
 
-        <Table
-          columns={columns}
-          data={data}
-          isLoading={isLoading}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onSort={handleSort}
-        />
+        {initError ? (
+          <div className="p-4 text-red-600 bg-red-50 border border-red-200 rounded-lg">
+            {initError}
+          </div>
+        ) : (
+          <>
+            <Table
+              columns={columns}
+              data={data}
+              isLoading={isLoading}
+              sortBy={sortBy}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+            />
 
-        <Pagination
-          currentPage={meta.current_page}
-          totalPages={meta.last_page}
-          onPageChange={handlePageChange}
-          perPage={meta.per_page}
-          onPerPageChange={handlePerPageChange}
-          total={meta.total}
-        />
+            <Pagination
+              currentPage={meta.current_page}
+              totalPages={meta.last_page}
+              onPageChange={handlePageChange}
+              perPage={meta.per_page}
+              onPerPageChange={handlePerPageChange}
+              total={meta.total}
+            />
+          </>
+        )}
       </Card>
 
       {/* Create Modal */}
@@ -268,9 +317,9 @@ export default function AdminUsers() {
           refresh();
           showToast('success', 'Tạo người dùng thành công');
         }}
-        roles={roles}
-        departments={departments}
-        positions={positions}
+        roles={roles || []}
+        departments={departments || []}
+        positions={positions || []}
       />
 
       {/* Edit Modal */}
@@ -283,9 +332,9 @@ export default function AdminUsers() {
           refresh();
           showToast('success', 'Cập nhật người dùng thành công');
         }}
-        roles={roles}
-        departments={departments}
-        positions={positions}
+        roles={roles || []}
+        departments={departments || []}
+        positions={positions || []}
       />
 
       {/* Delete Confirmation Modal */}

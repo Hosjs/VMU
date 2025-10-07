@@ -62,7 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    console.log('🔄 App component rendering');
+    console.log('🔄 App component rendering at:', new Date().toISOString());
     return <Outlet />;
 }
 

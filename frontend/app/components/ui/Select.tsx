@@ -4,11 +4,12 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   helperText?: string;
-  options: Array<{ value: string | number; label: string; disabled?: boolean }>;
+  options?: Array<{ value: string | number; label: string; disabled?: boolean }>;
+  children?: React.ReactNode; // THÊM support cho children
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, helperText, options, className = '', ...props }, ref) => {
+  ({ label, error, helperText, options, children, className = '', ...props }, ref) => {
     return (
       <div className="mb-4">
         {label && (
@@ -28,16 +29,23 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           `}
           {...props}
         >
-          <option value="">-- Chọn --</option>
-          {options.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-              disabled={option.disabled}
-            >
-              {option.label}
-            </option>
-          ))}
+          {/* Nếu có children thì dùng children, nếu không thì dùng options */}
+          {children ? (
+            children
+          ) : (
+            <>
+              <option value="">-- Chọn --</option>
+              {options?.map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  disabled={option.disabled}
+                >
+                  {option.label}
+                </option>
+              ))}
+            </>
+          )}
         </select>
         {error && (
           <p className="mt-1 text-sm text-red-600">{error}</p>
@@ -51,4 +59,3 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 );
 
 Select.displayName = 'Select';
-
