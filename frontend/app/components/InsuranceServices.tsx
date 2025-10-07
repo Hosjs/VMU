@@ -147,6 +147,59 @@ const insuranceServices: InsuranceService[] = [
   }
 ];
 
+export function InsuranceServices() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConsultationOpen, setIsConsultationOpen] = useState(false);
+
+  return (
+    <div className="w-full">
+      {/* Header Section */}
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Dịch Vụ Bảo Hiểm & Đăng Kiểm
+        </h2>
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          Chúng tôi hỗ trợ đầy đủ các dịch vụ bảo hiểm và thủ tục giấy tờ xe
+        </p>
+      </div>
+
+      {/* Services Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {insuranceServices.map((service) => (
+          <div
+            key={service.id}
+            className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 cursor-pointer group"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform">
+              {service.icon}
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+              {service.title}
+            </h3>
+            <p className="text-gray-600 text-sm text-center mb-4">
+              {service.description}
+            </p>
+            <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+              Xem chi tiết
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal */}
+      <InsuranceServicesModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onContactUs={() => {
+          setIsModalOpen(false);
+          setIsConsultationOpen(true);
+        }}
+      />
+    </div>
+  );
+}
+
 export function InsuranceServicesModal({ isOpen, onClose, onContactUs }: InsuranceServicesModalProps) {
   const [selectedService, setSelectedService] = useState<InsuranceService | null>(null);
 

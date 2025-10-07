@@ -1,14 +1,22 @@
 export interface Customer {
   id: number;
   name: string;
-  email?: string;
   phone: string;
+  email?: string;
   address?: string;
-  company_name?: string;
-  tax_code?: string;
+  birth_date?: string;
+  gender?: 'male' | 'female' | 'other';
+  user_id?: number;
+  insurance_company?: string;
+  insurance_number?: string;
+  insurance_expiry?: string;
   notes?: string;
+  preferences?: string; // key=value|key=value
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+  user?: any;
+  vehicles?: any[];
 }
 
 export interface CustomerVehicle {
@@ -29,15 +37,17 @@ export interface CustomerVehicle {
 
 export interface CreateCustomerData {
   name: string;
-  email?: string;
   phone: string;
+  email?: string;
   address?: string;
-  company_name?: string;
-  tax_code?: string;
+  birth_date?: string;
+  gender?: 'male' | 'female' | 'other';
+  insurance_company?: string;
+  insurance_number?: string;
+  insurance_expiry?: string;
   notes?: string;
 }
 
 export interface UpdateCustomerData extends Partial<CreateCustomerData> {
   id: number;
 }
-

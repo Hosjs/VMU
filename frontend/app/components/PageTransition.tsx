@@ -1,20 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useLocation, useNavigation } from 'react-router';
+import { useLocation, useNavigation, useNavigate } from 'react-router';
 import { PageTransitionLoader, ProgressLoader, CarAnimationLoader } from './Loading';
+import { SimpleImageLoader } from './ImagePreloader';
 
 interface PageTransitionContextType {
   isTransitioning: boolean;
   progress: number;
   setIsTransitioning: (value: boolean) => void;
-  transitionType: 'default' | 'progress' | 'car';
-  setTransitionType: (type: 'default' | 'progress' | 'car') => void;
+  transitionType: 'default' | 'progress' | 'car' | 'preloader';
+  setTransitionType: (type: 'default' | 'progress' | 'car' | 'preloader') => void;
 }
 
 const PageTransitionContext = createContext<PageTransitionContextType>({
   isTransitioning: false,
   progress: 0,
   setIsTransitioning: () => {},
-  transitionType: 'default',
+  transitionType: 'preloader',
   setTransitionType: () => {},
 });
 
@@ -23,7 +24,7 @@ export const usePageTransition = () => useContext(PageTransitionContext);
 export function PageTransitionProvider({ children }: { children: React.ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [transitionType, setTransitionType] = useState<'default' | 'progress' | 'car'>('default');
+  const [transitionType, setTransitionType] = useState<'default' | 'progress' | 'car' | 'preloader'>('preloader');
   const location = useLocation();
   const navigation = useNavigation();
 
@@ -73,13 +74,17 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
   }, [location.pathname, isTransitioning]);
 
   const renderLoader = () => {
+    if (!isTransitioning) return null;
+
     switch (transitionType) {
       case 'progress':
-        return <ProgressLoader progress={progress} isVisible={isTransitioning} />;
+        return <ProgressLoader progress={progress} />;
       case 'car':
-        return <CarAnimationLoader isVisible={isTransitioning} />;
+        return <CarAnimationLoader />;
+      case 'preloader':
+        return <SimpleImageLoader />;
       default:
-        return <PageTransitionLoader isVisible={isTransitioning} />;
+        return <PageTransitionLoader />;
     }
   };
 
@@ -106,23 +111,28 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
 
 // Custom hook for programmatic navigation with transition
 export function useNavigateWithTransition() {
+  const navigate = useNavigate();
   const { setIsTransitioning, setTransitionType } = usePageTransition();
 
   const navigateWithTransition = (
     to: string,
     options?: {
-      transitionType?: 'default' | 'progress' | 'car';
+      transitionType?: 'default' | 'progress' | 'car' | 'preloader';
       delay?: number;
+      replace?: boolean;
     }
   ) => {
+    // Set transition type if provided
     if (options?.transitionType) {
       setTransitionType(options.transitionType);
     }
 
+    // Show transition immediately
     setIsTransitioning(true);
 
+    // Navigate after a short delay for smooth UX
     setTimeout(() => {
-      window.location.href = to;
+      navigate(to, { replace: options?.replace });
     }, options?.delay || 100);
   };
 

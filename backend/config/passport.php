@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Passport Guard
@@ -43,4 +42,35 @@ return [
 
     'connection' => env('PASSPORT_CONNECTION'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Token Expiration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define the number of minutes that access tokens should
+    | remain valid. When a token expires, users will need to get a new one.
+    |
+    */
+
+    'token_expiration' => (int) env('PASSPORT_TOKEN_EXPIRATION', 15), // 15 days
+
+    'refresh_token_expiration' => (int) env('PASSPORT_REFRESH_TOKEN_EXPIRATION', 30), // 30 days
+
+    'personal_access_token_expiration' => (int) env('PASSPORT_PERSONAL_ACCESS_TOKEN_EXPIRATION', 365), // 1 year
+
+    /*
+    |--------------------------------------------------------------------------
+    | Passport Storage Driver
+    |--------------------------------------------------------------------------
+    |
+    | This configuration option allows you to customize the storage driver
+    | used by Passport to store tokens.
+    |
+    */
+
+    'storage' => [
+        'database' => [
+            'connection' => env('DB_CONNECTION', 'mysql'),
+        ],
+    ],
 ];

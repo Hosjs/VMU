@@ -6,6 +6,7 @@ import { Button } from '~/components/ui/Button';
 import { Badge } from '~/components/ui/Badge';
 import { useTable } from '~/hooks/useTable';
 import type { AuthUser } from '~/types/auth';
+import type { TableQueryParams } from '~/types/common';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<AuthUser[]>([]);
@@ -25,7 +26,7 @@ export default function AdminUsers() {
     handleSearch,
     loadData,
   } = useTable<AuthUser>(
-    async (params) => {
+    async (params: TableQueryParams) => {
       // Mock data - replace with actual API call
       return {
         data: [
@@ -161,4 +162,3 @@ export default function AdminUsers() {
     </div>
   );
 }
-

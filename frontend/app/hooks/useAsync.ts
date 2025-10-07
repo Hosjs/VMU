@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import type { TableQueryParams, PaginatedResponse, SortDirection } from '~/types/common';
 
 interface UseAsyncOptions<T> {
   immediate?: boolean;
@@ -48,8 +49,6 @@ export function useAsync<T>(
     execute,
   };
 }
-import { useState, useCallback } from 'react';
-import type { TableQueryParams, PaginatedResponse, SortDirection } from '~/types/common';
 
 interface UseTableOptions {
   defaultPerPage?: number;
@@ -155,4 +154,3 @@ export function useTable<T>(
     loadData,
   };
 }
-

@@ -62,19 +62,17 @@ export default function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
-          <Card key={index} padding={false}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg bg-${stat.color}-100 text-${stat.color}-600`}>
-                  {stat.icon}
-                </div>
-                <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
-                  {stat.change}
-                </span>
+          <Card key={index}>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-3 rounded-lg bg-${stat.color}-100 text-${stat.color}-600`}>
+                {stat.icon}
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
-              <p className="text-sm text-gray-600">{stat.title}</p>
+              <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
+                {stat.change}
+              </span>
             </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
+            <p className="text-sm text-gray-600">{stat.title}</p>
           </Card>
         ))}
       </div>
@@ -113,4 +111,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

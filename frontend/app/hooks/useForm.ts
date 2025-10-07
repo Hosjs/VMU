@@ -53,52 +53,49 @@ export function useForm<T extends Record<string, any>>({
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
 
+    setIsSubmitting(true);
+
     // Validate all fields
     if (validate) {
       const validationErrors = validate(values);
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
-        // Mark all fields as touched
-        const allTouched = Object.keys(values).reduce((acc, key) => ({
-          ...acc,
-          [key]: true,
-        }), {});
-        setTouched(allTouched);
+        setIsSubmitting(false);
         return;
       }
     }
 
-    setIsSubmitting(true);
     try {
       await onSubmit(values);
-    } catch (error: any) {
-      // Handle API validation errors
-      if (error.data?.errors) {
-        const apiErrors: Record<string, string> = {};
-        Object.keys(error.data.errors).forEach(key => {
-          apiErrors[key] = error.data.errors[key][0];
-        });
-        setErrors(apiErrors);
+      // Reset form after successful submit
+      setValues(initialValues);
+      setErrors({});
+      setTouched({});
+    } catch (error) {
+      console.error('Form submission error:', error);
+      if (error instanceof Error) {
+        setErrors({ submit: error.message });
       }
     } finally {
       setIsSubmitting(false);
     }
-  }, [validate, values, onSubmit]);
+  }, [values, validate, onSubmit, initialValues]);
 
   const reset = useCallback(() => {
     setValues(initialValues);
     setErrors({});
     setTouched({});
+    setIsSubmitting(false);
   }, [initialValues]);
 
   const setFieldValue = useCallback((name: keyof T, value: any) => {
     handleChange(name, value);
   }, [handleChange]);
 
-  const setFieldError = useCallback((name: keyof T, error: string) => {
+  const setFieldError = useCallback((name: string, error: string) => {
     setErrors(prev => ({
       ...prev,
-      [name as string]: error,
+      [name]: error,
     }));
   }, []);
 
@@ -116,4 +113,3 @@ export function useForm<T extends Record<string, any>>({
     setValues,
   };
 }
-

@@ -5,10 +5,8 @@ export default [
   index("routes/home.tsx"),
   route("login", "routes/login.tsx"),
   route("register", "routes/register.tsx"),
-  route("services", "routes/services.tsx"),
   route("products", "routes/products.tsx"),
-  route("about", "routes/about.tsx"),
-  route("contact", "routes/contact.tsx"),
+
 
   // Protected: General dashboard (all authenticated users)
   route("dashboard", "routes/dashboard/index.tsx"),

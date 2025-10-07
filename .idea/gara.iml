@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="WEB_MODULE" version="4">
-  <component name="NewModuleRootManager">
+  <component name="AdditionalModuleElements">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/backend/app" isTestSource="false" packagePrefix="App\" />
       <sourceFolder url="file://$MODULE_DIR$/backend/database/factories" isTestSource="false" packagePrefix="Database\Factories\" />
@@ -136,7 +136,5 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/webmozart/assert" />
     </content>
-    <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
