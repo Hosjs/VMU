@@ -37,9 +37,6 @@ export {
 
 // Layout Components
 export { CompanyLogo } from './Logo';
-export { Header } from './Header';
-export { UserMenu } from './UserMenu';
-
 // Feature Components
 export { BookingModal } from './BookingModal';
 export { ConsultationModal } from './ConsultationModal';
@@ -51,9 +48,7 @@ export { GoogleMap, LocationSection } from './GoogleMap';
 export { InsuranceServices } from './InsuranceServices';
 
 // HOC Components
-export { ProtectedRoute } from './ProtectedRoute';
 export { ModalPortal } from './ModalPortal';
 
 // Icons
 export * from './Icons';
-

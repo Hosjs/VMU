@@ -18,18 +18,12 @@ class Role extends Model
     ];
 
     protected $casts = [
-        'permissions' => 'array',
         'is_active' => 'boolean',
     ];
 
     // =====================
     // RELATIONSHIPS
     // =====================
-
-    public function userRoles()
-    {
-        return $this->hasMany(UserRole::class);
-    }
 
     public function users()
     {
@@ -40,7 +34,11 @@ class Role extends Model
             'id',
             'id',
             'user_id'
-        );
+        )->where('user_roles.is_active', true);
+    }
+
+    public function userRoles()
+    {
+        return $this->hasMany(UserRole::class);
     }
 }
-

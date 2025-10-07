@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\StockTransferScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StockTransfer extends Model
 {
-    use HasFactory;
+    use HasFactory, StockTransferScopes;
 
     protected $fillable = [
         'transfer_number',
@@ -74,6 +75,11 @@ class StockTransfer extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function items()
+    {
+        return $this->hasMany(StockTransferItem::class);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -92,11 +98,6 @@ class StockTransfer extends Model
     public function receiver()
     {
         return $this->belongsTo(User::class, 'received_by');
-    }
-
-    public function items()
-    {
-        return $this->hasMany(StockTransferItem::class);
     }
 
     public function stockMovements()
@@ -119,35 +120,4 @@ class StockTransfer extends Model
                $this->expected_arrival < now() &&
                !in_array($this->status, ['received', 'completed', 'cancelled']);
     }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeInTransit($query)
-    {
-        return $query->where('status', 'in_transit');
-    }
-
-    public function scopeTaxExempt($query)
-    {
-        return $query->where('is_tax_exempt', true);
-    }
-
-    public function scopeDelayed($query)
-    {
-        return $query->where('expected_arrival', '<', now())
-            ->whereNotIn('status', ['received', 'completed', 'cancelled']);
-    }
 }
-

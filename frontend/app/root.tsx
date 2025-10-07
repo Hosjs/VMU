@@ -4,11 +4,12 @@ import {
     Meta,
     Outlet,
     Scripts,
-    ScrollRestoration,
+    // ScrollRestoration, // TẮT TẠM để test
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import { PageTransitionProvider } from "./components/PageTransition";
+// import { PageTransitionProvider } from "./components/PageTransition"; // TẮT TẠM để test
+import { AuthProvider } from "./contexts/AuthContext";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -49,10 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             style={{ zIndex: -1 }}
         ></div>
 
-        <PageTransitionProvider>
+        <AuthProvider>
+            {/* TẮT TẠM PageTransition và ScrollRestoration để test */}
             {children}
-        </PageTransitionProvider>
-        <ScrollRestoration />
+        </AuthProvider>
+        {/* <ScrollRestoration /> */}
         <Scripts />
         </body>
         </html>
@@ -60,6 +62,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+    console.log('🔄 App component rendering');
     return <Outlet />;
 }
 

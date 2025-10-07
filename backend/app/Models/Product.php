@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\ProductScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, ProductScopes;
 
     protected $fillable = [
         'name',
@@ -75,14 +76,14 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function stockTransferItems()
-    {
-        return $this->hasMany(StockTransferItem::class);
-    }
-
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function stockTransferItems()
+    {
+        return $this->hasMany(StockTransferItem::class);
     }
 
     public function directSaleItems()
@@ -107,26 +108,5 @@ class Product extends Model
     public function getTotalAvailableStockAttribute()
     {
         return $this->warehouseStocks()->sum('available_quantity');
-    }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeStockable($query)
-    {
-        return $query->where('is_stockable', true);
-    }
-
-    public function scopeLowStock($query)
-    {
-        return $query->whereHas('warehouseStocks', function($q) {
-            $q->whereRaw('quantity <= min_stock');
-        });
     }
 }

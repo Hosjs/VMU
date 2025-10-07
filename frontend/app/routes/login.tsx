@@ -1,9 +1,8 @@
 import type { Route } from "./+types/login";
 import { useState } from "react";
 import { CompanyLogo } from "~/components/Logo";
-import { PhoneIcon } from "~/components/Icons";
-import { useNavigateWithTransition } from "~/components/PageTransition";
-import { LoadingSpinner } from "~/components/Loading";
+import { useNavigateWithTransition, usePageTransition } from "~/components/PageTransition";
+import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -14,28 +13,35 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Login() {
     const navigateWithTransition = useNavigateWithTransition();
+    const { isTransitioning } = usePageTransition();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
         remember: false
     });
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        setIsLoading(true);
 
         try {
-            // TODO: Implement actual login API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Gọi API login thật
+            await login({
+                email: formData.email,
+                password: formData.password,
+                remember: formData.remember
+            });
 
-            // Navigate với preloader đẹp
-            navigateWithTransition("/dashboard", { transitionType: 'preloader' });
-        } catch (err) {
-            setError("Email hoặc mật khẩu không đúng");
-            setIsLoading(false);
+            // Login thành công, redirect sẽ được xử lý bởi dashboard/_layout.tsx
+            navigateWithTransition("/dashboard", {
+                transitionType: 'preloader',
+                animationType: 'fade'
+            });
+        } catch (err: any) {
+            // Hiển thị lỗi từ API
+            setError(err.message || "Email hoặc mật khẩu không đúng");
         }
     };
 
@@ -59,7 +65,7 @@ export default function Login() {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm animate-fade-in">
                             {error}
                         </div>
                     )}
@@ -79,7 +85,8 @@ export default function Login() {
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="example@email.com"
                                 />
                             </div>
@@ -96,7 +103,8 @@ export default function Login() {
                                     required
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -111,7 +119,8 @@ export default function Login() {
                                     type="checkbox"
                                     checked={formData.remember}
                                     onChange={(e) => setFormData({ ...formData, remember: e.target.checked })}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    disabled={isTransitioning}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                                 />
                                 <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
                                     Ghi nhớ đăng nhập
@@ -119,33 +128,41 @@ export default function Login() {
                             </div>
 
                             <div className="text-sm">
-                                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        // TODO: Implement forgot password logic
+                                        console.log('Forgot password clicked');
+                                    }}
+                                    className="font-medium text-blue-600 hover:text-blue-500"
+                                >
                                     Quên mật khẩu?
-                                </a>
+                                </button>
                             </div>
                         </div>
 
-                        {/* Submit Button - SỬ DỤNG LoadingSpinner */}
+                        {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                            disabled={isTransitioning}
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                         >
-                            {isLoading ? (
-                                <LoadingSpinner size="sm" />
-                            ) : (
-                                "Đăng Nhập"
-                            )}
+                            {isTransitioning ? "Đang đăng nhập..." : "Đăng Nhập"}
                         </button>
 
-                        {/* Register Link - SỬ DỤNG navigateWithTransition */}
+                        {/* Register Link */}
                         <div className="text-center">
                             <p className="text-sm text-gray-600">
                                 Chưa có tài khoản?{" "}
                                 <button
                                     type="button"
-                                    onClick={() => navigateWithTransition('/register', { transitionType: 'preloader' })}
-                                    className="font-medium text-blue-600 hover:text-blue-500"
+                                    onClick={() => navigateWithTransition('/register', {
+                                        transitionType: 'preloader',
+                                        animationType: 'slide'
+                                    })}
+                                    disabled={isTransitioning}
+                                    className="font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50"
                                 >
                                     Đăng ký ngay
                                 </button>
@@ -153,11 +170,14 @@ export default function Login() {
                         </div>
                     </form>
 
-                    {/* Back to Home - SỬ DỤNG navigateWithTransition */}
                     <div className="text-center">
                         <button
-                            onClick={() => navigateWithTransition('/', { transitionType: 'preloader' })}
-                            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+                            onClick={() => navigateWithTransition('/', {
+                                transitionType: 'preloader',
+                                animationType: 'fade'
+                            })}
+                            disabled={isTransitioning}
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
                         >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -168,63 +188,46 @@ export default function Login() {
                 </div>
             </div>
 
-            {/* Right Side - Image/Info */}
-            <div className="hidden lg:block relative flex-1">
+            {/* Right Side - Image/Branding */}
+            <div className="hidden lg:block lg:flex-1 relative">
                 <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: 'url("/images/1.png")' }}
+                    className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700"
+                    style={{
+                        backgroundImage: 'url("/images/1.png")',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-indigo-600/90"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-indigo-600/90 to-purple-700/90" />
                 </div>
 
-                <div className="relative h-full flex flex-col justify-center px-12 text-white">
-                    <h2 className="text-4xl font-bold mb-6">
-                        Chào mừng đến với AutoCare Pro
-                    </h2>
-                    <p className="text-xl mb-8 leading-relaxed">
-                        Hệ thống quản lý gara ô tô chuyên nghiệp với đầy đủ tính năng:
-                    </p>
-
-                    <ul className="space-y-4">
-                        <li className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <div className="relative h-full flex items-center justify-center p-12">
+                    <div className="text-center text-white max-w-md">
+                        <h1 className="text-4xl font-bold mb-6">
+                            Chào mừng đến với AutoCare Pro
+                        </h1>
+                        <p className="text-xl text-blue-100 mb-8">
+                            Hệ thống quản lý garage hiện đại và chuyên nghiệp
+                        </p>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
+                                <span>Quản lý đơn hàng dễ dàng</span>
                             </div>
-                            <span className="text-lg">Quản lý khách hàng & xe</span>
-                        </li>
-                        <li className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <div className="flex items-center gap-3">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
+                                <span>Theo dõi khách hàng hiệu quả</span>
                             </div>
-                            <span className="text-lg">Quản lý dịch vụ & đơn hàng</span>
-                        </li>
-                        <li className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <div className="flex items-center gap-3">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
+                                <span>Báo cáo thống kê chi tiết</span>
                             </div>
-                            <span className="text-lg">Quản lý kho & phụ tùng</span>
-                        </li>
-                        <li className="flex items-center space-x-3">
-                            <div className="flex-shrink-0 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <span className="text-lg">Báo cáo & thống kê</span>
-                        </li>
-                    </ul>
-
-                    <div className="mt-12 p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                        <p className="text-sm text-blue-100 mb-2">Hotline hỗ trợ 24/7</p>
-                        <div className="flex items-center space-x-2">
-                            <PhoneIcon size={20} color="#ffffff" />
-                            <span className="text-xl font-bold">0123 456 789</span>
                         </div>
                     </div>
                 </div>

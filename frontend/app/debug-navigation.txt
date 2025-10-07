@@ -1,0 +1,42 @@
+# DEBUG NAVIGATION - Tìm nguyên nhân reload trang
+
+## Các bước đã thực hiện:
+
+1. ✅ Gỡ cài đặt react-router-dom (xung đột version)
+2. ✅ Tất cả import đã sử dụng "react-router"
+3. ✅ Sidebar sử dụng <Link> đúng cách
+4. ✅ Các route components đã có export default
+
+## Vấn đề có thể:
+
+### 1. HMR (Hot Module Replacement) đang trigger reload
+React Router v7 có thể có vấn đề với HMR trong dev mode
+
+### 2. ScrollRestoration gây conflict
+ScrollRestoration trong root.tsx có thể trigger reload
+
+### 3. Meta/Links tags thay đổi
+Khi navigation, nếu Meta hoặc Links thay đổi có thể gây reload
+
+### 4. Browser cache
+Cache cũ của react-router-dom vẫn còn
+
+## Test Case:
+
+Hãy thử các bước sau:
+
+1. **Hard Refresh**: Ctrl + Shift + R (xóa cache)
+2. **Incognito Mode**: Test trong chế độ ẩn danh
+3. **Disable extensions**: Tắt tất cả extensions
+4. **Check Network tab**:
+   - Filter: Doc
+   - Xem có request mới đến index.html không
+
+## Nếu vẫn reload:
+
+Thử tắt các feature một:
+- Tắt ScrollRestoration
+- Tắt PageTransition
+- Tắt Breadcrumb
+- Test với route đơn giản nhất
+

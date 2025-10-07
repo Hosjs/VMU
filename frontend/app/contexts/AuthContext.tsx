@@ -31,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.login(credentials);
       setUser(response.user);
+    } catch (error) {
+      throw error;
     } finally {
       setIsLoading(false);
     }

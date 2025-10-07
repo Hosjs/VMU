@@ -125,7 +125,7 @@ export function SkeletonLoader() {
 // Page Transition Loader với Logo - Used by PageTransition component
 export function PageTransitionLoader() {
   return (
-    <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-white z-50 flex items-center justify-center loader-fade-enter">
       <div className="text-center">
         {/* Logo với vòng xoay */}
         <div className="relative w-24 h-24 mx-auto mb-6">
@@ -162,56 +162,15 @@ export function PageTransitionLoader() {
 // Progress Loader with percentage và Logo
 export function ProgressLoader({ progress = 0 }: { progress?: number }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Logo */}
-      <div className="mb-8">
-        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl animate-pulse">
-          <img
-            src="/images/logo.png"
-            alt="AutoCare Pro"
-            className="w-14 h-14 object-contain"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-            }}
-          />
-        </div>
-      </div>
-
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">AutoCare Pro</h2>
-
-      <div className="w-80">
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
-          <div
-            className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 rounded-full"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        <p className="text-center text-gray-600 font-medium text-lg">{progress}%</p>
-      </div>
-
-      {/* Loading Dots */}
-      <div className="flex space-x-2 mt-6">
-        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-      </div>
-    </div>
-  );
-}
-
-// Car Animation Loader với Logo
-export function CarAnimationLoader() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Logo với animation */}
-      <div className="relative w-32 h-32 mb-6">
-        <div className="absolute inset-0 flex items-center justify-center animate-bounce">
-          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 flex items-center justify-center loader-fade-enter">
+      <div className="flex flex-col items-center">
+        {/* Logo */}
+        <div className="mb-8">
+          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-xl animate-pulse">
             <img
               src="/images/logo.png"
               alt="AutoCare Pro"
-              className="w-16 h-16 object-contain"
+              className="w-14 h-14 object-contain"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
@@ -220,35 +179,83 @@ export function CarAnimationLoader() {
           </div>
         </div>
 
-        {/* Vòng tròn xung quanh */}
-        <svg className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: '3s' }}>
-          <circle
-            cx="64"
-            cy="64"
-            r="60"
-            stroke="url(#gradient)"
-            strokeWidth="3"
-            fill="none"
-            strokeDasharray="10 5"
-          />
-          <defs>
-            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="100%" stopColor="#8B5CF6" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">AutoCare Pro</h2>
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">AutoCare Pro</h2>
-      <p className="text-gray-600 font-medium">Đang tải...</p>
+        <div className="w-80">
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
+            <div
+              className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 rounded-full"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <p className="text-center text-gray-600 font-medium text-lg">{Math.round(progress)}%</p>
+        </div>
 
-      {/* Loading Dots */}
-      <div className="flex space-x-2 mt-4">
-        <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-        <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        {/* Loading Dots */}
+        <div className="flex space-x-2 mt-6">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
       </div>
     </div>
   );
 }
+
+// Car Animation Loader - Animated car moving across screen
+export function CarAnimationLoader() {
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 flex items-center justify-center loader-fade-enter">
+      <div className="text-center px-6">
+        {/* Animated Car */}
+        <div className="relative w-80 h-32 mx-auto mb-8">
+          {/* Road */}
+          <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-300 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-transparent via-gray-400 to-transparent animate-pulse"></div>
+          </div>
+          
+          {/* Car SVG Animation */}
+          <div className="absolute bottom-4 animate-[slideInRight_2s_ease-in-out_infinite]">
+            <svg width="80" height="40" viewBox="0 0 80 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Car body */}
+              <rect x="10" y="15" width="60" height="15" rx="3" fill="#3B82F6"/>
+              <rect x="20" y="8" width="35" height="12" rx="2" fill="#60A5FA"/>
+              {/* Wheels */}
+              <circle cx="25" cy="32" r="6" fill="#1E293B" stroke="#64748B" strokeWidth="2"/>
+              <circle cx="25" cy="32" r="3" fill="#94A3B8"/>
+              <circle cx="55" cy="32" r="6" fill="#1E293B" stroke="#64748B" strokeWidth="2"/>
+              <circle cx="55" cy="32" r="3" fill="#94A3B8"/>
+              {/* Windows */}
+              <rect x="25" y="10" width="12" height="8" rx="1" fill="#E0F2FE"/>
+              <rect x="40" y="10" width="12" height="8" rx="1" fill="#E0F2FE"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Logo */}
+        <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-xl">
+          <img
+            src="/images/logo.png"
+            alt="AutoCare Pro"
+            className="w-12 h-12 object-contain"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+          />
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">AutoCare Pro</h2>
+        <p className="text-gray-600 font-medium">Đang chuyển trang...</p>
+
+        {/* Loading Dots */}
+        <div className="flex justify-center space-x-2 mt-4">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

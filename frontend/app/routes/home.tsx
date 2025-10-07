@@ -13,6 +13,7 @@ import { MAIN_SERVICES, getServiceByTitle } from "~/data/services";
 import { ImagePreloader } from "~/components/ImagePreloader";
 import { useImagePreloader } from "~/hooks/useImagePreloader";
 import { handleAnchorClick } from "~/utils/scrollUtils";
+import { useAuth } from "~/contexts/AuthContext";
 import {
     EngineIcon,
     MaintenanceIcon,
@@ -64,6 +65,7 @@ export default function Home() {
 
     const { setTransitionType } = usePageTransition();
     const navigateWithTransition = useNavigateWithTransition();
+    const { user, isAuthenticated, logout } = useAuth();
 
     // Danh sách tất cả ảnh cần preload
     const imagesToPreload = [
@@ -161,6 +163,19 @@ export default function Home() {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+            // Stay on home page after logout
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
+    const handleDashboardClick = () => {
+        navigateWithTransition('/dashboard', { transitionType: 'preloader' });
+    };
+
     // Track active section on scroll
     useEffect(() => {
         const handleScroll = () => {
@@ -239,18 +254,37 @@ export default function Home() {
 
                         {/* Desktop Auth Buttons */}
                         <div className="hidden md:flex items-center space-x-3">
-                            <button
-                                onClick={() => navigateWithTransition('/login', { transitionType: 'preloader' })}
-                                className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors border border-transparent hover:border-blue-600"
-                            >
-                                Đăng Nhập
-                            </button>
-                            <button
-                                onClick={() => navigateWithTransition('/register', { transitionType: 'preloader' })}
-                                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                            >
-                                Đăng Ký
-                            </button>
+                            {isAuthenticated ? (
+                                <>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors border border-transparent hover:border-blue-600"
+                                    >
+                                        Đăng Xuất
+                                    </button>
+                                    <button
+                                        onClick={handleDashboardClick}
+                                        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                                    >
+                                        Trang Quản Trị
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => navigateWithTransition('/login', { transitionType: 'preloader' })}
+                                        className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition-colors border border-transparent hover:border-blue-600"
+                                    >
+                                        Đăng Nhập
+                                    </button>
+                                    <button
+                                        onClick={() => navigateWithTransition('/register', { transitionType: 'preloader' })}
+                                        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                                    >
+                                        Đăng Ký
+                                    </button>
+                                </>
+                            )}
                         </div>
 
                         {/* Mobile menu button - Cải thiện touch */}
@@ -337,24 +371,43 @@ export default function Home() {
 
                                 {/* Mobile Auth Buttons */}
                                 <div className="flex flex-col space-y-2 pt-4 border-t border-gray-100">
-                                    <button
-                                        onClick={() => {
-                                            setIsMobileMenuOpen(false);
-                                            navigateWithTransition('/login', { transitionType: 'preloader' });
-                                        }}
-                                        className="text-center bg-white border-2 border-blue-600 text-blue-600 py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:bg-blue-50 transition-colors"
-                                    >
-                                        🔐 Đăng Nhập
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setIsMobileMenuOpen(false);
-                                            navigateWithTransition('/register', { transitionType: 'preloader' });
-                                        }}
-                                        className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:from-blue-700 hover:to-indigo-700 transition-colors"
-                                    >
-                                        ✨ Đăng Ký
-                                    </button>
+                                    {isAuthenticated ? (
+                                        <>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="text-center bg-white border-2 border-blue-600 text-blue-600 py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:bg-blue-50 transition-colors"
+                                            >
+                                                🔓 Đăng Xuất
+                                            </button>
+                                            <button
+                                                onClick={handleDashboardClick}
+                                                className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                                            >
+                                                📊 Trang Quản Trị
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => {
+                                                    setIsMobileMenuOpen(false);
+                                                    navigateWithTransition('/login', { transitionType: 'preloader' });
+                                                }}
+                                                className="text-center bg-white border-2 border-blue-600 text-blue-600 py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:bg-blue-50 transition-colors"
+                                            >
+                                                🔐 Đăng Nhập
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setIsMobileMenuOpen(false);
+                                                    navigateWithTransition('/register', { transitionType: 'preloader' });
+                                                }}
+                                                className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold touch-friendly mobile-button hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                                            >
+                                                ✨ Đăng Ký
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Mobile quick actions */}

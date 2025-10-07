@@ -6,27 +6,36 @@ const USER_KEY = 'auth_user';
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    const response = await api.post<any>('/auth/login', credentials);
+
+    // Backend trả về: { success, data: { user, token, token_type } }
+    // Phải lấy từ response.data (bên trong data của API response)
+    const authData = response.data;
 
     // Save token and user to localStorage
-    if (response.token) {
-      localStorage.setItem(TOKEN_KEY, response.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+    if (authData && authData.token) {
+      localStorage.setItem(TOKEN_KEY, authData.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(authData.user));
+    } else {
+      throw new Error('Invalid response from server');
     }
 
-    return response;
+    return authData;
   },
 
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
+    const response = await api.post<any>('/auth/register', data);
+
+    // Backend trả về: { success, data: { user, token, token_type } }
+    const authData = response.data;
 
     // Save token and user to localStorage
-    if (response.token) {
-      localStorage.setItem(TOKEN_KEY, response.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+    if (authData && authData.token) {
+      localStorage.setItem(TOKEN_KEY, authData.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(authData.user));
     }
 
-    return response;
+    return authData;
   },
 
   async logout(): Promise<void> {
@@ -50,9 +59,17 @@ export const authService = {
     }
 
     try {
-      const user = await api.get<AuthUser>('/auth/user', token);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-      return user;
+      const response = await api.get<any>('/auth/me', token);
+
+      // Backend trả về: { success, data: { user } }
+      const user = response.data?.user || response.user || response.data || response;
+
+      if (user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        return user;
+      }
+
+      return null;
     } catch (error) {
       // If token is invalid, clear storage
       this.clearAuth();

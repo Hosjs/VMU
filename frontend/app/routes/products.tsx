@@ -5,7 +5,7 @@ import { LocationIcon, PhoneIcon } from "~/components/Icons";
 import { BookingModal } from "~/components/BookingModal";
 import { ConsultationModal } from "~/components/ConsultationModal";
 import { SkeletonLoader } from "~/components/Loading";
-import { usePageTransition } from "~/components/PageTransition";
+import { usePageTransition, useNavigateWithTransition } from "~/components/PageTransition";
 import { ImagePreloader } from "~/components/ImagePreloader";
 import { useImagePreloader } from "~/hooks/useImagePreloader";
 
@@ -234,6 +234,16 @@ export default function Products() {
         window.location.href = '/';
     };
 
+    const handleServicesNavigation = () => {
+        setTransitionType('car');
+        window.location.href = '/#services';
+    };
+
+    const handleContactNavigation = () => {
+        setTransitionType('car');
+        window.location.href = '/#contact';
+    };
+
     // Show preloader until images are loaded
     if (!imagesLoaded) {
         return (
@@ -259,9 +269,19 @@ export default function Products() {
                             >
                                 Trang Chủ
                             </button>
-                            <a href="/#services" className="text-gray-700 hover:text-blue-600 transition-colors font-medium btn-hover">Dịch Vụ</a>
-                            <a href="/products" className="text-blue-600 font-semibold">Sản Phẩm</a>
-                            <a href="/#contact" className="text-gray-700 hover:text-blue-600 transition-colors font-medium btn-hover">Liên Hệ</a>
+                            <button
+                                onClick={handleServicesNavigation}
+                                className="text-gray-700 hover:text-blue-600 transition-colors font-medium btn-hover"
+                            >
+                                Dịch Vụ
+                            </button>
+                            <span className="text-blue-600 font-semibold">Sản Phẩm</span>
+                            <button
+                                onClick={handleContactNavigation}
+                                className="text-gray-700 hover:text-blue-600 transition-colors font-medium btn-hover"
+                            >
+                                Liên Hệ
+                            </button>
                         </div>
                         <div className="flex items-center space-x-3">
                             <div className="text-right hidden sm:block">
@@ -671,3 +691,4 @@ export default function Products() {
         </div>
     );
 }
+

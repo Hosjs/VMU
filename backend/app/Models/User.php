@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\QueryScopes\UserScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,7 +11,7 @@ use Laravel\Passport\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, UserScopes;
 
     /**
      * The attributes that are mass assignable.
@@ -64,13 +64,8 @@ class User extends Authenticatable
     }
 
     // =====================
-    // ROLE RELATIONSHIPS
+    // RELATIONSHIPS
     // =====================
-
-    public function userRole()
-    {
-        return $this->hasOne(UserRole::class);
-    }
 
     public function role()
     {
@@ -81,87 +76,43 @@ class User extends Authenticatable
             'id',
             'id',
             'role_id'
-        );
+        )->where('user_roles.is_active', true);
     }
 
-    // =====================
-    // CUSTOMER RELATIONSHIPS
-    // =====================
-
-    public function customer()
+    public function userRole()
     {
-        return $this->hasOne(Customer::class);
+        return $this->hasOne(UserRole::class)->where('is_active', true);
     }
 
-    // =====================
-    // SERVICE REQUEST RELATIONSHIPS
-    // =====================
+    public function ordersAsSalesperson()
+    {
+        return $this->hasMany(Order::class, 'salesperson_id');
+    }
+
+    public function ordersAsTechnician()
+    {
+        return $this->hasMany(Order::class, 'technician_id');
+    }
+
+    public function ordersAsAccountant()
+    {
+        return $this->hasMany(Order::class, 'accountant_id');
+    }
 
     public function assignedServiceRequests()
     {
         return $this->hasMany(ServiceRequest::class, 'assigned_to');
     }
 
-    public function handledServiceRequests()
+    public function managedProviders()
     {
-        return $this->hasMany(ServiceRequest::class, 'admin_handler');
+        return $this->hasMany(Provider::class, 'managed_by');
     }
 
-    // =====================
-    // ORDER RELATIONSHIPS
-    // =====================
-
-    public function salesOrders()
+    public function managedWarehouses()
     {
-        return $this->hasMany(Order::class, 'salesperson_id');
+        return $this->hasMany(Warehouse::class, 'manager_id');
     }
-
-    public function technicianOrders()
-    {
-        return $this->hasMany(Order::class, 'technician_id');
-    }
-
-    public function accountantOrders()
-    {
-        return $this->hasMany(Order::class, 'accountant_id');
-    }
-
-    public function coordinatorOrders()
-    {
-        return $this->hasMany(Order::class, 'partner_coordinator_id');
-    }
-
-    // =====================
-    // ORDER ITEM RELATIONSHIPS
-    // =====================
-
-    public function assignedOrderItems()
-    {
-        return $this->hasMany(OrderItem::class, 'assigned_technician');
-    }
-
-    public function partnerOrderItems()
-    {
-        return $this->hasMany(OrderItem::class, 'partner_technician_id');
-    }
-
-    // =====================
-    // INSPECTION RELATIONSHIPS
-    // =====================
-
-    public function conductedInspections()
-    {
-        return $this->hasMany(VehicleInspection::class, 'inspector_id');
-    }
-
-    public function representedInspections()
-    {
-        return $this->hasMany(VehicleInspection::class, 'customer_representative_id');
-    }
-
-    // =====================
-    // INVOICE & PAYMENT RELATIONSHIPS
-    // =====================
 
     public function createdInvoices()
     {
@@ -178,15 +129,6 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class, 'received_by');
     }
 
-    public function verifiedPayments()
-    {
-        return $this->hasMany(Payment::class, 'verified_by');
-    }
-
-    // =====================
-    // SETTLEMENT RELATIONSHIPS
-    // =====================
-
     public function createdSettlements()
     {
         return $this->hasMany(Settlement::class, 'created_by');
@@ -197,114 +139,9 @@ class User extends Authenticatable
         return $this->hasMany(Settlement::class, 'approved_by');
     }
 
-    public function accountantSettlements()
-    {
-        return $this->hasMany(Settlement::class, 'accountant_id');
-    }
-
-    public function createdSettlementPayments()
-    {
-        return $this->hasMany(SettlementPayment::class, 'created_by');
-    }
-
-    public function approvedSettlementPayments()
-    {
-        return $this->hasMany(SettlementPayment::class, 'approved_by');
-    }
-
-    public function processedSettlementPayments()
-    {
-        return $this->hasMany(SettlementPayment::class, 'processed_by');
-    }
-
-    // =====================
-    // PROVIDER RELATIONSHIPS
-    // =====================
-
-    public function managedProviders()
-    {
-        return $this->hasMany(Provider::class, 'managed_by');
-    }
-
-    // =====================
-    // HANDOVER RELATIONSHIPS
-    // =====================
-
-    public function deliveredHandovers()
-    {
-        return $this->hasMany(PartnerVehicleHandover::class, 'delivered_by');
-    }
-
-    public function receivedHandovers()
-    {
-        return $this->hasMany(PartnerVehicleHandover::class, 'received_by_technician');
-    }
-
-    // =====================
-    // WAREHOUSE RELATIONSHIPS
-    // =====================
-
-    public function managedWarehouses()
-    {
-        return $this->hasMany(Warehouse::class, 'manager_id');
-    }
-
-    public function createdTransfers()
-    {
-        return $this->hasMany(StockTransfer::class, 'created_by');
-    }
-
-    public function approvedTransfers()
-    {
-        return $this->hasMany(StockTransfer::class, 'approved_by');
-    }
-
-    public function sentTransfers()
-    {
-        return $this->hasMany(StockTransfer::class, 'sent_by');
-    }
-
-    public function receivedTransfers()
-    {
-        return $this->hasMany(StockTransfer::class, 'received_by');
-    }
-
-    public function stockMovements()
-    {
-        return $this->hasMany(StockMovement::class, 'created_by');
-    }
-
-    // =====================
-    // DIRECT SALES RELATIONSHIPS
-    // =====================
-
-    public function salesPersonDirectSales()
-    {
-        return $this->hasMany(DirectSale::class, 'salesperson_id');
-    }
-
-    public function createdDirectSales()
-    {
-        return $this->hasMany(DirectSale::class, 'created_by');
-    }
-
-    public function approvedDirectSales()
-    {
-        return $this->hasMany(DirectSale::class, 'approved_by');
-    }
-
-    // =====================
-    // NOTIFICATION RELATIONSHIPS
-    // =====================
-
     public function notifications()
     {
-        return $this->hasMany(Notification::class, 'user_id');
-    }
-
-    public function sentNotifications()
-    {
-        return $this->hasMany(Notification::class, 'sender_id');
+        return $this->hasMany(Notification::class);
     }
 
     // =====================

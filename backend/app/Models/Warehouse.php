@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\WarehouseScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Warehouse extends Model
 {
-    use HasFactory;
+    use HasFactory, WarehouseScopes;
 
     protected $fillable = [
         'code',
@@ -59,29 +60,30 @@ class Warehouse extends Model
         return $this->belongsTo(User::class, 'manager_id');
     }
 
-    public function warehouseStocks()
+    public function stocks()
     {
         return $this->hasMany(WarehouseStock::class);
     }
 
     public function products()
     {
-        return $this->hasMany(Product::class, 'primary_warehouse_id');
-    }
-
-    public function outgoingTransfers()
-    {
-        return $this->hasMany(StockTransfer::class, 'from_warehouse_id');
-    }
-
-    public function incomingTransfers()
-    {
-        return $this->hasMany(StockTransfer::class, 'to_warehouse_id');
+        return $this->belongsToMany(Product::class, 'warehouse_stocks')
+            ->withPivot(['quantity', 'available_quantity', 'reserved_quantity']);
     }
 
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function transfersFrom()
+    {
+        return $this->hasMany(StockTransfer::class, 'from_warehouse_id');
+    }
+
+    public function transfersTo()
+    {
+        return $this->hasMany(StockTransfer::class, 'to_warehouse_id');
     }
 
     public function directSales()
@@ -112,34 +114,4 @@ class Warehouse extends Model
         }
         return $result;
     }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeMainWarehouse($query)
-    {
-        return $query->where('is_main_warehouse', true);
-    }
-
-    public function scopePartnerWarehouses($query)
-    {
-        return $query->where('type', 'partner');
-    }
-
-    public function scopeCanReceive($query)
-    {
-        return $query->where('can_receive_transfers', true);
-    }
-
-    public function scopeCanSend($query)
-    {
-        return $query->where('can_send_transfers', true);
-    }
 }
-

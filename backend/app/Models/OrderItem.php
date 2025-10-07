@@ -75,19 +75,14 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function assignedTechnicianUser()
+    public function assignedTechnician()
     {
         return $this->belongsTo(User::class, 'assigned_technician');
     }
 
-    public function partnerTechnician()
+    public function warranty()
     {
-        return $this->belongsTo(User::class, 'partner_technician_id');
-    }
-
-    public function warranties()
-    {
-        return $this->hasMany(Warranty::class);
+        return $this->hasOne(Warranty::class);
     }
 
     // =====================
@@ -123,4 +118,3 @@ class OrderItem extends Model
         return $query->where('has_warranty', true);
     }
 }
-

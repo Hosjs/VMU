@@ -2,8 +2,8 @@ import type { Route } from "./+types/register";
 import { useState } from "react";
 import { CompanyLogo } from "~/components/Logo";
 import { PhoneIcon } from "~/components/Icons";
-import { useNavigateWithTransition } from "~/components/PageTransition";
-import { LoadingSpinner } from "~/components/Loading";
+import { useNavigateWithTransition, usePageTransition } from "~/components/PageTransition";
+import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -14,6 +14,8 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Register() {
     const navigateWithTransition = useNavigateWithTransition();
+    const { isTransitioning } = usePageTransition();
+    const { register } = useAuth();
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -22,7 +24,6 @@ export default function Register() {
         confirmPassword: "",
         acceptTerms: false
     });
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -35,8 +36,8 @@ export default function Register() {
             return;
         }
 
-        if (formData.password.length < 6) {
-            setError("Mật khẩu phải có ít nhất 6 ký tự");
+        if (formData.password.length < 8) {
+            setError("Mật khẩu phải có ít nhất 8 ký tự");
             return;
         }
 
@@ -45,17 +46,24 @@ export default function Register() {
             return;
         }
 
-        setIsLoading(true);
-
         try {
-            // TODO: Implement actual register API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Gọi API register thật
+            await register({
+                name: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+                password_confirmation: formData.confirmPassword,
+                phone: formData.phone,
+            });
 
-            // Navigate với preloader đẹp
-            navigateWithTransition("/login", { transitionType: 'preloader' });
-        } catch (err) {
-            setError("Đăng ký thất bại. Vui lòng thử lại.");
-            setIsLoading(false);
+            // Register thành công, chuyển đến dashboard
+            navigateWithTransition("/dashboard", {
+                transitionType: 'preloader',
+                animationType: 'slide'
+            });
+        } catch (err: any) {
+            // Hiển thị lỗi từ API
+            setError(err.message || "Đăng ký thất bại. Vui lòng thử lại.");
         }
     };
 
@@ -141,7 +149,7 @@ export default function Register() {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm animate-fade-in">
                             {error}
                         </div>
                     )}
@@ -161,7 +169,8 @@ export default function Register() {
                                     required
                                     value={formData.fullName}
                                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="Nguyễn Văn A"
                                 />
                             </div>
@@ -178,7 +187,8 @@ export default function Register() {
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="example@email.com"
                                 />
                             </div>
@@ -195,7 +205,8 @@ export default function Register() {
                                     required
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="0123456789"
                                 />
                             </div>
@@ -212,7 +223,8 @@ export default function Register() {
                                     required
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -229,7 +241,8 @@ export default function Register() {
                                     required
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isTransitioning}
+                                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -244,44 +257,61 @@ export default function Register() {
                                     type="checkbox"
                                     checked={formData.acceptTerms}
                                     onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    disabled={isTransitioning}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                                 />
                             </div>
                             <div className="ml-3 text-sm">
                                 <label htmlFor="acceptTerms" className="text-gray-700">
                                     Tôi đồng ý với{" "}
-                                    <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            // TODO: Implement terms modal
+                                            console.log('Terms clicked');
+                                        }}
+                                        className="font-medium text-blue-600 hover:text-blue-500"
+                                    >
                                         điều khoản sử dụng
-                                    </a>{" "}
+                                    </button>{" "}
                                     và{" "}
-                                    <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            // TODO: Implement privacy modal
+                                            console.log('Privacy clicked');
+                                        }}
+                                        className="font-medium text-blue-600 hover:text-blue-500"
+                                    >
                                         chính sách bảo mật
-                                    </a>
+                                    </button>
                                 </label>
                             </div>
                         </div>
 
-                        {/* Submit Button - SỬ DỤNG LoadingSpinner */}
+                        {/* Submit Button */}
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                            disabled={isTransitioning}
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                         >
-                            {isLoading ? (
-                                <LoadingSpinner size="sm" />
-                            ) : (
-                                "Đăng Ký"
-                            )}
+                            {isTransitioning ? "Đang xử lý..." : "Đăng Ký"}
                         </button>
 
-                        {/* Login Link - SỬ DỤNG navigateWithTransition */}
+                        {/* Login Link */}
                         <div className="text-center">
                             <p className="text-sm text-gray-600">
                                 Đã có tài khoản?{" "}
                                 <button
                                     type="button"
-                                    onClick={() => navigateWithTransition('/login', { transitionType: 'preloader' })}
-                                    className="font-medium text-blue-600 hover:text-blue-500"
+                                    onClick={() => navigateWithTransition('/login', {
+                                        transitionType: 'preloader',
+                                        animationType: 'slide'
+                                    })}
+                                    disabled={isTransitioning}
+                                    className="font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50"
                                 >
                                     Đăng nhập ngay
                                 </button>
@@ -289,11 +319,15 @@ export default function Register() {
                         </div>
                     </form>
 
-                    {/* Back to Home - SỬ DỤNG navigateWithTransition */}
+                    {/* Back to Home */}
                     <div className="text-center">
                         <button
-                            onClick={() => navigateWithTransition('/', { transitionType: 'preloader' })}
-                            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+                            onClick={() => navigateWithTransition('/', {
+                                transitionType: 'preloader',
+                                animationType: 'fade'
+                            })}
+                            disabled={isTransitioning}
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:opacity-50"
                         >
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

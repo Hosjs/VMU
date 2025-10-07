@@ -107,4 +107,3 @@ class SettlementPayment extends Model
         return $query->where('status', 'completed');
     }
 }
-

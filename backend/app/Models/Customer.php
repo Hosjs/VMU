@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\CustomerScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
-    use HasFactory;
+    use HasFactory, CustomerScopes;
 
     protected $fillable = [
         'name',
@@ -45,6 +46,11 @@ class Customer extends Model
         return $this->hasMany(Vehicle::class);
     }
 
+    public function activeVehicles()
+    {
+        return $this->hasMany(Vehicle::class)->where('is_active', true);
+    }
+
     public function orders()
     {
         return $this->hasMany(Order::class);
@@ -58,6 +64,11 @@ class Customer extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function serviceRequests()
+    {
+        return $this->hasMany(ServiceRequest::class);
     }
 
     public function warranties()
@@ -92,27 +103,5 @@ class Customer extends Model
             }
         }
         return $result;
-    }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeHasInsurance($query)
-    {
-        return $query->whereNotNull('insurance_company');
-    }
-
-    public function scopeInsuranceExpiring($query, $days = 30)
-    {
-        return $query->whereBetween('insurance_expiry', [
-            now(),
-            now()->addDays($days)
-        ]);
     }
 }

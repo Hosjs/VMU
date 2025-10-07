@@ -68,10 +68,6 @@ class WarehouseStock extends Model
         return $this->belongsTo(Product::class);
     }
 
-    // =====================
-    // ACCESSORS
-    // =====================
-
     public function getNeedsReorderAttribute()
     {
         return $this->quantity <= $this->reorder_point;
@@ -116,4 +112,3 @@ class WarehouseStock extends Model
         ]);
     }
 }
-

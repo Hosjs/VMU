@@ -1,73 +1,69 @@
-import type { Product, CreateProductData, UpdateProductData, Category } from '~/types/product';
+import { apiService } from './api.service';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
-import { api } from '~/utils/api';
-import { authService } from '~/utils/auth';
+import type { Product, CreateProductData, UpdateProductData } from '~/types/product';
 
-export const productService = {
-  async getAll(params?: TableQueryParams): Promise<PaginatedResponse<Product>> {
-    const token = authService.getToken();
-    const queryString = new URLSearchParams(params as any).toString();
-    return api.get<PaginatedResponse<Product>>(
-      `/products${queryString ? `?${queryString}` : ''}`,
-      token || undefined
-    );
-  },
+export interface ProductStatistics {
+  total: number;
+  active: number;
+  inactive: number;
+  stockable: number;
+  with_warranty: number;
+  total_value: number;
+  low_stock_count: number;
+}
 
-  async getById(id: number): Promise<Product> {
-    const token = authService.getToken();
-    return api.get<Product>(`/products/${id}`, token || undefined);
-  },
+class ProductService {
+  private readonly BASE_PATH = '/admin/products';
 
-  async create(data: CreateProductData): Promise<Product> {
-    const token = authService.getToken();
-    return api.post<Product>('/products', data, token || undefined);
-  },
+  /**
+   * Get paginated list of products
+   */
+  async getProducts(params: TableQueryParams): Promise<PaginatedResponse<Product>> {
+    return apiService.getPaginated<Product>(this.BASE_PATH, params);
+  }
 
-  async update(id: number, data: UpdateProductData): Promise<Product> {
-    const token = authService.getToken();
-    return api.put<Product>(`/products/${id}`, data, token || undefined);
-  },
+  /**
+   * Get single product by ID
+   */
+  async getProductById(id: number): Promise<Product> {
+    return apiService.get<Product>(`${this.BASE_PATH}/${id}`);
+  }
 
-  async delete(id: number): Promise<void> {
-    const token = authService.getToken();
-    return api.delete<void>(`/products/${id}`, token || undefined);
-  },
+  /**
+   * Create new product
+   */
+  async createProduct(data: CreateProductData): Promise<Product> {
+    return apiService.post<Product>(this.BASE_PATH, data);
+  }
 
-  async updateStock(id: number, quantity: number, type: 'add' | 'subtract'): Promise<Product> {
-    const token = authService.getToken();
-    return api.post<Product>(`/products/${id}/stock`, { quantity, type }, token || undefined);
-  },
+  /**
+   * Update existing product
+   */
+  async updateProduct(id: number, data: UpdateProductData): Promise<Product> {
+    return apiService.put<Product>(`${this.BASE_PATH}/${id}`, data);
+  }
 
-  async getLowStock(): Promise<Product[]> {
-    const token = authService.getToken();
-    return api.get<Product[]>('/products/low-stock', token || undefined);
-  },
-};
+  /**
+   * Delete product (deactivate)
+   */
+  async deleteProduct(id: number): Promise<void> {
+    return apiService.delete<void>(`${this.BASE_PATH}/${id}`);
+  }
 
-export const categoryService = {
-  async getAll(): Promise<Category[]> {
-    const token = authService.getToken();
-    return api.get<Category[]>('/categories', token || undefined);
-  },
+  /**
+   * Get product statistics
+   */
+  async getStatistics(): Promise<ProductStatistics> {
+    return apiService.get<ProductStatistics>(`${this.BASE_PATH}-statistics`);
+  }
 
-  async getById(id: number): Promise<Category> {
-    const token = authService.getToken();
-    return api.get<Category>(`/categories/${id}`, token || undefined);
-  },
+  /**
+   * Get low stock products
+   */
+  async getLowStockProducts(params: TableQueryParams): Promise<PaginatedResponse<Product>> {
+    return apiService.getPaginated<Product>(`${this.BASE_PATH}-low-stock`, params);
+  }
+}
 
-  async create(data: Partial<Category>): Promise<Category> {
-    const token = authService.getToken();
-    return api.post<Category>('/categories', data, token || undefined);
-  },
-
-  async update(id: number, data: Partial<Category>): Promise<Category> {
-    const token = authService.getToken();
-    return api.put<Category>(`/categories/${id}`, data, token || undefined);
-  },
-
-  async delete(id: number): Promise<void> {
-    const token = authService.getToken();
-    return api.delete<void>(`/categories/${id}`, token || undefined);
-  },
-};
+export const productService = new ProductService();
 

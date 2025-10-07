@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\VehicleScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Vehicle extends Model
 {
-    use HasFactory;
+    use HasFactory, VehicleScopes;
 
     protected $fillable = [
         'customer_id',
@@ -80,62 +81,5 @@ class Vehicle extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
-    }
-
-    public function handovers()
-    {
-        return $this->hasMany(PartnerVehicleHandover::class);
-    }
-
-    // =====================
-    // ACCESSORS
-    // =====================
-
-    public function getImageUrlsArrayAttribute()
-    {
-        return $this->image_urls ? explode('|', $this->image_urls) : [];
-    }
-
-    public function getFullNameAttribute()
-    {
-        return $this->brand->name . ' ' . $this->model->name . ' (' . $this->license_plate . ')';
-    }
-
-    public function getNeedsMaintenanceAttribute()
-    {
-        return $this->next_maintenance && $this->next_maintenance <= now()->addDays(7);
-    }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeMaintenanceDue($query, $days = 7)
-    {
-        return $query->whereBetween('next_maintenance', [
-            now(),
-            now()->addDays($days)
-        ]);
-    }
-
-    public function scopeInsuranceExpiring($query, $days = 30)
-    {
-        return $query->whereBetween('insurance_expiry', [
-            now(),
-            now()->addDays($days)
-        ]);
-    }
-
-    public function scopeRegistrationExpiring($query, $days = 30)
-    {
-        return $query->whereBetween('registration_expiry', [
-            now(),
-            now()->addDays($days)
-        ]);
     }
 }

@@ -1,33 +1,80 @@
 import { Outlet } from 'react-router';
 import { useAuth } from '~/contexts/AuthContext';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigateWithTransition } from '~/components/PageTransition';
+import { Loading } from '~/components/Loading';
 
 export default function DashboardLayout() {
-  const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const navigateWithTransition = useNavigateWithTransition();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
+    // Chờ auth loading xong
+    if (authLoading) {
       return;
     }
 
-    // Redirect based on role
-    const role = user?.role?.name;
-    if (role === 'admin') {
-      navigate('/admin/dashboard');
-    } else if (role === 'manager') {
-      navigate('/manager/dashboard');
-    } else if (role === 'accountant') {
-      navigate('/accountant/dashboard');
-    } else if (role === 'mechanic') {
-      navigate('/mechanic/dashboard');
-    } else {
-      navigate('/employee/dashboard');
+    // Nếu đã redirect rồi thì không làm gì nữa
+    if (hasRedirected) {
+      return;
     }
-  }, [isAuthenticated, user, navigate]);
+
+    // Nếu chưa login → redirect về login
+    if (!isAuthenticated) {
+      setHasRedirected(true);
+      navigateWithTransition('/login', {
+        transitionType: 'preloader',
+        animationType: 'fade',
+        replace: true
+      });
+      return;
+    }
+
+    // Nếu đã login → redirect theo role
+    const role = user?.role?.name;
+
+    // Redirect dựa theo role
+    setHasRedirected(true);
+
+    if (role === 'admin') {
+      navigateWithTransition('/admin/dashboard', {
+        transitionType: 'preloader',
+        animationType: 'slide',
+        replace: true
+      });
+    } else if (role === 'manager') {
+      navigateWithTransition('/manager/dashboard', {
+        transitionType: 'preloader',
+        animationType: 'slide',
+        replace: true
+      });
+    } else if (role === 'accountant') {
+      navigateWithTransition('/accountant/dashboard', {
+        transitionType: 'preloader',
+        animationType: 'slide',
+        replace: true
+      });
+    } else if (role === 'mechanic') {
+      navigateWithTransition('/mechanic/dashboard', {
+        transitionType: 'preloader',
+        animationType: 'slide',
+        replace: true
+      });
+    } else {
+      // Nếu không có role hoặc role không khớp → mặc định employee
+      navigateWithTransition('/employee/dashboard', {
+        transitionType: 'preloader',
+        animationType: 'slide',
+        replace: true
+      });
+    }
+  }, [isAuthenticated, user, navigateWithTransition, authLoading, hasRedirected]);
+
+  // Show loading khi đang check auth hoặc đang redirect
+  if (authLoading || !hasRedirected) {
+    return <Loading text="Đang kiểm tra quyền truy cập..." />;
+  }
 
   return <Outlet />;
 }
-

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\ServiceRequestScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ServiceRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, ServiceRequestScopes;
 
     protected $fillable = [
         'code',
@@ -35,10 +36,10 @@ class ServiceRequest extends Model
     ];
 
     protected $casts = [
+        'vehicle_year' => 'integer',
         'preferred_date' => 'datetime',
         'contacted_at' => 'datetime',
         'scheduled_at' => 'datetime',
-        'vehicle_year' => 'integer',
     ];
 
     // =====================
@@ -50,7 +51,7 @@ class ServiceRequest extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function assignedUser()
+    public function assignedTo()
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
@@ -65,53 +66,13 @@ class ServiceRequest extends Model
         return $this->belongsTo(Provider::class, 'selected_provider_id');
     }
 
-    public function serviceRequestServices()
+    public function requestedServices()
     {
         return $this->hasMany(ServiceRequestService::class);
     }
 
-    public function services()
+    public function order()
     {
-        return $this->belongsToMany(Service::class, 'service_request_services')
-            ->withPivot('description', 'priority', 'quantity', 'estimated_price', 'notes')
-            ->withTimestamps();
-    }
-
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
-
-    // =====================
-    // ACCESSORS
-    // =====================
-
-    public function getAttachmentUrlsArrayAttribute()
-    {
-        return $this->attachment_urls ? explode('|', $this->attachment_urls) : [];
-    }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    public function scopeByPriority($query, $priority)
-    {
-        return $query->where('priority', $priority);
-    }
-
-    public function scopeHighPriority($query)
-    {
-        return $query->whereIn('priority', ['high', 'urgent']);
+        return $this->hasOne(Order::class);
     }
 }

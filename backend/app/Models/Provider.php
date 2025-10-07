@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\QueryScopes\ProviderScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Provider extends Model
 {
-    use HasFactory;
+    use HasFactory, ProviderScopes;
 
     protected $fillable = [
         'code',
@@ -74,9 +75,9 @@ class Provider extends Model
         return $this->hasMany(Settlement::class);
     }
 
-    public function settlementPayments()
+    public function pendingSettlements()
     {
-        return $this->hasMany(SettlementPayment::class);
+        return $this->hasMany(Settlement::class)->whereIn('payment_status', ['unpaid', 'partial']);
     }
 
     public function serviceRequests()
@@ -84,7 +85,7 @@ class Provider extends Model
         return $this->hasMany(ServiceRequest::class, 'selected_provider_id');
     }
 
-    public function handovers()
+    public function vehicleHandovers()
     {
         return $this->hasMany(PartnerVehicleHandover::class);
     }
@@ -127,4 +128,3 @@ class Provider extends Model
         return $query->where('rating', '>=', $minRating);
     }
 }
-

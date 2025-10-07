@@ -35,13 +35,4 @@ class VehicleBrand extends Model
     {
         return $this->hasMany(Vehicle::class, 'brand_id');
     }
-
-    // =====================
-    // SCOPES
-    // =====================
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
 }
