@@ -4,14 +4,11 @@ import { ServiceDetail } from "~/components/ServiceDetail";
 import { CompanyLogo } from "~/components/Logo";
 import { BookingModal } from "~/components/BookingModal";
 import { ConsultationModal } from "~/components/ConsultationModal";
-import { SkeletonLoader } from "~/components/Loading";
 import { ServicesList } from "~/components/ServicesList";
 import { Partners } from "~/components/Partners";
 import { GoogleMap, LocationSection } from "~/components/GoogleMap";
-import { usePageTransition, useNavigateWithTransition } from "~/components/PageTransition";
+import { usePageTransition, useNavigateWithTransition, useImagePreloader, ImagePreloader } from "~/components/LoadingSystem";
 import { MAIN_SERVICES, getServiceByTitle } from "~/data/services";
-import { ImagePreloader } from "~/components/ImagePreloader";
-import { useImagePreloader } from "~/hooks/useImagePreloader";
 import { handleAnchorClick } from "~/utils/scrollUtils";
 import { useAuth } from "~/contexts/AuthContext";
 import {

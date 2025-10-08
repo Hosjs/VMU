@@ -2,7 +2,7 @@ import type { Route } from "./+types/register";
 import { useState } from "react";
 import { CompanyLogo } from "~/components/Logo";
 import { PhoneIcon } from "~/components/Icons";
-import { useNavigateWithTransition, usePageTransition } from "~/components/PageTransition";
+import { useNavigateWithTransition, usePageTransition } from "~/components/LoadingSystem";
 import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {

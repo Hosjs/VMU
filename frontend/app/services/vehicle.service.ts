@@ -1,5 +1,5 @@
 // Vehicle API Service
-import { apiClient } from '~/utils/api';
+import { apiService } from './api.service';
 import type {
   Vehicle,
   VehicleBrand,
@@ -15,23 +15,19 @@ import type {
 export const vehicleService = {
   // Vehicle Brands
   async getBrands(params?: TableQueryParams): Promise<PaginatedResponse<VehicleBrand>> {
-    const response = await apiClient.get('/vehicle-brands', { params });
-    return response.data;
+    return apiService.getPaginated<VehicleBrand>('/vehicle-brands', params);
   },
 
   async getBrandById(id: number): Promise<VehicleBrand> {
-    const response = await apiClient.get(`/vehicle-brands/${id}`);
-    return response.data;
+    return apiService.get<VehicleBrand>(`/vehicle-brands/${id}`);
   },
 
   async createBrand(data: any): Promise<VehicleBrand> {
-    const response = await apiClient.post('/vehicle-brands', data);
-    return response.data;
+    return apiService.post<VehicleBrand>('/vehicle-brands', data);
   },
 
   async updateBrand(id: number, data: any): Promise<VehicleBrand> {
-    const response = await apiClient.put(`/vehicle-brands/${id}`, data);
-    return response.data;
+    return apiService.put<VehicleBrand>(`/vehicle-brands/${id}`, data);
   },
 
   // Vehicle Models
@@ -323,4 +319,3 @@ export const providerService = {
     return response.data;
   },
 };
-

@@ -4,6 +4,7 @@ import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
+import { LoadingSpinner } from '~/components/LoadingSystem';
 
 interface Customer {
     id: number;
@@ -86,8 +87,10 @@ export default function Customers() {
             <Card>
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        <p className="mt-4 text-gray-600">Đang tải...</p>
+                        <div className="flex flex-col items-center">
+                            <LoadingSpinner size="lg" />
+                            <p className="mt-4 text-gray-600">Đang tải...</p>
+                        </div>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -146,4 +149,3 @@ export default function Customers() {
         </div>
     );
 }
-

@@ -4,80 +4,58 @@ import type {
   CreateServiceRequestData
 } from '~/types/service';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
-import { api } from '~/utils/api';
-import { authService } from '~/utils/auth';
+import { apiService } from './api.service';
 
 export const serviceService = {
   async getAll(params?: TableQueryParams): Promise<PaginatedResponse<Service>> {
-    const token = authService.getToken();
-    const queryString = new URLSearchParams(params as any).toString();
-    return api.get<PaginatedResponse<Service>>(
-      `/services${queryString ? `?${queryString}` : ''}`,
-      token || undefined
-    );
+    return apiService.getPaginated<Service>('/services', params);
   },
 
   async getById(id: number): Promise<Service> {
-    const token = authService.getToken();
-    return api.get<Service>(`/services/${id}`, token || undefined);
+    return apiService.get<Service>(`/services/${id}`);
   },
 
   async create(data: Partial<Service>): Promise<Service> {
-    const token = authService.getToken();
-    return api.post<Service>('/services', data, token || undefined);
+    return apiService.post<Service>('/services', data);
   },
 
   async update(id: number, data: Partial<Service>): Promise<Service> {
-    const token = authService.getToken();
-    return api.put<Service>(`/services/${id}`, data, token || undefined);
+    return apiService.put<Service>(`/services/${id}`, data);
   },
 
   async delete(id: number): Promise<void> {
-    const token = authService.getToken();
-    return api.delete<void>(`/services/${id}`, token || undefined);
+    return apiService.delete<void>(`/services/${id}`);
   },
 };
 
 export const serviceRequestService = {
   async getAll(params?: TableQueryParams): Promise<PaginatedResponse<ServiceRequest>> {
-    const token = authService.getToken();
-    const queryString = new URLSearchParams(params as any).toString();
-    return api.get<PaginatedResponse<ServiceRequest>>(
-      `/service-requests${queryString ? `?${queryString}` : ''}`,
-      token || undefined
-    );
+    return apiService.getPaginated<ServiceRequest>('/service-requests', params);
   },
 
   async getById(id: number): Promise<ServiceRequest> {
-    const token = authService.getToken();
-    return api.get<ServiceRequest>(`/service-requests/${id}`, token || undefined);
+    return apiService.get<ServiceRequest>(`/service-requests/${id}`);
   },
 
   async create(data: CreateServiceRequestData): Promise<ServiceRequest> {
-    const token = authService.getToken();
-    return api.post<ServiceRequest>('/service-requests', data, token || undefined);
+    return apiService.post<ServiceRequest>('/service-requests', data);
   },
 
   async update(id: number, data: Partial<ServiceRequest>): Promise<ServiceRequest> {
-    const token = authService.getToken();
-    return api.put<ServiceRequest>(`/service-requests/${id}`, data, token || undefined);
+    return apiService.put<ServiceRequest>(`/service-requests/${id}`, data);
   },
 
   async updateStatus(
     id: number,
     status: 'pending' | 'approved' | 'rejected' | 'completed'
   ): Promise<ServiceRequest> {
-    const token = authService.getToken();
-    return api.post<ServiceRequest>(
+    return apiService.post<ServiceRequest>(
       `/service-requests/${id}/status`,
-      { status },
-      token || undefined
+      { status }
     );
   },
 
   async delete(id: number): Promise<void> {
-    const token = authService.getToken();
-    return api.delete<void>(`/service-requests/${id}`, token || undefined);
+    return apiService.delete<void>(`/service-requests/${id}`);
   },
 };
-

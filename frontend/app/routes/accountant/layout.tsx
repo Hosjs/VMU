@@ -1,14 +1,13 @@
+import { Outlet } from 'react-router';
+import { useAuth } from '~/contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
-import { useAuth } from '~/contexts/AuthContext';
-import { Loading } from '~/components/Loading';
-import { DashboardLayout } from '~/components/layout';
+import { FullScreenLoader } from '~/components/LoadingSystem';
 
 export default function AccountantLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Role Check - chỉ accountant mới vào được
   useEffect(() => {
     if (!isLoading && isAuthenticated && user?.role?.name !== 'accountant') {
       navigate('/dashboard', { replace: true });
@@ -16,8 +15,8 @@ export default function AccountantLayout() {
   }, [isAuthenticated, isLoading, user, navigate]);
 
   if (isLoading || user?.role?.name !== 'accountant') {
-    return <Loading text="Đang kiểm tra quyền truy cập..." />;
+    return <FullScreenLoader text="Đang kiểm tra quyền truy cập..." />;
   }
 
-  return <DashboardLayout />;
+  return <Outlet />;
 }

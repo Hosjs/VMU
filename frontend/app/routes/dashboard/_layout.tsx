@@ -1,8 +1,7 @@
 import { Outlet } from 'react-router';
 import { useAuth } from '~/contexts/AuthContext';
 import { useEffect, useState } from 'react';
-import { useNavigateWithTransition } from '~/components/PageTransition';
-import { Loading } from '~/components/Loading';
+import { useNavigateWithTransition, FullScreenLoader } from '~/components/LoadingSystem';
 
 export default function DashboardLayout() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -73,7 +72,7 @@ export default function DashboardLayout() {
 
   // Show loading khi đang check auth hoặc đang redirect
   if (authLoading || !hasRedirected) {
-    return <Loading text="Đang kiểm tra quyền truy cập..." />;
+    return <FullScreenLoader text="Đang kiểm tra quyền truy cập..." />;
   }
 
   return <Outlet />;

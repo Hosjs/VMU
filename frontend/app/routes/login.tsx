@@ -1,7 +1,7 @@
 import type { Route } from "./+types/login";
 import { useState } from "react";
 import { CompanyLogo } from "~/components/Logo";
-import { useNavigateWithTransition, usePageTransition } from "~/components/PageTransition";
+import { useNavigateWithTransition, usePageTransition } from "~/components/LoadingSystem";
 import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {

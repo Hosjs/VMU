@@ -1,42 +1,47 @@
 // Main Components Export - Single Source of Truth
 // This file serves as the central export point for all reusable components
 
-// Loading Components
+// ============================================
+// UNIFIED LOADING SYSTEM - All-in-one
+// ============================================
 export {
-  Loading,
+  // Basic loaders
   LoadingSpinner,
-  LoadingOverlay,
   SkeletonLoader,
-  PageTransitionLoader,
+
+  // Full-screen loaders
+  FullScreenLoader,
+  GradientLoader,
+  ModalLoader,
+
+  // Progress loaders
   ProgressLoader,
+  ImagePreloader,
+
+  // Content loaders (cho protected routes)
+  ContentLoader,
+  SimpleContentLoader,
+
+  // Specialized loaders
   CarAnimationLoader,
-} from './Loading';
 
-// Image Preloader Components
-export { ImagePreloader, SimpleImageLoader } from './ImagePreloader';
-
-// Page Transition
-export {
+  // Page Transition System
   usePageTransition,
   PageTransitionProvider,
   useNavigateWithTransition,
-} from './PageTransition';
+  useRouteAnimation,
+
+  // Image Preloader Hooks
+  useImagePreloader,
+  usePreloadImages,
+} from './LoadingSystem';
+
+// Legacy exports - giữ để tương thích ngược
+export { CompanyLogo } from './Logo';
 
 // UI Components
-export {
-  Input,
-  Select,
-  Button,
-  Badge,
-  Card,
-  Modal,
-  Table,
-  Toast,
-  Pagination,
-} from './ui';
+export { Input, Select, Button, Badge, Card, Modal, Table, Toast, Pagination } from './ui';
 
-// Layout Components
-export { CompanyLogo } from './Logo';
 // Feature Components
 export { BookingModal } from './BookingModal';
 export { ConsultationModal } from './ConsultationModal';
@@ -46,8 +51,6 @@ export { ServicesCarousel } from './ServicesCarousel';
 export { Partners } from './Partners';
 export { GoogleMap, LocationSection } from './GoogleMap';
 export { InsuranceServices } from './InsuranceServices';
-
-// HOC Components
 export { ModalPortal } from './ModalPortal';
 
 // Icons

@@ -151,7 +151,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="px-3 py-4 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+        <nav className="px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 280px)' }}>
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -198,6 +198,44 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           aria-hidden="true"
         />
       )}
+
+      {/* Custom Scrollbar Styles */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(31, 41, 55, 0.3);
+          border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
+          border-radius: 10px;
+          transition: all 0.3s ease;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #2563eb 0%, #7c3aed 100%);
+          width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:active {
+          background: linear-gradient(180deg, #1d4ed8 0%, #6d28d9 100%);
+        }
+
+        /* Firefox */
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #3b82f6 rgba(31, 41, 55, 0.3);
+        }
+
+        /* Smooth scroll behavior */
+        .custom-scrollbar {
+          scroll-behavior: smooth;
+        }
+      `}</style>
     </>
   );
 }

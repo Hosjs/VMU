@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Button } from '~/components/ui/Button';
+import { LoadingSpinner } from '~/components/LoadingSystem';
 
 interface Vehicle {
   id: number;
@@ -29,7 +30,9 @@ export default function Vehicles() {
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Quản lý xe</h1>
       <Card>
         {loading ? (
-          <div className="text-center py-12"><div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>
+          <div className="text-center py-12">
+            <LoadingSpinner size="lg" />
+          </div>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50 border-b">

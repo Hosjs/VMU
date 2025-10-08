@@ -299,14 +299,91 @@ html {
 /* Stagger animation for lists */
 .stagger-item {
     animation: slideUp 0.5s ease-out;
-    animation-fill-mode: backwards;
 }
 
-.stagger-item:nth-child(1) { animation-delay: 0.1s; }
-.stagger-item:nth-child(2) { animation-delay: 0.2s; }
-.stagger-item:nth-child(3) { animation-delay: 0.3s; }
-.stagger-item:nth-child(4) { animation-delay: 0.4s; }
-.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+/* ===================================
+   2. SMOOTH PAGE CONTENT ANIMATIONS
+   =================================== */
+
+/* Fade in animation for main content */
+.animate-fadeIn {
+    animation: contentFadeIn 0.4s ease-out;
+}
+
+@keyframes contentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Smooth transition for all interactive elements */
+button, a, input, select, textarea {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Card hover animations */
+.card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ===================================
+   3. CUSTOM ANIMATIONS FOR LOADERS
+   =================================== */
+
+/* Pulse animation for loading states */
+.animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Bounce animation with custom timing */
+.animate-bounce-slow {
+    animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+}
+
+/* ===================================
+   4. RESPONSIVE UTILITIES
+   =================================== */
+
+/* Smooth transitions for responsive layouts */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
 
 /* ===================================
    2. BUTTON & INTERACTIVE ELEMENTS
@@ -428,8 +505,8 @@ a:hover {
 }
 
 .card-hover:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Enhanced card hover effects */
@@ -639,4 +716,3 @@ a:hover {
         gap: 1.5rem;
     }
 }
-

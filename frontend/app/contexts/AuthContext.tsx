@@ -1,7 +1,17 @@
+/**
+ * ============================================
+ * AUTH CONTEXT - REACT STATE MANAGEMENT ONLY
+ * ============================================
+ * CHỈ quản lý state cho UI, KHÔNG chứa business logic
+ * Business logic đã được chuyển sang services/auth.service.ts
+ *
+ * @version 2.0 - Simplified (State Only)
+ */
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AuthUser, LoginCredentials, AuthContextType, RegisterData } from '~/types/auth';
-import { authService } from '~/utils/auth';
+import { authService } from '~/services/auth.service';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -9,8 +19,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Initialize auth state on mount
   useEffect(() => {
-    // Check if user is logged in on mount
     const initAuth = async () => {
       const storedUser = authService.getStoredUser();
 
@@ -26,18 +36,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
+  // Login handler
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
       const response = await authService.login(credentials);
       setUser(response.user);
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Register handler
   const register = async (data: RegisterData) => {
     setIsLoading(true);
     try {
@@ -48,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Logout handler
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -58,33 +69,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const hasRole = (role: string): boolean => {
-    return user?.role?.name === role;
+  // Refresh user data
+  const refreshUser = async () => {
+    const currentUser = await authService.getCurrentUser();
+    setUser(currentUser);
   };
 
-  const hasPermission = (permission: string): boolean => {
-    return user?.role?.permissions?.includes(permission) ?? false;
-  };
-
-  const updateUser = (updatedUser: AuthUser) => {
-    setUser(updatedUser);
-  };
-
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    login,
-    register,
-    logout,
-    hasRole,
-    hasPermission,
-    updateUser,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isAuthenticated: !!user,
+        login,
+        register,
+        logout,
+        refreshUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
+// Hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

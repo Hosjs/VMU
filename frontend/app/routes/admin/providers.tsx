@@ -4,6 +4,7 @@ import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
+import { LoadingSpinner } from '~/components/LoadingSystem';
 
 interface Provider {
   id: number;
@@ -87,7 +88,7 @@ export default function Providers() {
       <Card>
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <LoadingSpinner size="lg" />
           </div>
         ) : (
           <div className="overflow-x-auto">

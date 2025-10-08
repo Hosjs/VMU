@@ -1,5 +1,5 @@
 // Notification API Service
-import { apiClient } from '~/utils/api';
+import { apiService } from './api.service';
 import type {
   Notification,
   CreateNotificationData,
@@ -10,155 +10,151 @@ import type {
 export const notificationService = {
   // Get notifications
   async getAll(params?: TableQueryParams): Promise<PaginatedResponse<Notification>> {
-    const response = await apiClient.get('/notifications', { params });
-    return response.data;
+    return apiService.getPaginated<Notification>('/notifications', params);
   },
 
   async getById(id: number): Promise<Notification> {
-    const response = await apiClient.get(`/notifications/${id}`);
-    return response.data;
+    return apiService.get<Notification>(`/notifications/${id}`);
   },
 
   async getUnread(): Promise<Notification[]> {
-    const response = await apiClient.get('/notifications/unread');
-    return response.data;
+    return apiService.get<Notification[]>('/notifications/unread');
   },
 
   async getUnreadCount(): Promise<number> {
-    const response = await apiClient.get('/notifications/unread-count');
-    return response.data;
+    return apiService.get<number>('/notifications/unread-count');
   },
 
   async getRecent(limit: number = 10): Promise<Notification[]> {
-    const response = await apiClient.get('/notifications/recent', { params: { limit } });
+    const response = await apiService.get<Notification[]>('/notifications/recent', { params: { limit } });
     return response.data;
   },
 
   async getByType(type: string, params?: TableQueryParams): Promise<PaginatedResponse<Notification>> {
-    const response = await apiClient.get(`/notifications/type/${type}`, { params });
+    const response = await apiService.get<Notification[]>(`/notifications/type/${type}`, { params });
     return response.data;
   },
 
   // Create notifications
   async create(data: CreateNotificationData): Promise<Notification> {
-    const response = await apiClient.post('/notifications', data);
+    const response = await apiService.post<Notification>('/notifications', data);
     return response.data;
   },
 
   async createBulk(data: CreateNotificationData[]): Promise<Notification[]> {
-    const response = await apiClient.post('/notifications/bulk', { notifications: data });
+    const response = await apiService.post<Notification[]>('/notifications/bulk', { notifications: data });
     return response.data;
   },
 
   async sendToRole(role: string, data: Omit<CreateNotificationData, 'recipient_roles'>): Promise<Notification[]> {
-    const response = await apiClient.post('/notifications/send-to-role', { role, ...data });
+    const response = await apiService.post<Notification[]>('/notifications/send-to-role', { role, ...data });
     return response.data;
   },
 
   async sendToUser(userId: number, data: Omit<CreateNotificationData, 'user_id'>): Promise<Notification> {
-    const response = await apiClient.post(`/notifications/send-to-user/${userId}`, data);
+    const response = await apiService.post<Notification>(`/notifications/send-to-user/${userId}`, data);
     return response.data;
   },
 
   // Mark as read/unread
   async markAsRead(id: number): Promise<Notification> {
-    const response = await apiClient.post(`/notifications/${id}/read`);
+    const response = await apiService.post<Notification>(`/notifications/${id}/read`);
     return response.data;
   },
 
   async markAsUnread(id: number): Promise<Notification> {
-    const response = await apiClient.post(`/notifications/${id}/unread`);
+    const response = await apiService.post<Notification>(`/notifications/${id}/unread`);
     return response.data;
   },
 
   async markAllAsRead(): Promise<{ updated: number }> {
-    const response = await apiClient.post('/notifications/mark-all-read');
+    const response = await apiService.post<{ updated: number }>('/notifications/mark-all-read');
     return response.data;
   },
 
   async markMultipleAsRead(ids: number[]): Promise<{ updated: number }> {
-    const response = await apiClient.post('/notifications/mark-multiple-read', { ids });
+    const response = await apiService.post<{ updated: number }>('/notifications/mark-multiple-read', { ids });
     return response.data;
   },
 
   // Delete notifications
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/notifications/${id}`);
+    await apiService.delete(`/notifications/${id}`);
   },
 
   async deleteMultiple(ids: number[]): Promise<{ deleted: number }> {
-    const response = await apiClient.post('/notifications/delete-multiple', { ids });
+    const response = await apiService.post<{ deleted: number }>('/notifications/delete-multiple', { ids });
     return response.data;
   },
 
   async deleteAll(): Promise<{ deleted: number }> {
-    const response = await apiClient.delete('/notifications/all');
+    const response = await apiService.delete('/notifications/all');
     return response.data;
   },
 
   async deleteRead(): Promise<{ deleted: number }> {
-    const response = await apiClient.delete('/notifications/read');
+    const response = await apiService.delete('/notifications/read');
     return response.data;
   },
 
   async deleteOlderThan(days: number): Promise<{ deleted: number }> {
-    const response = await apiClient.delete(`/notifications/older-than/${days}`);
+    const response = await apiService.delete(`/notifications/older-than/${days}`);
     return response.data;
   },
 
   // Notification preferences
   async getPreferences(): Promise<any> {
-    const response = await apiClient.get('/notifications/preferences');
+    const response = await apiService.get('/notifications/preferences');
     return response.data;
   },
 
   async updatePreferences(preferences: any): Promise<any> {
-    const response = await apiClient.put('/notifications/preferences', preferences);
+    const response = await apiService.put('/notifications/preferences', preferences);
     return response.data;
   },
 
   async enableNotificationType(type: string): Promise<void> {
-    await apiClient.post(`/notifications/preferences/enable/${type}`);
+    await apiService.post(`/notifications/preferences/enable/${type}`);
   },
 
   async disableNotificationType(type: string): Promise<void> {
-    await apiClient.post(`/notifications/preferences/disable/${type}`);
+    await apiService.post(`/notifications/preferences/disable/${type}`);
   },
 
   // Real-time notifications (WebSocket/Pusher)
   async subscribe(): Promise<any> {
-    const response = await apiClient.get('/notifications/subscribe');
+    const response = await apiService.get('/notifications/subscribe');
     return response.data;
   },
 
   async unsubscribe(): Promise<void> {
-    await apiClient.post('/notifications/unsubscribe');
+    await apiService.post('/notifications/unsubscribe');
   },
 
   // System notifications
   async sendMaintenanceReminders(): Promise<{ sent: number }> {
-    const response = await apiClient.post('/notifications/send-maintenance-reminders');
+    const response = await apiService.post('/notifications/send-maintenance-reminders');
     return response.data;
   },
 
   async sendInsuranceExpiryReminders(): Promise<{ sent: number }> {
-    const response = await apiClient.post('/notifications/send-insurance-reminders');
+    const response = await apiService.post('/notifications/send-insurance-reminders');
     return response.data;
   },
 
   async sendWarrantyExpiryReminders(): Promise<{ sent: number }> {
-    const response = await apiClient.post('/notifications/send-warranty-reminders');
+    const response = await apiService.post('/notifications/send-warranty-reminders');
     return response.data;
   },
 
   async sendLowStockAlerts(): Promise<{ sent: number }> {
-    const response = await apiClient.post('/notifications/send-low-stock-alerts');
+    const response = await apiService.post('/notifications/send-low-stock-alerts');
     return response.data;
   },
 
   // Statistics
   async getStats(): Promise<any> {
-    const response = await apiClient.get('/notifications/stats');
+    const response = await apiService.get('/notifications/stats');
     return response.data;
   },
 };
@@ -332,4 +328,3 @@ export const settlementService = {
     return response.data;
   },
 };
-

@@ -4,11 +4,11 @@ import {
     Meta,
     Outlet,
     Scripts,
-    // ScrollRestoration, // TẮT TẠM để test
+    ScrollRestoration,
 } from "react-router";
 
 import type { Route } from "./+types/root";
-// import { PageTransitionProvider } from "./components/PageTransition"; // TẮT TẠM để test
+import { PageTransitionProvider } from "./components/LoadingSystem";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./app.css";
 
@@ -51,10 +51,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ></div>
 
         <AuthProvider>
-            {/* TẮT TẠM PageTransition và ScrollRestoration để test */}
-            {children}
+            {/* PageTransition cho public routes (home, login, register) */}
+            <PageTransitionProvider>
+                {children}
+            </PageTransitionProvider>
         </AuthProvider>
-        {/* <ScrollRestoration /> */}
+        <ScrollRestoration />
         <Scripts />
         </body>
         </html>

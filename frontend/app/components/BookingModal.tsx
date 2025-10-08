@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PhoneIcon, LocationIcon } from './Icons';
 import { ModalPortal } from './ModalPortal';
 import { MAIN_SERVICES } from '~/data/services';
+import { ModalLoader } from './LoadingSystem';
 
 interface BookingFormData {
   name: string;
@@ -183,7 +184,19 @@ export function BookingModal({ isOpen, onClose, selectedService = '' }: BookingM
           // Loading State
           <div className="p-8 text-center">
             <div className="mb-6">
-              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="relative w-20 h-20 mx-auto mb-4">
+                <div className="absolute inset-0 w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <img
+                    src="/images/logo.png"
+                    alt="AutoCare Pro"
+                    className="w-12 h-12 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Đang xử lý đặt lịch...</h3>
               <p className="text-gray-600">Vui lòng đợi trong giây lát</p>
             </div>

@@ -4,10 +4,7 @@ import { CompanyLogo } from "~/components/Logo";
 import { LocationIcon, PhoneIcon } from "~/components/Icons";
 import { BookingModal } from "~/components/BookingModal";
 import { ConsultationModal } from "~/components/ConsultationModal";
-import { SkeletonLoader } from "~/components/Loading";
-import { usePageTransition, useNavigateWithTransition } from "~/components/PageTransition";
-import { ImagePreloader } from "~/components/ImagePreloader";
-import { useImagePreloader } from "~/hooks/useImagePreloader";
+import { usePageTransition, useNavigateWithTransition, useImagePreloader, ImagePreloader } from "~/components/LoadingSystem";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -691,4 +688,3 @@ export default function Products() {
         </div>
     );
 }
-

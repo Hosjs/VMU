@@ -9,9 +9,11 @@ export { Table } from './Table';
 export { Toast } from './Toast';
 export { Pagination } from './Pagination';
 
-// Re-export Loading components from main components folder
+// Re-export Loading components from LoadingSystem
 export { 
   LoadingSpinner, 
-  LoadingOverlay, 
-  Loading 
-} from '../Loading';
+  FullScreenLoader,
+  GradientLoader,
+  ModalLoader,
+  ContentLoader
+} from '../LoadingSystem';

@@ -1,8 +1,8 @@
+import { Outlet } from 'react-router';
+import { useAuth } from '~/contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
-import { useAuth } from '~/contexts/AuthContext';
-import { Loading } from '~/components/Loading';
-import { DashboardLayout } from '~/components/layout';
+import { FullScreenLoader } from '~/components/LoadingSystem';
 
 export default function AdminLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -22,20 +22,20 @@ export default function AdminLayout() {
 
   // Show loading while checking auth và role
   if (isLoading) {
-    return <Loading text="Đang kiểm tra quyền truy cập..." />;
+    return <FullScreenLoader text="Đang kiểm tra quyền truy cập..." />;
   }
 
   // Nếu chưa authenticated, DashboardLayout sẽ xử lý redirect
   // Nếu đã authenticated nhưng chưa có user data, show loading
   if (!user) {
-    return <Loading text="Đang tải thông tin người dùng..." />;
+    return <FullScreenLoader text="Đang tải thông tin người dùng..." />;
   }
 
   // Nếu không phải admin, hiển thị loading trong khi redirect
   if (user.role?.name !== 'admin') {
-    return <Loading text="Đang chuyển hướng..." />;
+    return <FullScreenLoader text="Đang chuyển hướng..." />;
   }
 
   // OK - là admin, render layout
-  return <DashboardLayout />;
+  return <Outlet />;
 }

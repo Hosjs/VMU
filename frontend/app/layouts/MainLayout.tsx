@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from 'react-router';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '~/contexts/AuthContext';
-import { Loading } from '~/components/Loading';
+import { FullScreenLoader, ContentLoader } from '~/components/LoadingSystem';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Breadcrumb } from './Breadcrumb';
@@ -10,13 +10,17 @@ import { Breadcrumb } from './Breadcrumb';
  * MainLayout - Layout chung cho TOÀN BỘ dự án
  *
  * Features:
- * - Header: Hiển thị thông tin user, notifications, logout
- * - Sidebar: Menu động theo role của user (admin, manager, accountant, mechanic, employee)
+ * - Header: Hiển thị thông tin user, notifications, logout (KHÔNG RELOAD)
+ * - Sidebar: Menu động theo role của user (KHÔNG RELOAD)
  * - Breadcrumb: Hiển thị vị trí hiện tại
- * - Content Area: Chỉ phần này thay đổi khi navigate (Outlet)
+ * - Content Area: Có loading indicator khi chuyển trang (KHÔNG che sidebar)
  * - Footer: Thông tin copyright
  * - Responsive: Tự động đóng sidebar trên mobile
  * - Authentication Guard: Redirect về login nếu chưa đăng nhập
+ *
+ * Loading Strategy:
+ * - Auth check: FullScreenLoader
+ * - Navigation: ContentLoader (CHỈ trong content area)
  */
 export default function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -51,12 +55,12 @@ export default function MainLayout() {
 
   // Hiển thị loading trong khi kiểm tra authentication
   if (isLoading) {
-    return <Loading text="Đang kiểm tra quyền truy cập..." />;
+    return <FullScreenLoader text="Đang kiểm tra quyền truy cập..." />;
   }
 
   // Nếu chưa authenticated, sẽ redirect trong useEffect
   if (!isAuthenticated || !user) {
-    return <Loading text="Đang tải thông tin người dùng..." />;
+    return <FullScreenLoader text="Đang tải thông tin người dùng..." />;
   }
 
   // Toggle sidebar
@@ -73,7 +77,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar - KHÔNG reload khi navigate, menu tự động thay đổi theo role */}
+      {/* Sidebar - KHÔNG reload */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={handleCloseSidebar}
@@ -82,19 +86,22 @@ export default function MainLayout() {
 
       {/* Main Content Area */}
       <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
-        {/* Header - KHÔNG reload khi navigate */}
+        {/* Header - KHÔNG reload */}
         <Header
           onToggleSidebar={handleToggleSidebar}
           sidebarOpen={sidebarOpen}
           user={user}
         />
 
-        {/* Breadcrumb - Hiển thị vị trí hiện tại */}
+        {/* Breadcrumb */}
         <Breadcrumb />
 
-        {/* Page Content - CHỈ PHẦN NÀY thay đổi khi navigate */}
-        <main className="p-4 md:p-6 min-h-[calc(100vh-12rem)]">
-          {/* Animation wrapper cho smooth transitions */}
+        {/* Page Content với ContentLoader */}
+        <main className="p-4 md:p-6 min-h-[calc(100vh-12rem)] relative">
+          {/* ContentLoader - CHỈ trong content area */}
+          <ContentLoader />
+
+          {/* Content với fade animation */}
           <div className="animate-fadeIn">
             <Outlet />
           </div>
@@ -102,14 +109,9 @@ export default function MainLayout() {
 
         {/* Footer */}
         <footer className="bg-white border-t border-gray-200 py-4 px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-gray-600">
-            <p>© {new Date().getFullYear()} Thắng Trường Auto. All rights reserved.</p>
-            <div className="flex gap-4">
-              <button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors">Điều khoản</button>
-              <button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors">Bảo mật</button>
-              <button onClick={(e) => e.preventDefault()} className="hover:text-blue-600 transition-colors">Hỗ trợ</button>
-            </div>
-          </div>
+          <p className="text-center text-sm text-gray-600">
+            © 2024 AutoCare Pro. All rights reserved.
+          </p>
         </footer>
       </div>
     </div>

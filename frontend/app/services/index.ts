@@ -1,5 +1,6 @@
 // Export all services
 export * from './api.service';
+export * from './auth.service';
 export * from './user.service';
 export * from './customer.service';
 export * from './product.service';
@@ -104,4 +105,3 @@ class UserService {
 }
 
 export const userService = new UserService();
-
