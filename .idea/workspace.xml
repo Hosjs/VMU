@@ -4,64 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="27c88a10-f167-43bd-8677-425c61336e3c" name="Changes" comment="Add new components for dashboard, orders, invoices, and user management">
-      <change afterPath="$PROJECT_DIR$/FILES_CLEANUP_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LOADING_SYSTEM_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/LOADING_SYSTEM_REFACTORING.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/NAVIGATION_TRANSITION_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/SERVICES_REFACTORING_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/app/components/LoadingSystem.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/app/services/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+    <list default="true" id="27c88a10-f167-43bd-8677-425c61336e3c" name="Changes" comment="Refactor loading components into a unified LoadingSystem and update imports across the application">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/5c6bcebe-cf3e-4cea-8efa-45b5c628b446.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/5c6bcebe-cf3e-4cea-8efa-45b5c628b446.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/BookingModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/BookingModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/ConsultationModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ConsultationModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/ImagePreloader.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/Loading.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/PageTransition.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/ui/Button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ui/Button.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/ui/Table.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ui/Table.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/ui/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ui/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/contexts/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/contexts/AuthContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/hooks/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/hooks/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/hooks/useImagePreloader.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/layouts/MainLayout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/layouts/MainLayout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/layouts/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/layouts/Sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/root.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/root.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/accountant/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/accountant/layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/customers.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/customers.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/dashboard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/providers.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/providers.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/services.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/services.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/settlements.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/settlements.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/vehicles.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/vehicles.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/dashboard/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/dashboard/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/dashboard/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/dashboard/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/employee/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/employee/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/home.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/login.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/manager/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/manager/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/mechanic/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/mechanic/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/products.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/products.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/register.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/register.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/api.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/api.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/direct-sale.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/direct-sale.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/invoice.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/invoice.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/notification.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/notification.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/order.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/order.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/service.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/service.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/vehicle.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/vehicle.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/warehouse.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/warehouse.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/warranty.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/warranty.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/utils/api.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/utils/auth.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/utils/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/utils/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/products.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/products.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -292,6 +239,7 @@
       <workItem from="1759761701940" duration="6886000" />
       <workItem from="1759811050852" duration="91000" />
       <workItem from="1759841377919" duration="13108000" />
+      <workItem from="1759887707253" duration="3028000" />
     </task>
     <task id="LOCAL-00001" summary="Initialize project structure with essential files and configurations">
       <option name="closed" value="true" />
@@ -309,7 +257,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759811112171</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Refactor loading components into a unified LoadingSystem and update imports across the application">
+      <option name="closed" value="true" />
+      <created>1759887775577</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1759887775577</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -329,6 +285,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initialize project structure with essential files and configurations" />
     <MESSAGE value="Add new components for dashboard, orders, invoices, and user management" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add new components for dashboard, orders, invoices, and user management" />
+    <MESSAGE value="Refactor loading components into a unified LoadingSystem and update imports across the application" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactor loading components into a unified LoadingSystem and update imports across the application" />
   </component>
 </project>

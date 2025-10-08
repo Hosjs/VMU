@@ -1148,7 +1148,7 @@ test\\_%|schema||&apos;&apos;||UPDATE|G</Grants>
       <AutoIntrospectionLevel>3</AutoIntrospectionLevel>
       <Current>1</Current>
       <LastIntrospectionLevel>3</LastIntrospectionLevel>
-      <LastIntrospectionLocalTimestamp>2025-10-07.12:59:30</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2025-10-08.02:22:34</LastIntrospectionLocalTimestamp>
       <CollationName>utf8mb4_general_ci</CollationName>
     </schema>
     <schema id="326" parent="1" name="information_schema">
