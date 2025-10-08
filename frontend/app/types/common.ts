@@ -18,15 +18,25 @@ export interface PaginationMeta {
   total: number;
 }
 
+// Laravel paginate() structure
 export interface PaginatedResponse<T> {
+  current_page: number;
   data: T[];
-  meta: PaginationMeta;
-  links?: {
-    first: string;
-    last: string;
-    prev: string | null;
-    next: string | null;
-  };
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: Array<{
+    url: string | null;
+    label: string;
+    active: boolean;
+  }>;
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
 }
 
 export interface ApiError {
@@ -38,4 +48,3 @@ export interface SelectOption {
   value: string | number;
   label: string;
 }
-

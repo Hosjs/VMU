@@ -58,15 +58,12 @@ class PaymentController extends Controller
 
         // Sort
         $sortBy = $request->get('sort_by', 'payment_date');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $payments = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $payments,
-        ]);
+        return response()->json($payments);
     }
 
     /**
@@ -225,23 +222,41 @@ class PaymentController extends Controller
     }
 
     /**
-     * Thống kê payments
+     * Thống kê payments - Using Eloquent only (no DB::raw)
      */
     public function statistics(Request $request)
     {
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now()->endOfMonth());
 
+        // Get payments by status using Collection methods
+        $paymentsByStatus = Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
+            ->get(['status'])
+            ->groupBy('status')
+            ->map(function($statusPayments, $status) {
+                return [
+                    'status' => $status,
+                    'count' => $statusPayments->count(),
+                ];
+            })
+            ->values();
+
+        // Get payments by method using Collection methods
+        $paymentsByMethod = Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
+            ->get(['payment_method'])
+            ->groupBy('payment_method')
+            ->map(function($methodPayments, $method) {
+                return [
+                    'method' => $method,
+                    'count' => $methodPayments->count(),
+                ];
+            })
+            ->values();
+
         $stats = [
             'total' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])->count(),
-            'by_status' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
-                ->select('status', DB::raw('COUNT(*) as count'))
-                ->groupBy('status')
-                ->get(),
-            'by_method' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
-                ->select('method', DB::raw('COUNT(*) as count'))
-                ->groupBy('method')
-                ->get(),
+            'by_status' => $paymentsByStatus,
+            'by_method' => $paymentsByMethod,
             'total_amount' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
                 ->where('status', 'completed')
                 ->sum('amount'),
@@ -250,11 +265,11 @@ class PaymentController extends Controller
                 ->sum('amount'),
             'cash_amount' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
                 ->where('status', 'completed')
-                ->where('method', 'cash')
+                ->where('payment_method', 'cash')
                 ->sum('amount'),
             'bank_amount' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
                 ->where('status', 'completed')
-                ->where('method', 'bank_transfer')
+                ->where('payment_method', 'bank_transfer')
                 ->sum('amount'),
         ];
 

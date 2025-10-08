@@ -5,10 +5,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="27c88a10-f167-43bd-8677-425c61336e3c" name="Changes" comment="Refactor loading components into a unified LoadingSystem and update imports across the application">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/5c6bcebe-cf3e-4cea-8efa-45b5c628b446.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/5c6bcebe-cf3e-4cea-8efa-45b5c628b446.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FINAL_STANDARDIZATION_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SERVER_SIDE_PAGINATION_SYNC_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/STANDARDIZATION_REPORT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/laravel-idea.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/laravel-idea.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/CategoryController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/CategoryController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/DashboardController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/DashboardController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/InvoiceController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/InvoiceController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/OrderController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/OrderController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/PaymentController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/PaymentController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/ProviderController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/ProviderController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/RoleController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/RoleController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/UserController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/UserController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/WarehouseController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/WarehouseController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/QueryScopes/CustomerScopes.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/QueryScopes/CustomerScopes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/QueryScopes/InvoiceScopes.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/QueryScopes/InvoiceScopes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/QueryScopes/OrderScopes.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/QueryScopes/OrderScopes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/QueryScopes/ProductScopes.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/QueryScopes/ProductScopes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/QueryScopes/ProviderScopes.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/QueryScopes/ProviderScopes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/components/ui/Badge.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ui/Badge.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/components/ui/Button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ui/Button.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/hooks/useTable.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/hooks/useTable.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/customers.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/customers.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/products.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/products.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/services.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/services.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/routes/admin/users.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/admin/users.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/category.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/category.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/service.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/service.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/types/common.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/types/common.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/types/customer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/types/customer.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/types/product.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/types/product.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,30 +206,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\PhpStorm 2025.1.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "show.migrate.to.gradle.popup": "false",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\PhpStorm 2025.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;mysql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\xampp\htdocs\gara\frontend\public\images" />

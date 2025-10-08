@@ -50,7 +50,7 @@ export interface CreateProductData {
   category_id: number;
   name: string;
   code: string;
-  sku: string;
+  sku?: string; // Make sku optional to match backend validation
   description?: string;
   primary_warehouse_id?: number;
   quote_price: number;
@@ -72,5 +72,5 @@ export interface CreateProductData {
 }
 
 export interface UpdateProductData extends Partial<CreateProductData> {
-  id: number;
+  // No need for id in update data, it's in the URL
 }

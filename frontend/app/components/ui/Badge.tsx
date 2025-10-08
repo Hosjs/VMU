@@ -1,6 +1,6 @@
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'secondary';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -11,6 +11,7 @@ export function Badge({ children, variant = 'default', size = 'md' }: BadgeProps
     warning: 'bg-yellow-100 text-yellow-800',
     danger: 'bg-red-100 text-red-800',
     info: 'bg-blue-100 text-blue-800',
+    secondary: 'bg-purple-100 text-purple-800',
   };
 
   const sizeClasses = {
@@ -31,4 +32,3 @@ export function Badge({ children, variant = 'default', size = 'md' }: BadgeProps
     </span>
   );
 }
-

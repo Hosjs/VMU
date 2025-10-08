@@ -193,18 +193,14 @@ trait InvoiceScopes
     }
 
     /**
-     * Scope: With profit information (Admin only)
+     * Scope: With profit information (Admin only) - Using Eloquent only
      */
     public function scopeWithProfit(Builder $query): Builder
     {
-        return $query->addSelect([
-            'profit_amount' => function ($subQuery) {
-                $subQuery->selectRaw('actual_profit');
-            },
-            'profit_percentage' => function ($subQuery) {
-                $subQuery->selectRaw('CASE WHEN total_amount > 0 THEN (actual_profit / total_amount * 100) ELSE 0 END');
-            }
-        ]);
+        // Note: Cannot calculate profit percentage in query without raw SQL
+        // Better approach: Calculate in accessor or after fetching
+        // Just return the query as-is, profit calculation will be done in model accessor
+        return $query;
     }
 
     /**
@@ -244,4 +240,3 @@ trait InvoiceScopes
         ]);
     }
 }
-

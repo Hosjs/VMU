@@ -71,15 +71,12 @@ class OrderController extends Controller
 
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $orders = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $orders,
-        ]);
+        return response()->json($orders);
     }
 
     /**
@@ -287,27 +284,54 @@ class OrderController extends Controller
     }
 
     /**
-     * Thống kê orders
+     * Thống kê orders - Using Eloquent only (no DB::raw)
      */
     public function statistics(Request $request)
     {
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now()->endOfMonth());
 
+        // Get orders by status using Collection methods
+        $ordersByStatus = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+            ->get(['status'])
+            ->groupBy('status')
+            ->map(function($statusOrders, $status) {
+                return [
+                    'status' => $status,
+                    'count' => $statusOrders->count(),
+                ];
+            })
+            ->values();
+
+        // Get orders by payment status using Collection methods
+        $ordersByPaymentStatus = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+            ->get(['payment_status'])
+            ->groupBy('payment_status')
+            ->map(function($paymentOrders, $paymentStatus) {
+                return [
+                    'payment_status' => $paymentStatus,
+                    'count' => $paymentOrders->count(),
+                ];
+            })
+            ->values();
+
+        // Get orders by type using Collection methods
+        $ordersByType = Order::whereBetween('created_at', [$dateFrom, $dateTo])
+            ->get(['type'])
+            ->groupBy('type')
+            ->map(function($typeOrders, $type) {
+                return [
+                    'type' => $type,
+                    'count' => $typeOrders->count(),
+                ];
+            })
+            ->values();
+
         $stats = [
             'total' => Order::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-            'by_status' => Order::whereBetween('created_at', [$dateFrom, $dateTo])
-                ->select('status', DB::raw('COUNT(*) as count'))
-                ->groupBy('status')
-                ->get(),
-            'by_payment_status' => Order::whereBetween('created_at', [$dateFrom, $dateTo])
-                ->select('payment_status', DB::raw('COUNT(*) as count'))
-                ->groupBy('payment_status')
-                ->get(),
-            'by_type' => Order::whereBetween('created_at', [$dateFrom, $dateTo])
-                ->select('type', DB::raw('COUNT(*) as count'))
-                ->groupBy('type')
-                ->get(),
+            'by_status' => $ordersByStatus,
+            'by_payment_status' => $ordersByPaymentStatus,
+            'by_type' => $ordersByType,
             'total_revenue' => Order::whereBetween('created_at', [$dateFrom, $dateTo])
                 ->where('payment_status', 'paid')
                 ->sum('final_amount'),

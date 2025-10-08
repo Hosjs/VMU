@@ -46,8 +46,9 @@ export interface CreateCustomerData {
   insurance_number?: string;
   insurance_expiry?: string;
   notes?: string;
+  is_active?: boolean;
 }
 
 export interface UpdateCustomerData extends Partial<CreateCustomerData> {
-  id: number;
+  // No id field - it's passed as URL parameter
 }

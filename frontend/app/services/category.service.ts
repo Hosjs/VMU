@@ -17,14 +17,27 @@ class CategoryService {
   private readonly BASE_PATH = '/admin/categories';
 
   /**
-   * Get all categories (without pagination)
+   * Get paginated list of categories (for admin management)
+   */
+  async getCategoriesPaginated(params: TableQueryParams): Promise<PaginatedResponse<Category>> {
+    return apiService.getPaginated<Category>(this.BASE_PATH, params);
+  }
+
+  /**
+   * Get all categories (for dropdowns/selects) - requests high per_page
    */
   async getCategories(params?: {
     search?: string;
     type?: string;
     is_active?: boolean;
   }): Promise<Category[]> {
-    return apiService.get<Category[]>(this.BASE_PATH, params);
+    const queryParams = {
+      page: 1,
+      per_page: 1000, // Get all categories for dropdowns
+      ...params,
+    };
+    const response = await apiService.getPaginated<Category>(this.BASE_PATH, queryParams);
+    return response.data; // Return just the data array
   }
 
   /**
@@ -58,10 +71,9 @@ class CategoryService {
   /**
    * Update category display order
    */
-  async updateOrder(categories: Array<{ id: number; display_order: number }>): Promise<void> {
+  async updateCategoryOrder(categories: Array<{ id: number; sort_order: number }>): Promise<void> {
     return apiService.post<void>(`${this.BASE_PATH}/update-order`, { categories });
   }
 }
 
 export const categoryService = new CategoryService();
-

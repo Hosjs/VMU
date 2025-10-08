@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { TableQueryParams, PaginatedResponse, SortDirection } from '~/types/common';
 
 interface UseTableOptions<T> {
@@ -36,6 +36,12 @@ export function useTable<T>({
     total: 0,
   });
 
+  // Store fetchData in ref to avoid recreating loadData on every render
+  const fetchDataRef = useRef(fetchData);
+  useEffect(() => {
+    fetchDataRef.current = fetchData;
+  }, [fetchData]);
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -50,9 +56,18 @@ export function useTable<T>({
         filters: Object.keys(filters).length > 0 ? filters : undefined,
       };
 
-      const response = await fetchData(params);
+      const response = await fetchDataRef.current(params);
       setData(response.data);
-      setMeta(response.meta);
+
+      // Laravel pagination properties are at root level, not nested in meta
+      setMeta({
+        current_page: response.current_page,
+        from: response.from,
+        last_page: response.last_page,
+        per_page: response.per_page,
+        to: response.to,
+        total: response.total,
+      });
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to load data');
       setError(error);
@@ -60,7 +75,7 @@ export function useTable<T>({
     } finally {
       setIsLoading(false);
     }
-  }, [page, perPage, sortBy, sortDirection, search, filters, fetchData]);
+  }, [page, perPage, sortBy, sortDirection, search, filters]);
 
   useEffect(() => {
     loadData();

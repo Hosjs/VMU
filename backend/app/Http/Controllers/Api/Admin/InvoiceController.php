@@ -57,15 +57,12 @@ class InvoiceController extends Controller
 
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $invoices = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $invoices,
-        ]);
+        return response()->json($invoices);
     }
 
     /**
@@ -150,23 +147,41 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Thống kê invoices
+     * Thống kê invoices - Using Eloquent only (no DB::raw)
      */
     public function statistics(Request $request)
     {
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now()->endOfMonth());
 
+        // Get invoices by status using Collection methods
+        $invoicesByStatus = Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])
+            ->get(['status'])
+            ->groupBy('status')
+            ->map(function($statusInvoices, $status) {
+                return [
+                    'status' => $status,
+                    'count' => $statusInvoices->count(),
+                ];
+            })
+            ->values();
+
+        // Get invoices by type using Collection methods
+        $invoicesByType = Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])
+            ->get(['type'])
+            ->groupBy('type')
+            ->map(function($typeInvoices, $type) {
+                return [
+                    'type' => $type,
+                    'count' => $typeInvoices->count(),
+                ];
+            })
+            ->values();
+
         $stats = [
             'total' => Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])->count(),
-            'by_status' => Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])
-                ->select('status', DB::raw('COUNT(*) as count'))
-                ->groupBy('status')
-                ->get(),
-            'by_type' => Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])
-                ->select('type', DB::raw('COUNT(*) as count'))
-                ->groupBy('type')
-                ->get(),
+            'by_status' => $invoicesByStatus,
+            'by_type' => $invoicesByType,
             'total_amount' => Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])
                 ->sum('total_amount'),
             'paid_amount' => Invoice::whereBetween('invoice_date', [$dateFrom, $dateTo])

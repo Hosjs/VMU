@@ -104,18 +104,7 @@ export default function AdminUsers() {
         return result;
       } catch (error) {
         console.error('❌ Failed to fetch users:', error);
-        // Return empty result thay vì throw error để tránh crash
-        return {
-          data: [],
-          meta: {
-            current_page: 1,
-            from: 0,
-            last_page: 1,
-            per_page: 15,
-            to: 0,
-            total: 0,
-          },
-        };
+        throw error; // Throw error instead of returning empty result
       }
     },
     initialPerPage: 15,

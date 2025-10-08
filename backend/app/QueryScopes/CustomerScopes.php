@@ -91,15 +91,17 @@ trait CustomerScopes
     }
 
     /**
-     * Scope: VIP customers (high spending)
+     * Scope: VIP customers (high spending) - Using Eloquent only
+     * Note: This scope adds withSum to calculate total spending
+     * Controller should filter results where total_spent >= threshold
      */
     public function scopeVip(Builder $query, float $threshold = 50000000): Builder
     {
-        return $query->whereHas('orders', function ($orderQuery) use ($threshold) {
-            $orderQuery->selectRaw('customer_id, SUM(final_amount) as total')
-                ->groupBy('customer_id')
-                ->havingRaw('SUM(final_amount) >= ?', [$threshold]);
-        });
+        // Add sum of paid orders, controller will filter by threshold
+        return $query->withSum(['orders as total_spent' => function($q) {
+            $q->where('payment_status', 'paid');
+        }], 'final_amount')
+        ->has('orders');
     }
 
     /**
@@ -163,20 +165,18 @@ trait CustomerScopes
     }
 
     /**
-     * Scope: Inactive customers (no orders recently)
+     * Scope: Inactive customers (no orders recently) - Using Eloquent only
      */
     public function scopeInactive(Builder $query, int $months = 6): Builder
     {
-        return $query->where(function ($q) use ($months) {
+        $cutoffDate = now()->subMonths($months);
+
+        return $query->where(function ($q) use ($cutoffDate) {
+            // Customers with no orders at all
             $q->whereDoesntHave('orders')
-              ->orWhereHas('orders', function ($orderQuery) use ($months) {
-                  $orderQuery->where('created_at', '<', now()->subMonths($months))
-                      ->whereNotExists(function ($subQuery) use ($months) {
-                          $subQuery->selectRaw(1)
-                              ->from('orders as recent_orders')
-                              ->whereColumn('recent_orders.customer_id', 'orders.customer_id')
-                              ->where('recent_orders.created_at', '>=', now()->subMonths($months));
-                      });
+              // OR customers whose latest order is older than cutoff date
+              ->orWhereDoesntHave('orders', function ($orderQuery) use ($cutoffDate) {
+                  $orderQuery->where('created_at', '>=', $cutoffDate);
               });
         });
     }
@@ -193,4 +193,3 @@ trait CustomerScopes
         ]);
     }
 }
-

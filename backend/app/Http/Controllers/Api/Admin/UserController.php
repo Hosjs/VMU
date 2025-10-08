@@ -355,25 +355,44 @@ class UserController extends Controller
     }
 
     /**
-     * Lấy thống kê users
+     * Lấy thống kê users - Using Eloquent only (no DB::raw)
      */
     public function statistics()
     {
+        // Get users by role using Collection methods
+        $userRoles = \App\Models\UserRole::with(['role:id,name,display_name'])
+            ->where('is_active', true)
+            ->get()
+            ->groupBy('role.name')
+            ->map(function($roleUsers, $roleName) {
+                $role = $roleUsers->first()->role;
+                return [
+                    'name' => $roleName,
+                    'display_name' => $role->display_name,
+                    'count' => $roleUsers->count(),
+                ];
+            })
+            ->values();
+
+        // Get users by department using Collection methods
+        $usersByDepartment = User::whereNotNull('department')
+            ->where('is_active', true)
+            ->get(['department'])
+            ->groupBy('department')
+            ->map(function($deptUsers, $department) {
+                return [
+                    'department' => $department,
+                    'count' => $deptUsers->count(),
+                ];
+            })
+            ->values();
+
         $stats = [
             'total' => User::count(),
             'active' => User::where('is_active', true)->count(),
             'inactive' => User::where('is_active', false)->count(),
-            'by_role' => DB::table('user_roles')
-                ->join('roles', 'user_roles.role_id', '=', 'roles.id')
-                ->where('user_roles.is_active', true)
-                ->select('roles.name', 'roles.display_name', DB::raw('count(*) as count'))
-                ->groupBy('roles.id', 'roles.name', 'roles.display_name')
-                ->get(),
-            'by_department' => User::select('department', DB::raw('count(*) as count'))
-                ->whereNotNull('department')
-                ->where('is_active', true)
-                ->groupBy('department')
-                ->get(),
+            'by_role' => $userRoles,
+            'by_department' => $usersByDepartment,
         ];
 
         return response()->json([

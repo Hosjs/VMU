@@ -7,30 +7,41 @@ import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 import { apiService } from './api.service';
 
 export const serviceService = {
-  async getAll(params?: TableQueryParams): Promise<PaginatedResponse<Service>> {
-    return apiService.getPaginated<Service>('/services', params);
+  // Services CRUD
+  async getServices(params?: TableQueryParams): Promise<PaginatedResponse<Service>> {
+    const defaultParams: TableQueryParams = {
+      page: 1,
+      per_page: 15,
+      ...params
+    };
+    return apiService.getPaginated<Service>('/admin/services', defaultParams);
   },
 
-  async getById(id: number): Promise<Service> {
-    return apiService.get<Service>(`/services/${id}`);
+  async getServiceById(id: number): Promise<Service> {
+    return apiService.get<Service>(`/admin/services/${id}`);
   },
 
-  async create(data: Partial<Service>): Promise<Service> {
-    return apiService.post<Service>('/services', data);
+  async createService(data: Partial<Service>): Promise<Service> {
+    return apiService.post<Service>('/admin/services', data);
   },
 
-  async update(id: number, data: Partial<Service>): Promise<Service> {
-    return apiService.put<Service>(`/services/${id}`, data);
+  async updateService(id: number, data: Partial<Service>): Promise<Service> {
+    return apiService.put<Service>(`/admin/services/${id}`, data);
   },
 
-  async delete(id: number): Promise<void> {
-    return apiService.delete<void>(`/services/${id}`);
+  async deleteService(id: number): Promise<void> {
+    return apiService.delete<void>(`/admin/services/${id}`);
   },
 };
 
 export const serviceRequestService = {
   async getAll(params?: TableQueryParams): Promise<PaginatedResponse<ServiceRequest>> {
-    return apiService.getPaginated<ServiceRequest>('/service-requests', params);
+    const defaultParams: TableQueryParams = {
+      page: 1,
+      per_page: 15,
+      ...params
+    };
+    return apiService.getPaginated<ServiceRequest>('/service-requests', defaultParams);
   },
 
   async getById(id: number): Promise<ServiceRequest> {

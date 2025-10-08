@@ -39,15 +39,12 @@ class ProviderController extends Controller
 
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $providers = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $providers,
-        ]);
+        return response()->json($providers);
     }
 
     /**

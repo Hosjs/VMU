@@ -15,77 +15,117 @@ use App\Models\Service;
 class DashboardController extends Controller
 {
     /**
-     * Tổng quan dashboard cho Admin
+     * Tổng quan dashboard cho Admin - Using Eloquent only (no DB::raw)
      */
     public function overview(Request $request)
     {
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now()->endOfMonth());
 
-        // Orders statistics
+        // Orders statistics - Using Eloquent query builder
+        $ordersBase = Order::whereBetween('created_at', [$dateFrom, $dateTo]);
+        $ordersPaidBase = Order::whereBetween('created_at', [$dateFrom, $dateTo])->where('payment_status', 'paid');
+
         $ordersStats = [
-            'total' => Order::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-            'pending' => Order::whereBetween('created_at', [$dateFrom, $dateTo])->where('status', 'pending')->count(),
-            'in_progress' => Order::whereBetween('created_at', [$dateFrom, $dateTo])->where('status', 'in_progress')->count(),
-            'completed' => Order::whereBetween('created_at', [$dateFrom, $dateTo])->where('status', 'completed')->count(),
-            'total_revenue' => Order::whereBetween('created_at', [$dateFrom, $dateTo])
-                ->where('payment_status', 'paid')
-                ->sum('final_amount'),
+            'total' => (clone $ordersBase)->count(),
+            'pending' => (clone $ordersBase)->where('status', 'pending')->count(),
+            'in_progress' => (clone $ordersBase)->where('status', 'in_progress')->count(),
+            'completed' => (clone $ordersBase)->where('status', 'completed')->count(),
+            'total_revenue' => (clone $ordersPaidBase)->sum('final_amount') ?? 0,
+            'total_profit' => (clone $ordersPaidBase)->sum('quote_total') - (clone $ordersPaidBase)->sum('settlement_total'),
         ];
 
-        // Payments statistics
+        // Payments statistics - Using Eloquent query builder
+        $paymentsBase = Payment::whereBetween('payment_date', [$dateFrom, $dateTo]);
+        $paymentsCompletedBase = Payment::whereBetween('payment_date', [$dateFrom, $dateTo])->where('status', 'completed');
+
         $paymentsStats = [
-            'total' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
-                ->where('status', 'completed')
-                ->sum('amount'),
-            'by_method' => Payment::whereBetween('payment_date', [$dateFrom, $dateTo])
-                ->where('status', 'completed')
-                ->select('method', DB::raw('SUM(amount) as total'))
-                ->groupBy('method')
-                ->get(),
+            'total' => (clone $paymentsBase)->count(),
+            'paid' => (clone $paymentsCompletedBase)->count(),
+            'pending' => (clone $paymentsBase)->where('status', 'pending')->count(),
+            'total_amount' => (clone $paymentsCompletedBase)->sum('amount') ?? 0,
         ];
 
-        // Customers statistics
+        // Customers statistics - Using Eloquent with relationships
         $customersStats = [
             'total' => Customer::count(),
-            'new_this_period' => Customer::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
-            'with_orders' => Customer::has('orders')->count(),
+            'new_this_month' => Customer::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+            'active' => Customer::has('orders')->count(),
         ];
 
-        // Inventory statistics
+        // Inventory statistics - Using Eloquent with scopes
         $inventoryStats = [
-            'total_products' => Product::where('is_active', true)->count(),
-            'low_stock' => Product::whereHas('warehouseStocks', function($q) {
-                $q->whereRaw('available_quantity <= reorder_point');
-            })->count(),
-            'out_of_stock' => Product::whereHas('warehouseStocks', function($q) {
-                $q->where('available_quantity', '<=', 0);
-            })->count(),
+            'total_products' => Product::active()->count(),
+            'low_stock_count' => Product::lowStock()->count(),
+            'out_of_stock_count' => Product::outOfStock()->count(),
         ];
 
-        // Recent activities
-        $recentOrders = Order::with(['customer', 'vehicle.brand'])
+        // Recent orders - single query with relationships
+        $recentOrders = Order::with(['customer:id,name', 'vehicle.brand:id,name'])
+            ->select('id', 'order_number', 'customer_id', 'vehicle_id', 'status', 'final_amount', 'created_at')
             ->latest()
-            ->take(10)
-            ->get();
+            ->limit(10)
+            ->get()
+            ->map(function($order) {
+                return [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'customer_name' => $order->customer?->name ?? 'N/A',
+                    'status' => $order->status,
+                    'final_amount' => $order->final_amount,
+                    'created_at' => $order->created_at,
+                ];
+            });
 
-        $recentPayments = Payment::with(['customer', 'order'])
+        // Recent payments - single query with relationships
+        $recentPayments = Payment::with(['customer:id,name', 'invoice:id,invoice_number'])
+            ->select('id', 'customer_id', 'invoice_id', 'amount', 'payment_method', 'status', 'payment_date', 'created_at')
             ->where('status', 'completed')
             ->latest('payment_date')
-            ->take(10)
-            ->get();
+            ->limit(10)
+            ->get()
+            ->map(function($payment) {
+                return [
+                    'id' => $payment->id,
+                    'invoice_number' => $payment->invoice?->invoice_number ?? 'N/A',
+                    'customer_name' => $payment->customer?->name ?? 'N/A',
+                    'amount' => $payment->amount,
+                    'payment_method' => $payment->payment_method,
+                    'created_at' => $payment->created_at,
+                ];
+            });
 
-        // Revenue trend (last 7 days)
-        $revenueTrend = Order::where('payment_status', 'paid')
-            ->whereBetween('created_at', [now()->subDays(7), now()])
-            ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('SUM(final_amount) as revenue'),
-                DB::raw('COUNT(*) as orders_count')
-            )
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // Revenue trend - Using Eloquent groupBy with collection
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        $revenueData = Order::where('payment_status', 'paid')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['created_at', 'final_amount'])
+            ->groupBy(function($order) {
+                return $order->created_at->format('Y-m-d');
+            })
+            ->map(function($dayOrders, $date) {
+                return [
+                    'date' => $date,
+                    'revenue' => $dayOrders->sum('final_amount'),
+                    'orders' => $dayOrders->count(),
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        // Fill missing dates with zero values
+        $revenueTrend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $found = collect($revenueData)->firstWhere('date', $date);
+            $revenueTrend[] = $found ?? [
+                'date' => $date,
+                'revenue' => 0,
+                'orders' => 0,
+            ];
+        }
 
         return response()->json([
             'success' => true,
@@ -102,7 +142,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Báo cáo doanh thu chi tiết
+     * Báo cáo doanh thu chi tiết - Using Eloquent only (no DB::raw)
      */
     public function revenueReport(Request $request)
     {
@@ -110,25 +150,28 @@ class DashboardController extends Controller
         $dateTo = $request->get('date_to', now()->endOfMonth());
         $groupBy = $request->get('group_by', 'day'); // day, week, month
 
-        $dateFormat = match($groupBy) {
-            'week' => '%Y-%u',
-            'month' => '%Y-%m',
-            default => '%Y-%m-%d',
-        };
-
-        $revenue = Order::where('payment_status', 'paid')
+        // Get all paid orders in date range
+        $orders = Order::where('payment_status', 'paid')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
-            ->select(
-                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"),
-                DB::raw('SUM(final_amount) as total_revenue'),
-                DB::raw('SUM(quote_total) as quote_total'),
-                DB::raw('SUM(settlement_total) as settlement_total'),
-                DB::raw('COUNT(*) as orders_count'),
-                DB::raw('AVG(final_amount) as avg_order_value')
-            )
-            ->groupBy('period')
-            ->orderBy('period')
-            ->get();
+            ->get(['created_at', 'final_amount', 'quote_total', 'settlement_total']);
+
+        // Group by period using Collection methods
+        $revenue = $orders->groupBy(function($order) use ($groupBy) {
+            return match($groupBy) {
+                'week' => $order->created_at->format('Y-W'),
+                'month' => $order->created_at->format('Y-m'),
+                default => $order->created_at->format('Y-m-d'),
+            };
+        })->map(function($periodOrders, $period) {
+            return [
+                'period' => $period,
+                'total_revenue' => $periodOrders->sum('final_amount'),
+                'quote_total' => $periodOrders->sum('quote_total'),
+                'settlement_total' => $periodOrders->sum('settlement_total'),
+                'orders_count' => $periodOrders->count(),
+                'avg_order_value' => $periodOrders->avg('final_amount'),
+            ];
+        })->sortBy('period')->values();
 
         return response()->json([
             'success' => true,
@@ -137,7 +180,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Top customers
+     * Top customers - Using Eloquent with relationships (no DB::raw)
      */
     public function topCustomers(Request $request)
     {
@@ -145,22 +188,29 @@ class DashboardController extends Controller
         $dateTo = $request->get('date_to', now());
         $limit = $request->get('limit', 10);
 
-        $customers = Customer::select('customers.*')
-            ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            ->whereBetween('orders.created_at', [$dateFrom, $dateTo])
-            ->where('orders.payment_status', 'paid')
-            ->select(
-                'customers.id',
-                'customers.name',
-                'customers.phone',
-                'customers.email',
-                DB::raw('COUNT(orders.id) as orders_count'),
-                DB::raw('SUM(orders.final_amount) as total_spent')
-            )
-            ->groupBy('customers.id', 'customers.name', 'customers.phone', 'customers.email')
-            ->orderBy('total_spent', 'desc')
-            ->take($limit)
-            ->get();
+        // Get customers with their paid orders
+        $customers = Customer::with(['orders' => function($query) use ($dateFrom, $dateTo) {
+            $query->where('payment_status', 'paid')
+                  ->whereBetween('created_at', [$dateFrom, $dateTo])
+                  ->select('id', 'customer_id', 'final_amount');
+        }])
+        ->get(['id', 'name', 'phone', 'email'])
+        ->map(function($customer) {
+            return [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'email' => $customer->email,
+                'orders_count' => $customer->orders->count(),
+                'total_spent' => $customer->orders->sum('final_amount'),
+            ];
+        })
+        ->filter(function($customer) {
+            return $customer['orders_count'] > 0;
+        })
+        ->sortByDesc('total_spent')
+        ->take($limit)
+        ->values();
 
         return response()->json([
             'success' => true,
@@ -169,7 +219,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Top services
+     * Top services - Using Eloquent with relationships (no DB::raw)
      */
     public function topServices(Request $request)
     {
@@ -177,22 +227,30 @@ class DashboardController extends Controller
         $dateTo = $request->get('date_to', now());
         $limit = $request->get('limit', 10);
 
-        $services = Service::select('services.*')
-            ->join('order_items', 'services.id', '=', 'order_items.service_id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$dateFrom, $dateTo])
-            ->select(
-                'services.id',
-                'services.name',
-                'services.code',
-                DB::raw('COUNT(order_items.id) as usage_count'),
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.total_price) as total_revenue')
-            )
-            ->groupBy('services.id', 'services.name', 'services.code')
-            ->orderBy('total_revenue', 'desc')
-            ->take($limit)
-            ->get();
+        // Get services with their order items
+        $services = Service::with(['orderItems' => function($query) use ($dateFrom, $dateTo) {
+            $query->whereHas('order', function($orderQuery) use ($dateFrom, $dateTo) {
+                $orderQuery->whereBetween('created_at', [$dateFrom, $dateTo]);
+            })
+            ->select('id', 'service_id', 'quantity', 'quote_total_price');
+        }])
+        ->get(['id', 'name', 'code'])
+        ->map(function($service) {
+            return [
+                'id' => $service->id,
+                'name' => $service->name,
+                'code' => $service->code,
+                'usage_count' => $service->orderItems->count(),
+                'total_quantity' => $service->orderItems->sum('quantity'),
+                'total_revenue' => $service->orderItems->sum('quote_total_price'),
+            ];
+        })
+        ->filter(function($service) {
+            return $service['usage_count'] > 0;
+        })
+        ->sortByDesc('total_revenue')
+        ->take($limit)
+        ->values();
 
         return response()->json([
             'success' => true,
@@ -201,7 +259,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Top products
+     * Top products - Using Eloquent with relationships (no DB::raw)
      */
     public function topProducts(Request $request)
     {
@@ -209,22 +267,30 @@ class DashboardController extends Controller
         $dateTo = $request->get('date_to', now());
         $limit = $request->get('limit', 10);
 
-        $products = Product::select('products.*')
-            ->join('order_items', 'products.id', '=', 'order_items.product_id')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->whereBetween('orders.created_at', [$dateFrom, $dateTo])
-            ->select(
-                'products.id',
-                'products.name',
-                'products.code',
-                DB::raw('COUNT(order_items.id) as usage_count'),
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.total_price) as total_revenue')
-            )
-            ->groupBy('products.id', 'products.name', 'products.code')
-            ->orderBy('total_revenue', 'desc')
-            ->take($limit)
-            ->get();
+        // Get products with their order items
+        $products = Product::with(['orderItems' => function($query) use ($dateFrom, $dateTo) {
+            $query->whereHas('order', function($orderQuery) use ($dateFrom, $dateTo) {
+                $orderQuery->whereBetween('created_at', [$dateFrom, $dateTo]);
+            })
+            ->select('id', 'product_id', 'quantity', 'quote_total_price');
+        }])
+        ->get(['id', 'name', 'code'])
+        ->map(function($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'code' => $product->code,
+                'usage_count' => $product->orderItems->count(),
+                'total_quantity' => $product->orderItems->sum('quantity'),
+                'total_revenue' => $product->orderItems->sum('quote_total_price'),
+            ];
+        })
+        ->filter(function($product) {
+            return $product['usage_count'] > 0;
+        })
+        ->sortByDesc('total_revenue')
+        ->take($limit)
+        ->values();
 
         return response()->json([
             'success' => true,
@@ -233,280 +299,39 @@ class DashboardController extends Controller
     }
 
     /**
-     * Báo cáo lợi nhuận
+     * Báo cáo lợi nhuận - Using Eloquent only (no DB::raw)
      */
     public function profitReport(Request $request)
     {
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now());
 
+        // Get all paid orders
         $orders = Order::where('payment_status', 'paid')
             ->whereBetween('created_at', [$dateFrom, $dateTo])
-            ->select(
-                DB::raw('SUM(quote_total) as total_quote'),
-                DB::raw('SUM(settlement_total) as total_settlement'),
-                DB::raw('SUM(quote_total - settlement_total) as gross_profit'),
-                DB::raw('COUNT(*) as orders_count')
-            )
-            ->first();
+            ->get(['quote_total', 'settlement_total']);
 
-        $profitMargin = $orders->total_quote > 0
-            ? ($orders->gross_profit / $orders->total_quote) * 100
+        $totalQuote = $orders->sum('quote_total');
+        $totalSettlement = $orders->sum('settlement_total');
+        $grossProfit = $totalQuote - $totalSettlement;
+        $ordersCount = $orders->count();
+
+        $profitMargin = $totalQuote > 0
+            ? ($grossProfit / $totalQuote) * 100
             : 0;
 
         return response()->json([
             'success' => true,
             'data' => [
-                'total_quote' => $orders->total_quote,
-                'total_settlement' => $orders->total_settlement,
-                'gross_profit' => $orders->gross_profit,
+                'total_quote' => $totalQuote,
+                'total_settlement' => $totalSettlement,
+                'gross_profit' => $grossProfit,
                 'profit_margin' => round($profitMargin, 2),
-                'orders_count' => $orders->orders_count,
-                'avg_profit_per_order' => $orders->orders_count > 0
-                    ? $orders->gross_profit / $orders->orders_count
+                'orders_count' => $ordersCount,
+                'avg_profit_per_order' => $ordersCount > 0
+                    ? $grossProfit / $ordersCount
                     : 0,
             ],
         ]);
     }
 }
-<?php
-
-namespace App\Http\Controllers\Api\Admin;
-
-use App\Http\Controllers\Controller;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-
-class CategoryController extends Controller
-{
-    /**
-     * Danh sách categories
-     */
-    public function index(Request $request)
-    {
-        $search = $request->get('search');
-        $type = $request->get('type');
-        $isActive = $request->get('is_active');
-
-        $query = Category::withCount(['services', 'products']);
-
-        // Search
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
-
-        // Filter by type
-        if ($type) {
-            $query->where('type', $type);
-        }
-
-        // Filter active
-        if ($isActive !== null) {
-            $query->where('is_active', $isActive == 1);
-        }
-
-        $categories = $query->orderBy('display_order')->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $categories,
-        ]);
-    }
-
-    /**
-     * Tạo category mới
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:categories,code',
-            'type' => 'required|in:service,product,both',
-            'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id',
-            'icon' => 'nullable|string|max:100',
-            'image' => 'nullable|string',
-            'display_order' => 'nullable|integer|min:0',
-            'is_active' => 'nullable|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation errors',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $category = Category::create($request->all());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Category created successfully',
-                'data' => $category,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create category',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Xem chi tiết category
-     */
-    public function show($id)
-    {
-        $category = Category::with(['services', 'products', 'children'])->find($id);
-
-        if (!$category) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found'
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $category,
-        ]);
-    }
-
-    /**
-     * Cập nhật category
-     */
-    public function update(Request $request, $id)
-    {
-        $category = Category::find($id);
-
-        if (!$category) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found'
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:categories,code,' . $id,
-            'type' => 'required|in:service,product,both',
-            'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id',
-            'icon' => 'nullable|string|max:100',
-            'image' => 'nullable|string',
-            'display_order' => 'nullable|integer|min:0',
-            'is_active' => 'nullable|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation errors',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $category->update($request->all());
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Category updated successfully',
-                'data' => $category,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update category',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Xóa category
-     */
-    public function destroy($id)
-    {
-        $category = Category::find($id);
-
-        if (!$category) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found'
-            ], 404);
-        }
-
-        // Check if category has services or products
-        if ($category->services()->exists() || $category->products()->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete category with existing services or products'
-            ], 400);
-        }
-
-        try {
-            $category->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Category deleted successfully',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete category',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Cập nhật thứ tự hiển thị
-     */
-    public function updateOrder(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'categories' => 'required|array',
-            'categories.*.id' => 'required|exists:categories,id',
-            'categories.*.display_order' => 'required|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation errors',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            foreach ($request->categories as $item) {
-                Category::where('id', $item['id'])->update(['display_order' => $item['display_order']]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Category order updated successfully',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update order',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-}
-

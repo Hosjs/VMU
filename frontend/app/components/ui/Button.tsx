@@ -3,7 +3,7 @@ import { forwardRef } from 'react';
 import { LoadingSpinner } from '../LoadingSystem';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -34,6 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
       warning: 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500',
       ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
+      outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-100 focus:ring-gray-300',
     };
 
     const sizeClasses = {
