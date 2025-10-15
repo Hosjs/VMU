@@ -21,7 +21,7 @@ export const orderService = {
 
   async updateStatus(
     id: number,
-    status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+    status: Order['status']
   ): Promise<Order> {
     return apiService.post<Order>(`/admin/orders/${id}/update-status`, { status });
   },

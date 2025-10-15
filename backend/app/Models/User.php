@@ -150,33 +150,133 @@ class User extends Authenticatable
     // HELPER METHODS
     // =====================
 
-    public function hasRole($roleName)
+    /**
+     * Kiểm tra user có permission cụ thể không
+     * Hỗ trợ: role permissions, custom permissions, và wildcard
+     *
+     * @param string $permission Format: "resource.action" (vd: "users.view", "orders.create")
+     * @return bool
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // Admin có tất cả quyền
+        if ($this->role && $this->role->name === 'admin') {
+            return true;
+        }
+
+        // 1. Kiểm tra custom_permissions của user (override role)
+        if ($this->custom_permissions && is_array($this->custom_permissions)) {
+            // Check exact match
+            if (in_array($permission, $this->custom_permissions)) {
+                return true;
+            }
+
+            // Check wildcard: users.* cho phép users.view, users.create, etc
+            $parts = explode('.', $permission);
+            if (count($parts) === 2) {
+                $wildcardPermission = $parts[0] . '.*';
+                if (in_array($wildcardPermission, $this->custom_permissions)) {
+                    return true;
+                }
+            }
+
+            // Check deny permission (bắt đầu với !)
+            if (in_array('!' . $permission, $this->custom_permissions)) {
+                return false;
+            }
+        }
+
+        // 2. Kiểm tra permissions từ role
+        if ($this->role && $this->role->permissions) {
+            $rolePermissions = is_string($this->role->permissions)
+                ? json_decode($this->role->permissions, true)
+                : $this->role->permissions;
+
+            if (is_array($rolePermissions)) {
+                // Check exact match
+                if (in_array($permission, $rolePermissions)) {
+                    return true;
+                }
+
+                // Check wildcard
+                $parts = explode('.', $permission);
+                if (count($parts) === 2) {
+                    $wildcardPermission = $parts[0] . '.*';
+                    if (in_array($wildcardPermission, $rolePermissions)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Kiểm tra user có bất kỳ permission nào trong danh sách
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra user có tất cả permissions trong danh sách
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Lấy tất cả permissions của user (role + custom)
+     */
+    public function getAllPermissions(): array
+    {
+        $permissions = [];
+
+        // Permissions từ role
+        if ($this->role && $this->role->permissions) {
+            $rolePermissions = is_string($this->role->permissions)
+                ? json_decode($this->role->permissions, true)
+                : $this->role->permissions;
+
+            if (is_array($rolePermissions)) {
+                $permissions = array_merge($permissions, $rolePermissions);
+            }
+        }
+
+        // Custom permissions
+        if ($this->custom_permissions && is_array($this->custom_permissions)) {
+            $permissions = array_merge($permissions, $this->custom_permissions);
+        }
+
+        return array_unique($permissions);
+    }
+
+    /**
+     * Kiểm tra user có role cụ thể
+     */
+    public function hasRole(string $roleName): bool
     {
         return $this->role && $this->role->name === $roleName;
     }
 
-    public function isAdmin()
+    /**
+     * Kiểm tra user có bất kỳ role nào trong danh sách
+     */
+    public function hasAnyRole(array $roleNames): bool
     {
-        return $this->hasRole('admin');
-    }
-
-    public function isManager()
-    {
-        return $this->hasRole('manager');
-    }
-
-    public function isAccountant()
-    {
-        return $this->hasRole('accountant');
-    }
-
-    public function isMechanic()
-    {
-        return $this->hasRole('mechanic');
-    }
-
-    public function isEmployee()
-    {
-        return $this->hasRole('employee');
+        return $this->role && in_array($this->role->name, $roleNames);
     }
 }

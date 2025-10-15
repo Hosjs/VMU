@@ -74,30 +74,15 @@ class AuthService {
   /**
    * Get current authenticated user from API
    */
-  async getCurrentUser(): Promise<AuthUser | null> {
-    const token = this.getToken();
+  async getCurrentUser(): Promise<AuthUser> {
+    return apiService.get<AuthUser>('/auth/me');
+  }
 
-    if (!token) {
-      return null;
-    }
-
-    try {
-      const response = await apiService.get<any>('/auth/me');
-
-      // Backend có thể trả về nhiều format khác nhau
-      const user = response.user || response;
-
-      if (user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        return user;
-      }
-
-      return null;
-    } catch (error) {
-      // If token is invalid, clear storage
-      this.clearAuth();
-      return null;
-    }
+  /**
+   * Get permissions of the authenticated user
+   */
+  async getPermissions(): Promise<{ permissions: string[]; role: string; role_display_name: string }> {
+    return apiService.get('/auth/permissions');
   }
 
   /**
@@ -142,4 +127,3 @@ class AuthService {
 // ============================================
 
 export const authService = new AuthService();
-

@@ -11,9 +11,9 @@ class Category extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'slug',
         'description',
-        'type',
         'image',
         'parent_id',
         'sort_order',
@@ -21,8 +21,8 @@ class Category extends Model
     ];
 
     protected $casts = [
-        'sort_order' => 'integer',
         'is_active' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     // =====================
@@ -37,11 +37,6 @@ class Category extends Model
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
-    }
-
-    public function services()
-    {
-        return $this->hasMany(Service::class);
     }
 
     public function products()

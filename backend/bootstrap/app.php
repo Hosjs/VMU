@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Đăng ký middleware alias
         $middleware->alias([
             'cors' => \App\Http\Middleware\Cors::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
 
         // Thêm CORS middleware cho API

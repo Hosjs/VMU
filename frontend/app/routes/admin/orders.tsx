@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Route } from './+types/orders';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
@@ -10,9 +10,10 @@ import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { Toast } from '~/components/ui/Toast';
 import { orderService } from '~/services/order.service';
+import { customerService } from '~/services/customer.service';
 import { useTable } from '~/hooks/useTable';
 import { useModal } from '~/hooks/useModal';
-import type { Order } from '~/types/order';
+import type { Order, CreateOrderData } from '~/types/order';
 import { formatters } from '~/utils/formatters';
 
 // Export loader function for React Router v7
@@ -23,9 +24,40 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Orders() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
+    const [newOrder, setNewOrder] = useState<Partial<CreateOrderData>>({
+        type: 'service',
+        items: [{
+            item_type: 'service',
+            item_name: '',
+            item_code: '',
+            quantity: 1,
+            unit: 'lần',
+            quote_unit_price: 0,
+            settlement_unit_price: 0,
+        }]
+    });
 
     const viewModal = useModal();
     const deleteModal = useModal();
+    const createModal = useModal();
+
+    // Fetch customers khi mở modal tạo đơn
+    useEffect(() => {
+        if (createModal.isOpen) {
+            fetchCustomers();
+        }
+    }, [createModal.isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const fetchCustomers = async () => {
+        try {
+            const response = await customerService.getAll({ per_page: 100 });
+            setCustomers(response.data);
+        } catch (error) {
+            console.error('Failed to fetch customers:', error);
+        }
+    };
 
     const fetchOrders = useCallback(async (params: any) => {
         return await orderService.getAll(params);
@@ -80,14 +112,71 @@ export default function Orders() {
         }
     };
 
-    const handleStatusChange = async (orderId: number, newStatus: Order['status']) => {
-        try {
-            await orderService.updateStatus(orderId, newStatus);
-            showToast('success', 'Cập nhật trạng thái thành công');
-            refresh();
-        } catch (error: any) {
-            showToast('error', error.message || 'Không thể cập nhật trạng thái');
+    const handleCreateOrder = async () => {
+        if (!newOrder.customer_id) {
+            showToast('error', 'Vui lòng chọn khách hàng');
+            return;
         }
+
+        if (!newOrder.items || newOrder.items.length === 0 || !newOrder.items[0].item_name) {
+            showToast('error', 'Vui lòng nhập ít nhất một sản phẩm/dịch vụ');
+            return;
+        }
+
+        try {
+            setIsCreating(true);
+            await orderService.create(newOrder as CreateOrderData);
+            showToast('success', 'Tạo đơn hàng thành công');
+            createModal.close();
+            refresh();
+            // Reset form
+            setNewOrder({
+                type: 'service',
+                items: [{
+                    item_type: 'service',
+                    item_name: '',
+                    item_code: '',
+                    quantity: 1,
+                    unit: 'lần',
+                    quote_unit_price: 0,
+                    settlement_unit_price: 0,
+                }]
+            });
+        } catch (error: any) {
+            showToast('error', error.message || 'Không thể tạo đơn hàng');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const addOrderItem = () => {
+        setNewOrder({
+            ...newOrder,
+            items: [
+                ...(newOrder.items || []),
+                {
+                    item_type: newOrder.type === 'product' ? 'product' : 'service',
+                    item_name: '',
+                    item_code: '',
+                    quantity: 1,
+                    unit: 'lần',
+                    quote_unit_price: 0,
+                    settlement_unit_price: 0,
+                }
+            ]
+        });
+    };
+
+    const removeOrderItem = (index: number) => {
+        const items = [...(newOrder.items || [])];
+        items.splice(index, 1);
+        setNewOrder({ ...newOrder, items });
+    };
+
+    const updateOrderItem = (index: number, field: string, value: any) => {
+        const items = [...(newOrder.items || [])];
+        items[index] = { ...items[index], [field]: value };
+        setNewOrder({ ...newOrder, items });
     };
 
     const getStatusText = (status: string) => {
@@ -287,7 +376,7 @@ export default function Orders() {
                             <option value="refunded">Hoàn tiền</option>
                         </Select>
                     </div>
-                    <Button variant="primary" onClick={() => window.location.href = '/admin/orders/create'}>
+                    <Button variant="primary" onClick={createModal.open}>
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -313,6 +402,149 @@ export default function Orders() {
                     total={meta.total}
                 />
             </Card>
+
+            {/* Create Order Modal */}
+            <Modal
+                isOpen={createModal.isOpen}
+                onClose={createModal.close}
+                title="Tạo đơn hàng mới"
+                size="xl"
+            >
+                <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Khách hàng <span className="text-red-500">*</span>
+                            </label>
+                            <Select
+                                value={newOrder.customer_id || ''}
+                                onChange={(e) => setNewOrder({ ...newOrder, customer_id: Number(e.target.value) })}
+                                required
+                            >
+                                <option value="">-- Chọn khách hàng --</option>
+                                {customers.map((customer) => (
+                                    <option key={customer.id} value={customer.id}>
+                                        {customer.name} - {customer.phone}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Loại đơn hàng <span className="text-red-500">*</span>
+                            </label>
+                            <Select
+                                value={newOrder.type || 'service'}
+                                onChange={(e) => setNewOrder({ ...newOrder, type: e.target.value as any })}
+                                required
+                            >
+                                <option value="service">Dịch vụ</option>
+                                <option value="product">Sản phẩm</option>
+                                <option value="mixed">Hỗn hợp</option>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-900">Chi tiết đơn hàng</h4>
+                            <Button size="sm" variant="outline" onClick={addOrderItem}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Thêm dòng
+                            </Button>
+                        </div>
+
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {newOrder.items?.map((item, index) => (
+                                <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                                    <div className="grid grid-cols-12 gap-3">
+                                        <div className="col-span-4">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                Tên sản phẩm/dịch vụ
+                                            </label>
+                                            <Input
+                                                value={item.item_name}
+                                                onChange={(e) => updateOrderItem(index, 'item_name', e.target.value)}
+                                                placeholder="Nhập tên..."
+                                            />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Mã</label>
+                                            <Input
+                                                value={item.item_code}
+                                                onChange={(e) => updateOrderItem(index, 'item_code', e.target.value)}
+                                                placeholder="Mã..."
+                                            />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">SL</label>
+                                            <Input
+                                                type="number"
+                                                value={item.quantity}
+                                                onChange={(e) => updateOrderItem(index, 'quantity', Number(e.target.value))}
+                                                min="1"
+                                            />
+                                        </div>
+                                        <div className="col-span-3">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Đơn giá</label>
+                                            <Input
+                                                type="number"
+                                                value={item.quote_unit_price}
+                                                onChange={(e) => {
+                                                    const price = Number(e.target.value);
+                                                    updateOrderItem(index, 'quote_unit_price', price);
+                                                    updateOrderItem(index, 'settlement_unit_price', price);
+                                                }}
+                                                min="0"
+                                                step="1000"
+                                            />
+                                        </div>
+                                        <div className="col-span-1 flex items-end">
+                                            {index > 0 && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => removeOrderItem(index)}
+                                                    className="text-red-600"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-gray-900">Tổng tạm tính:</span>
+                                <span className="text-xl font-bold text-blue-600">
+                                    {formatters.currency(
+                                        (newOrder.items || []).reduce((sum, item) =>
+                                            sum + (item.quantity * item.quote_unit_price), 0
+                                        )
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <Button variant="ghost" onClick={createModal.close} disabled={isCreating}>
+                            Hủy
+                        </Button>
+                        <Button variant="primary" onClick={handleCreateOrder} disabled={isCreating}>
+                            {isCreating ? 'Đang tạo...' : 'Tạo đơn hàng'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* View Order Modal */}
             <Modal
@@ -386,9 +618,6 @@ export default function Orders() {
 
                         <div className="flex justify-end gap-3 pt-4 border-t">
                             <Button variant="ghost" onClick={viewModal.close}>Đóng</Button>
-                            <Button variant="primary" onClick={() => window.location.href = `/admin/orders/${selectedOrder.id}/edit`}>
-                                Chỉnh sửa
-                            </Button>
                         </div>
                     </div>
                 )}

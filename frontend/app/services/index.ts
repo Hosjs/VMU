@@ -7,6 +7,7 @@ export * from './product.service';
 export * from './category.service';
 export * from './role.service';
 export * from './dashboard.service';
+export * from './badge.service';
 import { apiService } from './api.service';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 import type { AuthUser } from '~/types/auth';

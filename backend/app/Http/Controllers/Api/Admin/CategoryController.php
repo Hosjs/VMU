@@ -16,22 +16,27 @@ class CategoryController extends Controller
     {
         $perPage = $request->get('per_page', 100); // Categories usually not too many
         $search = $request->get('search');
-        $type = $request->get('type');
         $isActive = $request->get('is_active');
+        $parentId = $request->get('parent_id');
 
-        $query = Category::withCount(['services', 'products']);
+        $query = Category::withCount('products');
 
         // Search
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%");
             });
         }
 
-        // Filter by type
-        if ($type) {
-            $query->where('type', $type);
+        // Filter by parent
+        if ($parentId !== null) {
+            if ($parentId === '0' || $parentId === 0) {
+                $query->whereNull('parent_id');
+            } else {
+                $query->where('parent_id', $parentId);
+            }
         }
 
         // Filter active
@@ -56,8 +61,8 @@ class CategoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:categories,code',
             'slug' => 'required|string|max:255|unique:categories,slug',
-            'type' => 'required|in:service,product,both',
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|string',
@@ -96,7 +101,7 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        $category = Category::with(['services', 'products', 'children'])->find($id);
+        $category = Category::with(['products', 'children', 'parent'])->find($id);
 
         if (!$category) {
             return response()->json([
@@ -127,8 +132,8 @@ class CategoryController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:categories,code,' . $id,
             'slug' => 'required|string|max:255|unique:categories,slug,' . $id,
-            'type' => 'required|in:service,product,both',
             'description' => 'nullable|string',
             'parent_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|string',
@@ -176,11 +181,18 @@ class CategoryController extends Controller
             ], 404);
         }
 
-        // Check if category has services or products
-        if ($category->services()->exists() || $category->products()->exists()) {
+        // Check if category has products or children
+        if ($category->products()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete category with existing services or products'
+                'message' => 'Cannot delete category with existing products'
+            ], 400);
+        }
+
+        if ($category->children()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete category with sub-categories'
             ], 400);
         }
 
@@ -239,4 +251,3 @@ class CategoryController extends Controller
         }
     }
 }
-

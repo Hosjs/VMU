@@ -103,6 +103,16 @@ class Order extends Model
         return $this->belongsTo(Provider::class, 'partner_provider_id');
     }
 
+    public function partnerCoordinator()
+    {
+        return $this->belongsTo(User::class, 'partner_coordinator_id');
+    }
+
+    public function vehicleHandovers()
+    {
+        return $this->hasMany(PartnerVehicleHandover::class);
+    }
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
@@ -128,4 +138,3 @@ class Order extends Model
         return $this->hasMany(StockTransfer::class);
     }
 }
-

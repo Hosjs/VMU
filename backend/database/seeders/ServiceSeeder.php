@@ -2,86 +2,76 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use App\Models\Service;
 use Illuminate\Database\Seeder;
 
 class ServiceSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     * 6 DỊCH VỤ CHÍNH - QUẢN LÝ ĐỘC LẬP, KHÔNG THUỘC DANH MỤC
+     */
     public function run(): void
     {
-        $serviceCategory = Category::where('code', 'SERVICE')->first();
-
-        if (!$serviceCategory) {
-            $this->command->error('Service category not found! Please run CategorySeeder first.');
-            return;
-        }
-
         $services = [
             [
-                'name' => 'Engine Repair',
-                'code' => 'SV-ENGINE',
-                'description' => 'Complete engine repair and overhaul services',
-                'category_id' => $serviceCategory->id,
-                'unit' => 'service',
-                'estimated_time' => 480,
+                'name' => 'Bảo dưỡng định kỳ',
+                'code' => 'MAINTENANCE',
+                'description' => 'Bảo dưỡng định kỳ theo km: thay dầu động cơ, lọc gió, kiểm tra tổng quát',
+                'unit' => 'lần',
+                'estimated_time' => 90, // 1.5 giờ
+                'has_warranty' => true,
+                'warranty_months' => 3,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Sửa chữa động cơ',
+                'code' => 'ENGINE_REPAIR',
+                'description' => 'Sửa chữa, đại tu động cơ: thay piston, xi lanh, đại tu tổng thể',
+                'unit' => 'lần',
+                'estimated_time' => 480, // 8 giờ
+                'has_warranty' => true,
+                'warranty_months' => 12,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Sửa chữa hệ thống phanh',
+                'code' => 'BRAKE_REPAIR',
+                'description' => 'Thay má phanh, đĩa phanh, bơm phanh, sửa chữa hệ thống phanh',
+                'unit' => 'lần',
+                'estimated_time' => 120, // 2 giờ
                 'has_warranty' => true,
                 'warranty_months' => 6,
                 'is_active' => true,
             ],
             [
-                'name' => 'Transmission Repair',
-                'code' => 'SV-TRANSMISSION',
-                'description' => 'Automatic and manual transmission repair',
-                'category_id' => $serviceCategory->id,
-                'unit' => 'service',
-                'estimated_time' => 360,
-                'has_warranty' => true,
-                'warranty_months' => 6,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Brake System Repair',
-                'code' => 'SV-BRAKE',
-                'description' => 'Complete brake system maintenance and repair',
-                'category_id' => $serviceCategory->id,
-                'unit' => 'service',
-                'estimated_time' => 120,
-                'has_warranty' => true,
-                'warranty_months' => 3,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Electrical System Repair',
-                'code' => 'SV-ELECTRICAL',
-                'description' => 'Electrical diagnostics and repair',
-                'category_id' => $serviceCategory->id,
-                'unit' => 'service',
-                'estimated_time' => 180,
-                'has_warranty' => true,
-                'warranty_months' => 3,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Body Work & Painting',
-                'code' => 'SV-BODY',
-                'description' => 'Body repair and professional painting',
-                'category_id' => $serviceCategory->id,
-                'unit' => 'service',
-                'estimated_time' => 240,
-                'has_warranty' => true,
-                'warranty_months' => 3,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Regular Maintenance',
-                'code' => 'SV-MAINTENANCE',
-                'description' => 'Scheduled maintenance and inspection',
-                'category_id' => $serviceCategory->id,
-                'unit' => 'service',
-                'estimated_time' => 90,
+                'name' => 'Kiểm tra và chẩn đoán',
+                'code' => 'INSPECTION',
+                'description' => 'Kiểm tra tổng quát, chẩn đoán lỗi bằng máy scan, đánh giá tình trạng xe',
+                'unit' => 'lần',
+                'estimated_time' => 60, // 1 giờ
                 'has_warranty' => false,
                 'warranty_months' => 0,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Sửa chữa điện - điện tử',
+                'code' => 'ELECTRIC_REPAIR',
+                'description' => 'Sửa chữa hệ thống điện, thay ắc quy, sửa đèn, điều hòa',
+                'unit' => 'lần',
+                'estimated_time' => 180, // 3 giờ
+                'has_warranty' => true,
+                'warranty_months' => 6,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Thay lốp và cân chỉnh',
+                'code' => 'TIRE_SERVICE',
+                'description' => 'Thay lốp, vá lốp, cân bằng lốp, cân chỉnh góc đặt bánh xe',
+                'unit' => 'lần',
+                'estimated_time' => 90, // 1.5 giờ
+                'has_warranty' => true,
+                'warranty_months' => 6,
                 'is_active' => true,
             ],
         ];
@@ -90,6 +80,7 @@ class ServiceSeeder extends Seeder
             Service::create($service);
         }
 
-        $this->command->info('Created ' . count($services) . ' services');
+        $this->command->info('✅ Đã tạo 6 dịch vụ chính (độc lập, không thuộc danh mục)');
     }
 }
+

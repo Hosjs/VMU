@@ -82,4 +82,14 @@ class Vehicle extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function vehicleHandovers()
+    {
+        return $this->hasMany(PartnerVehicleHandover::class);
+    }
+
+    public function serviceHistories()
+    {
+        return $this->hasMany(VehicleServiceHistory::class);
+    }
 }

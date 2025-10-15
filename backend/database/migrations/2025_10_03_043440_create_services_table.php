@@ -13,10 +13,9 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Tên dịch vụ (6 dịch vụ trung tâm)
-            $table->string('code')->unique(); // Mã dịch vụ
+            $table->string('name'); // Tên dịch vụ (6 dịch vụ chính)
+            $table->string('code')->unique(); // Mã dịch vụ: MAINTENANCE, REPAIR, INSPECTION...
             $table->text('description')->nullable(); // Mô tả dịch vụ
-            $table->unsignedBigInteger('category_id'); // Danh mục dịch vụ
 
             $table->string('unit')->default('lần'); // Đơn vị tính
             $table->integer('estimated_time')->default(60); // Thời gian ước tính (phút)
@@ -34,7 +33,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->index(['category_id', 'is_active']);
+            $table->index('is_active');
             $table->index('code');
         });
     }

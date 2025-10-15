@@ -18,10 +18,24 @@ class ServiceResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'description' => $this->description,
-            'price' => $this->price,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'unit' => $this->unit,
+            'estimated_time' => $this->estimated_time,
+
+            // Images
+            'main_image' => $this->main_image,
+            'gallery_images' => $this->gallery_images ? explode('|', $this->gallery_images) : [],
+
+            // Warranty
+            'has_warranty' => (bool) $this->has_warranty,
+            'warranty_months' => $this->warranty_months,
+
+            'notes' => $this->notes,
+            'is_active' => (bool) $this->is_active,
+
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }

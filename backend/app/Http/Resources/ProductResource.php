@@ -20,23 +20,29 @@ class ProductResource extends JsonResource
             'unit' => $this->unit,
 
             // Pricing
-            'quote_price' => (float) $this->quote_price,
-            'settlement_price' => $this->when($isAdmin, (float) $this->settlement_price),
-            'profit_per_unit' => $this->when($isAdmin, (float) ($this->quote_price - $this->settlement_price)),
-            'profit_margin' => $this->when($isAdmin,
-                $this->quote_price > 0 ? round((($this->quote_price - $this->settlement_price) / $this->quote_price) * 100, 2) : 0
+            'cost_price' => $this->when($isAdmin, (float) $this->cost_price),
+            'suggested_price' => (float) $this->suggested_price,
+            'profit_per_unit' => $this->when($isAdmin, (float) ($this->suggested_price - $this->cost_price)),
+            'profit_margin' => $this->when($isAdmin && $this->suggested_price > 0,
+                round((($this->suggested_price - $this->cost_price) / $this->suggested_price) * 100, 2)
             ),
 
             // Category
             'category' => new CategoryResource($this->whenLoaded('category')),
             'category_name' => $this->category?->name,
 
+            // Vehicle Compatibility
+            'vehicle_brand' => new VehicleBrandResource($this->whenLoaded('vehicleBrand')),
+            'vehicle_model' => new VehicleModelResource($this->whenLoaded('vehicleModel')),
+            'compatible_years' => $this->compatible_years,
+            'is_universal' => (bool) $this->is_universal,
+
             // Warehouse & Stock
             'primary_warehouse' => new WarehouseResource($this->whenLoaded('primaryWarehouse')),
             'warehouse_stocks' => WarehouseStockResource::collection($this->whenLoaded('warehouseStocks')),
             'total_stock' => $this->when(
-                isset($this->warehouse_stocks_sum_available_quantity),
-                (int) $this->warehouse_stocks_sum_available_quantity
+                isset($this->warehouse_stocks_sum_quantity),
+                (int) $this->warehouse_stocks_sum_quantity
             ),
             'available_stock' => $this->when(
                 isset($this->warehouse_stocks_sum_available_quantity),
@@ -53,15 +59,18 @@ class ProductResource extends JsonResource
             'track_by_serial' => (bool) $this->track_by_serial,
             'track_by_batch' => (bool) $this->track_by_batch,
             'shelf_life_days' => $this->shelf_life_days,
-            'auto_transfer_enabled' => (bool) $this->auto_transfer_enabled,
-            'transfer_threshold' => $this->transfer_threshold,
+
+            // Stock Levels
+            'min_stock_level' => $this->min_stock_level,
+            'max_stock_level' => $this->max_stock_level,
+            'reorder_point' => $this->reorder_point,
 
             // Warranty
             'has_warranty' => (bool) $this->has_warranty,
             'warranty_months' => $this->warranty_months,
 
             // Supplier
-            'supplier_name' => $this->supplier_name,
+            'supplier' => new ProviderResource($this->whenLoaded('supplier')),
             'supplier_code' => $this->supplier_code,
 
             // Images

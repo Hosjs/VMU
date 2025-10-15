@@ -235,4 +235,31 @@ class AuthController extends Controller
             'message' => 'Password changed successfully'
         ]);
     }
+
+    /**
+     * Lấy tất cả permissions của user hiện tại
+     */
+    public function permissions(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        // Load role để lấy permissions
+        $user->load('role');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'permissions' => $user->getAllPermissions(),
+                'role' => $user->role ? $user->role->name : null,
+                'role_display_name' => $user->role ? $user->role->display_name : null,
+            ]
+        ]);
+    }
 }

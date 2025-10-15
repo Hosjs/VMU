@@ -29,8 +29,6 @@ export function Header({ onToggleSidebar, sidebarOpen, user }: HeaderProps) {
       // Clear local storage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
-
-      // Redirect to login
       navigate('/login', { replace: true });
 
       // Reload để clear tất cả state - CHỈ DÙNG CHO LOGOUT
@@ -41,7 +39,8 @@ export function Header({ onToggleSidebar, sidebarOpen, user }: HeaderProps) {
   }, [navigate]);
 
   // Lấy chữ cái đầu của tên user cho avatar
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name) return 'U';
     return name
       .split(' ')
       .map(word => word.charAt(0))

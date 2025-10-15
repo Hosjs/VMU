@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import type { Route } from './+types/services';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
@@ -10,38 +10,27 @@ import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { Toast } from '~/components/ui/Toast';
 import { serviceService } from '~/services/service.service';
-import { categoryService } from '~/services/category.service';
 import { useTable } from '~/hooks/useTable';
 import { useModal } from '~/hooks/useModal';
 import { useForm } from '~/hooks/useForm';
 import type { Service } from '~/types/service';
-import type { Category } from '~/types/product';
-import { formatters } from '~/utils/formatters';
-import { validators } from '~/utils/validators';
 
-// Export loader function for React Router v7
 export async function loader({ request }: Route.LoaderArgs) {
   return null;
 }
 
 export default function Services() {
-    const [categories, setCategories] = useState<Category[]>([]);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-    // ✅ Sử dụng useRef để tránh gọi API 2 lần
-    const isInitializedRef = useRef(false);
 
     const createModal = useModal();
     const editModal = useModal();
     const deleteModal = useModal();
 
-    // Memoize fetchData to prevent infinite loop
     const fetchServices = useCallback(async (params: any) => {
         return await serviceService.getServices(params);
     }, []);
 
-    // Use the reusable useTable hook
     const {
         data: services,
         isLoading,
@@ -59,31 +48,9 @@ export default function Services() {
     } = useTable<Service>({
         fetchData: fetchServices,
         initialPerPage: 15,
-        initialSortBy: 'created_at',
-        initialSortDirection: 'desc',
+        initialSortBy: 'name',
+        initialSortDirection: 'asc',
     });
-
-    useEffect(() => {
-        // ✅ Check ref để tránh gọi lặp trong React Strict Mode
-        if (isInitializedRef.current) {
-            console.log('⚠️ Skipping duplicate initialization call (services)');
-            return;
-        }
-
-        isInitializedRef.current = true;
-        loadCategories();
-    }, []);
-
-    const loadCategories = async () => {
-        try {
-            const response = await categoryService.getCategories({ type: 'service', is_active: true });
-            setCategories(response || []);
-        } catch (error) {
-            console.error('Error loading categories:', error);
-            setCategories([]);
-            isInitializedRef.current = false; // ✅ Reset để có thể retry
-        }
-    };
 
     const showToast = (type: 'success' | 'error', message: string) => {
         setToast({ type, message });
@@ -123,7 +90,7 @@ export default function Services() {
             key: 'code',
             label: 'Mã',
             sortable: true,
-            width: '100px',
+            width: '120px',
         },
         {
             key: 'name',
@@ -133,47 +100,41 @@ export default function Services() {
                 <div>
                     <p className="font-medium text-gray-900">{service.name}</p>
                     {service.description && (
-                        <p className="text-xs text-gray-500">{service.description}</p>
+                        <p className="text-xs text-gray-500 line-clamp-2">{service.description}</p>
                     )}
                 </div>
             ),
         },
         {
-            key: 'category',
-            label: 'Danh mục',
-            render: (service: Service) => (
-                <Badge variant="info">{service.category?.name || 'N/A'}</Badge>
-            ),
-        },
-        {
             key: 'unit',
             label: 'Đơn vị',
+            width: '100px',
             render: (service: Service) => (
                 <span className="text-sm text-gray-700">{service.unit}</span>
             ),
         },
         {
-            key: 'quote_price',
-            label: 'Giá báo KH',
-            sortable: true,
+            key: 'estimated_time',
+            label: 'Thời gian ƯT',
+            width: '120px',
             render: (service: Service) => (
-                <span className="font-semibold text-blue-600">
-                    {formatters.currency(service.quote_price || 0)}
-                </span>
+                <span className="text-sm text-gray-600">{service.estimated_time} phút</span>
             ),
         },
         {
-            key: 'settlement_price',
-            label: 'Giá QT',
+            key: 'has_warranty',
+            label: 'Bảo hành',
+            width: '100px',
             render: (service: Service) => (
-                <span className="font-semibold text-gray-900">
-                    {formatters.currency(service.settlement_price || 0)}
-                </span>
+                <Badge variant={service.has_warranty ? 'success' : 'secondary'}>
+                    {service.has_warranty ? `${service.warranty_months} tháng` : 'Không'}
+                </Badge>
             ),
         },
         {
             key: 'is_active',
             label: 'Trạng thái',
+            width: '120px',
             render: (service: Service) => (
                 <Badge variant={service.is_active ? 'success' : 'danger'}>
                     {service.is_active ? 'Hoạt động' : 'Ngừng'}
@@ -183,6 +144,7 @@ export default function Services() {
         {
             key: 'actions',
             label: 'Thao tác',
+            width: '100px',
             render: (service: Service) => (
                 <div className="flex gap-2">
                     <Button size="sm" variant="ghost" onClick={() => handleEdit(service)}>
@@ -202,31 +164,20 @@ export default function Services() {
 
     return (
         <div>
-            {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Dịch vụ</h1>
-                <p className="text-gray-600 mt-2">Quản lý danh mục dịch vụ</p>
+                <h1 className="text-3xl font-bold text-gray-900">6 Dịch vụ chính</h1>
+                <p className="text-gray-600 mt-2">Quản lý các dịch vụ độc lập (không thuộc danh mục)</p>
             </div>
 
             <Card>
                 <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                         <Input
-                            placeholder="Tìm kiếm tên, mã..."
+                            placeholder="Tìm kiếm tên, mã, mô tả..."
                             value={search}
                             onChange={(e) => handleSearch(e.target.value)}
                             className="w-full md:w-96"
                         />
-                        <Select
-                            value={filters.category_id || ''}
-                            onChange={(e) => handleFilter('category_id', e.target.value || undefined)}
-                            className="w-full md:w-48"
-                        >
-                            <option value="">Tất cả danh mục</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                        </Select>
                         <Select
                             value={filters.is_active || ''}
                             onChange={(e) => handleFilter('is_active', e.target.value || undefined)}
@@ -264,7 +215,6 @@ export default function Services() {
                 />
             </Card>
 
-            {/* Create Modal */}
             <ServiceFormModal
                 isOpen={createModal.isOpen}
                 onClose={createModal.close}
@@ -273,10 +223,8 @@ export default function Services() {
                     refresh();
                     showToast('success', 'Thêm dịch vụ thành công');
                 }}
-                categories={categories}
             />
 
-            {/* Edit Modal */}
             <ServiceFormModal
                 isOpen={editModal.isOpen}
                 onClose={editModal.close}
@@ -286,10 +234,8 @@ export default function Services() {
                     refresh();
                     showToast('success', 'Cập nhật dịch vụ thành công');
                 }}
-                categories={categories}
             />
 
-            {/* Delete Confirmation Modal */}
             <Modal
                 isOpen={deleteModal.isOpen}
                 onClose={deleteModal.close}
@@ -301,103 +247,79 @@ export default function Services() {
                         Bạn có chắc chắn muốn xóa dịch vụ <strong>{selectedService?.name}</strong>?
                     </p>
                     <div className="flex items-center justify-end gap-3">
-                        <Button variant="ghost" onClick={deleteModal.close}>
-                            Hủy
-                        </Button>
-                        <Button variant="danger" onClick={handleDeleteConfirm}>
-                            Xóa
-                        </Button>
+                        <Button variant="ghost" onClick={deleteModal.close}>Hủy</Button>
+                        <Button variant="danger" onClick={handleDeleteConfirm}>Xóa</Button>
                     </div>
                 </div>
             </Modal>
 
-            {/* Toast Notification */}
-            {toast && (
-                <Toast
-                    type={toast.type}
-                    message={toast.message}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
         </div>
     );
 }
 
-// Service Form Modal Component
 interface ServiceFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
     service?: Service | null;
-    categories: Category[];
 }
 
 interface ServiceFormData {
     name: string;
     code: string;
-    category_id: number | string;
-    unit: string;
-    quote_price: string | number;
-    settlement_price: string | number;
     description: string;
+    unit: string;
+    estimated_time: number | string;
+    has_warranty: boolean;
+    warranty_months: number | string;
+    notes: string;
     is_active: boolean;
 }
 
-function ServiceFormModal({
-    isOpen,
-    onClose,
-    onSuccess,
-    service,
-    categories,
-}: ServiceFormModalProps) {
+function ServiceFormModal({ isOpen, onClose, onSuccess, service }: ServiceFormModalProps) {
     const isEdit = !!service;
 
     const initialValues: ServiceFormData = {
         name: service?.name || '',
         code: service?.code || '',
-        category_id: service?.category_id || '',
-        unit: service?.unit || 'lần',
-        quote_price: service?.quote_price || '',
-        settlement_price: service?.settlement_price || '',
         description: service?.description || '',
+        unit: service?.unit || 'lần',
+        estimated_time: service?.estimated_time || 60,
+        has_warranty: service?.has_warranty || false,
+        warranty_months: service?.warranty_months || 0,
+        notes: service?.notes || '',
         is_active: service?.is_active !== false,
     };
 
     const validateForm = (values: ServiceFormData): Record<string, string> => {
         const errors: Record<string, string> = {};
-
         if (!values.name?.trim()) errors.name = 'Tên dịch vụ là bắt buộc';
         if (!values.code?.trim()) errors.code = 'Mã dịch vụ là bắt buộc';
-        if (!values.category_id) errors.category_id = 'Danh mục là bắt buộc';
-        if (!values.quote_price || Number(values.quote_price) <= 0) {
-            errors.quote_price = 'Giá báo khách hàng phải lớn hơn 0';
+        if (values.estimated_time && Number(values.estimated_time) <= 0) {
+            errors.estimated_time = 'Thời gian ước tính phải lớn hơn 0';
         }
-        if (!values.settlement_price || Number(values.settlement_price) <= 0) {
-            errors.settlement_price = 'Giá quyết toán phải lớn hơn 0';
+        if (values.has_warranty && (!values.warranty_months || Number(values.warranty_months) <= 0)) {
+            errors.warranty_months = 'Số tháng bảo hành phải lớn hơn 0 khi có bảo hành';
         }
-
         return errors;
     };
 
-    const {
-        values,
-        errors,
-        touched,
-        isSubmitting,
-        handleChange,
-        handleBlur,
-        handleSubmit,
-        reset,
-    } = useForm<ServiceFormData>({
+    const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit, reset } = useForm<ServiceFormData>({
         initialValues,
         validate: validateForm,
         onSubmit: async (values) => {
             try {
                 const submitData = {
-                    ...values,
-                    category_id: Number(values.category_id),
-                    quote_price: Number(values.quote_price),
-                    settlement_price: Number(values.settlement_price),
+                    name: values.name,
+                    code: values.code,
+                    description: values.description,
+                    unit: values.unit,
+                    estimated_time: Number(values.estimated_time),
+                    has_warranty: values.has_warranty,
+                    warranty_months: Number(values.warranty_months),
+                    notes: values.notes,
+                    is_active: values.is_active,
                 };
 
                 if (isEdit && service) {
@@ -419,12 +341,7 @@ function ServiceFormModal({
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={handleClose}
-            title={isEdit ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}
-            size="lg"
-        >
+        <Modal isOpen={isOpen} onClose={handleClose} title={isEdit ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'} size="lg">
             <form onSubmit={handleSubmit}>
                 <div className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -435,6 +352,7 @@ function ServiceFormModal({
                             onChange={(e) => handleChange('name', e.target.value)}
                             onBlur={() => handleBlur('name')}
                             error={touched.name ? errors.name : undefined}
+                            placeholder="VD: Bảo dưỡng định kỳ"
                         />
                         <Input
                             label="Mã dịch vụ *"
@@ -443,48 +361,26 @@ function ServiceFormModal({
                             onChange={(e) => handleChange('code', e.target.value)}
                             onBlur={() => handleBlur('code')}
                             error={touched.code ? errors.code : undefined}
+                            placeholder="VD: MAINTENANCE"
                         />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Select
-                            label="Danh mục *"
-                            name="category_id"
-                            value={values.category_id}
-                            onChange={(e) => handleChange('category_id', e.target.value)}
-                            error={touched.category_id ? errors.category_id : undefined}
-                        >
-                            <option value="">Chọn danh mục</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                        </Select>
                         <Input
                             label="Đơn vị"
                             name="unit"
                             value={values.unit}
                             onChange={(e) => handleChange('unit', e.target.value)}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                            label="Giá báo khách hàng *"
-                            type="number"
-                            name="quote_price"
-                            value={values.quote_price}
-                            onChange={(e) => handleChange('quote_price', e.target.value)}
-                            onBlur={() => handleBlur('quote_price')}
-                            error={touched.quote_price ? errors.quote_price : undefined}
+                            placeholder="VD: lần, giờ"
                         />
                         <Input
-                            label="Giá quyết toán *"
+                            label="Thời gian ước tính (phút)"
                             type="number"
-                            name="settlement_price"
-                            value={values.settlement_price}
-                            onChange={(e) => handleChange('settlement_price', e.target.value)}
-                            onBlur={() => handleBlur('settlement_price')}
-                            error={touched.settlement_price ? errors.settlement_price : undefined}
+                            name="estimated_time"
+                            value={values.estimated_time}
+                            onChange={(e) => handleChange('estimated_time', e.target.value)}
+                            onBlur={() => handleBlur('estimated_time')}
+                            error={touched.estimated_time ? errors.estimated_time : undefined}
                         />
                     </div>
 
@@ -495,6 +391,45 @@ function ServiceFormModal({
                             rows={3}
                             value={values.description}
                             onChange={(e) => handleChange('description', e.target.value)}
+                            placeholder="Mô tả chi tiết về dịch vụ"
+                        />
+                    </div>
+
+                    <div className="border-t pt-4">
+                        <div className="flex items-center mb-4">
+                            <input
+                                type="checkbox"
+                                id="has_warranty"
+                                checked={values.has_warranty}
+                                onChange={(e) => handleChange('has_warranty', e.target.checked)}
+                                className="mr-2 h-4 w-4"
+                            />
+                            <label htmlFor="has_warranty" className="text-sm font-medium text-gray-700">
+                                Có bảo hành
+                            </label>
+                        </div>
+
+                        {values.has_warranty && (
+                            <Input
+                                label="Số tháng bảo hành *"
+                                type="number"
+                                name="warranty_months"
+                                value={values.warranty_months}
+                                onChange={(e) => handleChange('warranty_months', e.target.value)}
+                                onBlur={() => handleBlur('warranty_months')}
+                                error={touched.warranty_months ? errors.warranty_months : undefined}
+                            />
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
+                        <textarea
+                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            rows={2}
+                            value={values.notes}
+                            onChange={(e) => handleChange('notes', e.target.value)}
+                            placeholder="Ghi chú thêm về dịch vụ"
                         />
                     </div>
 
@@ -504,9 +439,9 @@ function ServiceFormModal({
                             id="is_active"
                             checked={values.is_active}
                             onChange={(e) => handleChange('is_active', e.target.checked)}
-                            className="mr-2"
+                            className="mr-2 h-4 w-4"
                         />
-                        <label htmlFor="is_active" className="text-sm text-gray-700">Hoạt động</label>
+                        <label htmlFor="is_active" className="text-sm text-gray-700">Kích hoạt dịch vụ</label>
                     </div>
                 </div>
 
@@ -522,3 +457,4 @@ function ServiceFormModal({
         </Modal>
     );
 }
+

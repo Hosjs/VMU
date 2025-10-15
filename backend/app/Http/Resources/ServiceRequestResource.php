@@ -12,8 +12,6 @@ class ServiceRequestResource extends JsonResource
         return [
             'id' => $this->id,
             'code' => $this->code,
-            'status' => $this->status,
-            'priority' => $this->priority,
 
             // Customer Info
             'customer_name' => $this->customer_name,
@@ -32,20 +30,26 @@ class ServiceRequestResource extends JsonResource
             // Request Details
             'description' => $this->description,
             'preferred_date' => $this->preferred_date?->format('Y-m-d H:i:s'),
+            'status' => $this->status,
+            'priority' => $this->priority,
 
-            // Assignment
-            'assigned_to_user' => new UserResource($this->whenLoaded('assignedTo')),
-            'admin_handler_user' => new UserResource($this->whenLoaded('adminHandler')),
+            // Assignment & Handling
+            'assigned_to' => new UserResource($this->whenLoaded('assignedTo')),
+            'admin_handler' => new UserResource($this->whenLoaded('adminHandler')),
             'selected_provider' => new ProviderResource($this->whenLoaded('selectedProvider')),
 
-            // Services
-            'requested_services' => ServiceRequestServiceResource::collection($this->whenLoaded('requestedServices')),
-            'services_count' => $this->whenCounted('requestedServices'),
-
-            // Timestamps
+            // Timeline
             'contacted_at' => $this->contacted_at?->format('Y-m-d H:i:s'),
             'scheduled_at' => $this->scheduled_at?->format('Y-m-d H:i:s'),
 
+            // Requested Services
+            'requested_services' => ServiceRequestServiceResource::collection($this->whenLoaded('requestedServices')),
+            'requested_services_count' => $this->whenCounted('requestedServices'),
+
+            // Order
+            'order' => new OrderResource($this->whenLoaded('order')),
+
+            // Notes & Attachments
             'admin_notes' => $this->admin_notes,
             'attachment_urls' => $this->attachment_urls ? explode('|', $this->attachment_urls) : [],
 

@@ -13,7 +13,6 @@ class Service extends Model
         'name',
         'code',
         'description',
-        'category_id',
         'unit',
         'estimated_time',
         'main_image',
@@ -32,13 +31,8 @@ class Service extends Model
     ];
 
     // =====================
-    // RELATIONSHIPS
+    // RELATIONSHIPS - BỎ category
     // =====================
-
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
 
     public function orderItems()
     {
@@ -50,11 +44,9 @@ class Service extends Model
         return $this->hasMany(ServiceRequestService::class);
     }
 
-    public function serviceRequests()
+    public function vehicleServiceHistories()
     {
-        return $this->belongsToMany(ServiceRequest::class, 'service_request_services')
-            ->withPivot('description', 'priority', 'quantity', 'estimated_price', 'notes')
-            ->withTimestamps();
+        return $this->hasMany(VehicleServiceHistory::class);
     }
 
     // =====================

@@ -66,6 +66,18 @@ class ServiceRequest extends Model
         return $this->belongsTo(Provider::class, 'selected_provider_id');
     }
 
+    public function serviceRequest()
+    {
+        return $this->belongsTo(ServiceRequest::class);
+    }
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'service_request_services')
+            ->withPivot(['description', 'priority', 'quantity', 'estimated_price', 'notes'])
+            ->withTimestamps();
+    }
+
     public function requestedServices()
     {
         return $this->hasMany(ServiceRequestService::class);

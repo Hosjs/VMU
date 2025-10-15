@@ -85,12 +85,21 @@ export function useTable<T>({
 
   // ✅ Sửa useEffect để tránh gọi lặp do React Strict Mode
   useEffect(() => {
-    // Chỉ prevent duplicate call cho lần mount đầu tiên
-    // Khi dependencies thay đổi, vẫn cho phép gọi lại
-    if (!isInitialLoadRef.current) {
-      isInitialLoadRef.current = true;
-    }
-    loadData();
+    let isMounted = true;
+
+    // Chỉ gọi loadData nếu component vẫn mounted
+    const fetchData = async () => {
+      if (isMounted) {
+        await loadData();
+      }
+    };
+
+    fetchData();
+
+    // Cleanup function để prevent memory leak
+    return () => {
+      isMounted = false;
+    };
   }, [loadData]);
 
   const handlePageChange = useCallback((newPage: number) => {

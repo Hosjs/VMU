@@ -72,7 +72,9 @@ export default function Products() {
 
     const loadCategories = async () => {
         try {
-            const response = await categoryService.getCategories({ type: 'product', is_active: true });
+            // ✅ XÓA type vì database mới không có trường này
+            // Categories CHỈ quản lý products
+            const response = await categoryService.getCategories({ is_active: true });
             setCategories(response || []);
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -129,7 +131,7 @@ export default function Products() {
                 <div>
                     <p className="font-medium text-gray-900">{product.name}</p>
                     {product.description && (
-                        <p className="text-xs text-gray-500">{product.description}</p>
+                        <p className="text-xs text-gray-500 line-clamp-1">{product.description}</p>
                     )}
                 </div>
             ),
@@ -144,26 +146,28 @@ export default function Products() {
         {
             key: 'unit',
             label: 'Đơn vị',
+            width: '80px',
             render: (product: Product) => (
                 <span className="text-sm text-gray-700">{product.unit}</span>
             ),
         },
         {
-            key: 'quote_price',
-            label: 'Giá báo KH',
+            key: 'cost_price',
+            label: 'Giá nhập',
             sortable: true,
             render: (product: Product) => (
-                <span className="font-semibold text-blue-600">
-                    {formatters.currency(product.quote_price || 0)}
+                <span className="font-semibold text-orange-600">
+                    {formatters.currency(product.cost_price || 0)}
                 </span>
             ),
         },
         {
-            key: 'settlement_price',
-            label: 'Giá QT',
+            key: 'suggested_price',
+            label: 'Giá đề xuất',
+            sortable: true,
             render: (product: Product) => (
-                <span className="font-semibold text-gray-900">
-                    {formatters.currency(product.settlement_price || 0)}
+                <span className="font-semibold text-blue-600">
+                    {formatters.currency(product.suggested_price || 0)}
                 </span>
             ),
         },
@@ -324,12 +328,16 @@ interface ProductFormModalProps {
 interface ProductFormData {
     name: string;
     code: string;
+    sku: string;
     category_id: number | string;
     unit: string;
-    quote_price: string | number;
-    settlement_price: string | number;
+    cost_price: string | number;
+    suggested_price: string | number;
     description: string;
     is_stockable: boolean;
+    track_stock: boolean;
+    has_warranty: boolean;
+    warranty_months: number | string;
     is_active: boolean;
 }
 
@@ -339,12 +347,16 @@ function ProductFormModal({ isOpen, onClose, onSuccess, product, categories }: P
     const initialValues: ProductFormData = {
         name: product?.name || '',
         code: product?.code || '',
+        sku: product?.sku || '',
         category_id: product?.category_id || '',
         unit: product?.unit || 'cái',
-        quote_price: product?.quote_price || '',
-        settlement_price: product?.settlement_price || '',
+        cost_price: product?.cost_price || '',
+        suggested_price: product?.suggested_price || '',
         description: product?.description || '',
         is_stockable: product?.is_stockable !== false,
+        track_stock: product?.track_stock !== false,
+        has_warranty: product?.has_warranty || false,
+        warranty_months: product?.warranty_months || 0,
         is_active: product?.is_active !== false,
     };
 
@@ -353,11 +365,14 @@ function ProductFormModal({ isOpen, onClose, onSuccess, product, categories }: P
         if (!values.name?.trim()) errors.name = 'Tên sản phẩm là bắt buộc';
         if (!values.code?.trim()) errors.code = 'Mã sản phẩm là bắt buộc';
         if (!values.category_id) errors.category_id = 'Danh mục là bắt buộc';
-        if (!values.quote_price || Number(values.quote_price) <= 0) {
-            errors.quote_price = 'Giá báo khách hàng phải lớn hơn 0';
+        if (!values.cost_price || Number(values.cost_price) < 0) {
+            errors.cost_price = 'Giá nhập phải lớn hơn hoặc bằng 0';
         }
-        if (!values.settlement_price || Number(values.settlement_price) <= 0) {
-            errors.settlement_price = 'Giá quyết toán phải lớn hơn 0';
+        if (!values.suggested_price || Number(values.suggested_price) <= 0) {
+            errors.suggested_price = 'Giá đề xuất phải lớn hơn 0';
+        }
+        if (values.has_warranty && (!values.warranty_months || Number(values.warranty_months) <= 0)) {
+            errors.warranty_months = 'Số tháng bảo hành phải lớn hơn 0';
         }
         return errors;
     };
@@ -370,8 +385,9 @@ function ProductFormModal({ isOpen, onClose, onSuccess, product, categories }: P
                 const submitData = {
                     ...values,
                     category_id: Number(values.category_id),
-                    quote_price: Number(values.quote_price),
-                    settlement_price: Number(values.settlement_price),
+                    cost_price: Number(values.cost_price),
+                    suggested_price: Number(values.suggested_price),
+                    warranty_months: Number(values.warranty_months),
                 };
                 if (isEdit && product) {
                     await productService.updateProduct(product.id, submitData);
@@ -400,27 +416,41 @@ function ProductFormModal({ isOpen, onClose, onSuccess, product, categories }: P
                         <Input label="Mã sản phẩm *" name="code" value={values.code} onChange={(e) => handleChange('code', e.target.value)} onBlur={() => handleBlur('code')} error={touched.code ? errors.code : undefined} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input label="SKU" name="sku" value={values.sku} onChange={(e) => handleChange('sku', e.target.value)} />
                         <Select label="Danh mục *" name="category_id" value={values.category_id} onChange={(e) => handleChange('category_id', e.target.value)} error={touched.category_id ? errors.category_id : undefined}>
                             <option value="">Chọn danh mục</option>
                             {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </Select>
-                        <Input label="Đơn vị" name="unit" value={values.unit} onChange={(e) => handleChange('unit', e.target.value)} />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Giá báo khách hàng *" type="number" name="quote_price" value={values.quote_price} onChange={(e) => handleChange('quote_price', e.target.value)} onBlur={() => handleBlur('quote_price')} error={touched.quote_price ? errors.quote_price : undefined} />
-                        <Input label="Giá quyết toán *" type="number" name="settlement_price" value={values.settlement_price} onChange={(e) => handleChange('settlement_price', e.target.value)} onBlur={() => handleBlur('settlement_price')} error={touched.settlement_price ? errors.settlement_price : undefined} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input label="Đơn vị" name="unit" value={values.unit} onChange={(e) => handleChange('unit', e.target.value)} />
+                        <Input label="Giá nhập *" type="number" name="cost_price" value={values.cost_price} onChange={(e) => handleChange('cost_price', e.target.value)} onBlur={() => handleBlur('cost_price')} error={touched.cost_price ? errors.cost_price : undefined} />
+                        <Input label="Giá đề xuất *" type="number" name="suggested_price" value={values.suggested_price} onChange={(e) => handleChange('suggested_price', e.target.value)} onBlur={() => handleBlur('suggested_price')} error={touched.suggested_price ? errors.suggested_price : undefined} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
                         <textarea className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" rows={3} value={values.description} onChange={(e) => handleChange('description', e.target.value)} />
                     </div>
+                    <div className="border-t pt-4">
+                        <div className="flex items-center mb-4">
+                            <input type="checkbox" id="has_warranty" checked={values.has_warranty} onChange={(e) => handleChange('has_warranty', e.target.checked)} className="mr-2 h-4 w-4" />
+                            <label htmlFor="has_warranty" className="text-sm font-medium text-gray-700">Có bảo hành</label>
+                        </div>
+                        {values.has_warranty && (
+                            <Input label="Số tháng bảo hành *" type="number" name="warranty_months" value={values.warranty_months} onChange={(e) => handleChange('warranty_months', e.target.value)} onBlur={() => handleBlur('warranty_months')} error={touched.warranty_months ? errors.warranty_months : undefined} />
+                        )}
+                    </div>
                     <div className="flex items-center gap-6">
                         <div className="flex items-center">
-                            <input type="checkbox" id="is_stockable" checked={values.is_stockable} onChange={(e) => handleChange('is_stockable', e.target.checked)} className="mr-2" />
+                            <input type="checkbox" id="is_stockable" checked={values.is_stockable} onChange={(e) => handleChange('is_stockable', e.target.checked)} className="mr-2 h-4 w-4" />
                             <label htmlFor="is_stockable" className="text-sm text-gray-700">Quản lý tồn kho</label>
                         </div>
                         <div className="flex items-center">
-                            <input type="checkbox" id="is_active" checked={values.is_active} onChange={(e) => handleChange('is_active', e.target.checked)} className="mr-2" />
+                            <input type="checkbox" id="track_stock" checked={values.track_stock} onChange={(e) => handleChange('track_stock', e.target.checked)} className="mr-2 h-4 w-4" />
+                            <label htmlFor="track_stock" className="text-sm text-gray-700">Theo dõi tồn kho</label>
+                        </div>
+                        <div className="flex items-center">
+                            <input type="checkbox" id="is_active" checked={values.is_active} onChange={(e) => handleChange('is_active', e.target.checked)} className="mr-2 h-4 w-4" />
                             <label htmlFor="is_active" className="text-sm text-gray-700">Hoạt động</label>
                         </div>
                     </div>

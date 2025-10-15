@@ -4,12 +4,12 @@ import type { Category } from '~/types/product';
 
 export interface CategoryFormData {
   name: string;
-  code?: string;
-  type: 'service' | 'product' | 'both';
+  code: string;
+  slug: string;
   description?: string;
   parent_id?: number;
-  icon?: string;
-  display_order?: number;
+  image?: string;
+  sort_order?: number;
   is_active?: boolean;
 }
 
@@ -28,7 +28,7 @@ class CategoryService {
    */
   async getCategories(params?: {
     search?: string;
-    type?: string;
+    parent_id?: number | null;
     is_active?: boolean;
   }): Promise<Category[]> {
     const queryParams = {

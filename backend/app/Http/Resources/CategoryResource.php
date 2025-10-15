@@ -12,25 +12,22 @@ class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'slug' => $this->slug,
             'description' => $this->description,
-            'type' => $this->type,
             'image' => $this->image,
-            'sort_order' => $this->sort_order,
-
-            // Hierarchy
             'parent_id' => $this->parent_id,
+            'sort_order' => $this->sort_order,
+            'is_active' => (bool) $this->is_active,
+
+            // Relationships (CHỈ products, KHÔNG có services)
             'parent' => new CategoryResource($this->whenLoaded('parent')),
             'children' => CategoryResource::collection($this->whenLoaded('children')),
+            'children_count' => $this->whenCounted('children'),
+            'products_count' => $this->whenCounted('products'),
 
-            // Statistics
-            'services_count' => $this->when($this->type === 'service', $this->whenCounted('services')),
-            'products_count' => $this->when($this->type === 'product', $this->whenCounted('products')),
-
-            'is_active' => (bool) $this->is_active,
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }
-

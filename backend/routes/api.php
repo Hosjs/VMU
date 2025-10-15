@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Admin\CategoryController;
 use App\Http\Controllers\Api\Admin\InvoiceController;
 use App\Http\Controllers\Api\Admin\PaymentController;
 use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\BadgeController;
 use App\Http\Controllers\NotificationController;
 
 /*
@@ -45,6 +46,7 @@ Route::middleware('auth:api')->group(function () {
     // Auth routes
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('api.auth.me');
+        Route::get('/permissions', [AuthController::class, 'permissions'])->name('api.auth.permissions');
         Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
         Route::post('/refresh', [AuthController::class, 'refresh'])->name('api.auth.refresh');
         Route::post('/change-password', [AuthController::class, 'changePassword'])->name('api.auth.change-password');
@@ -60,6 +62,14 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
         Route::get('/stream', [NotificationController::class, 'stream']); // SSE endpoint
+    });
+
+    // =====================
+    // BADGE COUNTS ROUTES
+    // =====================
+    Route::prefix('badges')->group(function () {
+        Route::get('/counts', [BadgeController::class, 'getCounts']);
+        Route::get('/count/{type}', [BadgeController::class, 'getCount']);
     });
 
     // =====================
@@ -135,5 +145,25 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/payments/{id}/confirm', [PaymentController::class, 'confirm']);
         Route::post('/payments/{id}/cancel', [PaymentController::class, 'cancel']);
         Route::get('/payments/statistics', [PaymentController::class, 'statistics']);
+
+        // Partner Vehicle Handovers Management
+        Route::prefix('partner-vehicle-handovers')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\Admin\PartnerVehicleHandoverController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\Admin\PartnerVehicleHandoverController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\Admin\PartnerVehicleHandoverController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\Admin\PartnerVehicleHandoverController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\PartnerVehicleHandoverController::class, 'destroy']);
+            Route::post('/{id}/acknowledge', [\App\Http\Controllers\Api\Admin\PartnerVehicleHandoverController::class, 'acknowledge']);
+        });
+
+        // Settlements Management
+        Route::prefix('settlements')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\Admin\SettlementController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\Admin\SettlementController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\Admin\SettlementController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\Admin\SettlementController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\SettlementController::class, 'destroy']);
+            Route::post('/{id}/approve', [\App\Http\Controllers\Api\Admin\SettlementController::class, 'approve']);
+        });
     });
 });

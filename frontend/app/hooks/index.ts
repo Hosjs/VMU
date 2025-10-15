@@ -3,6 +3,7 @@ export { useAsync } from './useAsync';
 export { useForm } from './useForm';
 export { useModal } from './useModal';
 export { useTable } from './useTable';
+export { useBadgeCounts } from './useBadgeCounts';
 
 // Image preloader hooks are now in LoadingSystem
 export { useImagePreloader, usePreloadImages } from '~/components/LoadingSystem';

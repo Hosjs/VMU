@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\PartnerServiceQuotation;
 use App\Models\PartnerPayment;
 use App\Models\ServiceRequest;

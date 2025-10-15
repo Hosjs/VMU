@@ -43,6 +43,11 @@ class VehicleModel extends Model
         return $this->hasMany(Vehicle::class, 'model_id');
     }
 
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'vehicle_model_id');
+    }
+
     // =====================
     // ACCESSORS
     // =====================
