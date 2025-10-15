@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import type { Route } from './+types/customers';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Button } from '~/components/ui/Button';
@@ -15,6 +16,11 @@ import { useForm } from '~/hooks/useForm';
 import type { Customer } from '~/types/customer';
 import { formatters } from '~/utils/formatters';
 import { validators } from '~/utils/validators';
+
+// Export loader function for React Router v7
+export async function loader({ request }: Route.LoaderArgs) {
+  return null;
+}
 
 export default function Customers() {
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -254,14 +260,14 @@ interface CustomerFormData {
 function CustomerFormModal({ isOpen, onClose, onSuccess, customer }: CustomerFormModalProps) {
     const isEdit = !!customer;
 
-    const initialValues: CustomerFormData = {
+    const initialValues: CustomerFormData = useMemo(() => ({
         name: customer?.name || '',
         phone: customer?.phone || '',
         email: customer?.email || '',
         address: customer?.address || '',
         notes: customer?.notes || '',
         is_active: customer?.is_active !== false,
-    };
+    }), [customer]);
 
     const validateForm = (values: CustomerFormData): Record<string, string> => {
         const errors: Record<string, string> = {};

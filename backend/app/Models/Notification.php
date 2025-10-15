@@ -29,8 +29,8 @@ class Notification extends Model
 
     protected $casts = [
         'is_read' => 'boolean',
-        'read_at' => 'datetime',
         'is_recurring' => 'boolean',
+        'read_at' => 'datetime',
         'scheduled_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
@@ -55,35 +55,6 @@ class Notification extends Model
     }
 
     // =====================
-    // ACCESSORS
-    // =====================
-
-    public function getRecipientRolesArrayAttribute()
-    {
-        return $this->recipient_roles ? explode(',', $this->recipient_roles) : [];
-    }
-
-    public function getAdditionalDataArrayAttribute()
-    {
-        if (!$this->additional_data) return [];
-
-        $items = explode('|', $this->additional_data);
-        $result = [];
-        foreach ($items as $item) {
-            $parts = explode('=', $item, 2);
-            if (count($parts) === 2) {
-                $result[$parts[0]] = $parts[1];
-            }
-        }
-        return $result;
-    }
-
-    public function getIsExpiredAttribute()
-    {
-        return $this->expires_at && $this->expires_at < now();
-    }
-
-    // =====================
     // SCOPES
     // =====================
 
@@ -97,6 +68,24 @@ class Notification extends Model
         return $query->where('is_read', true);
     }
 
+    public function scopeForUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeForRoles($query, $roles)
+    {
+        if (!is_array($roles)) {
+            $roles = [$roles];
+        }
+
+        return $query->where(function ($q) use ($roles) {
+            foreach ($roles as $role) {
+                $q->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$role]);
+            }
+        });
+    }
+
     public function scopeByType($query, $type)
     {
         return $query->where('type', $type);
@@ -107,21 +96,11 @@ class Notification extends Model
         return $query->where('priority', $priority);
     }
 
-    public function scopeHighPriority($query)
-    {
-        return $query->whereIn('priority', ['high', 'urgent']);
-    }
-
-    public function scopeScheduled($query)
-    {
-        return $query->whereNotNull('scheduled_at');
-    }
-
     public function scopeNotExpired($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>=', now());
+              ->orWhere('expires_at', '>', now());
         });
     }
 
@@ -144,4 +123,33 @@ class Notification extends Model
             'read_at' => null,
         ]);
     }
+
+    public static function createForServiceRequest($serviceRequest, $priority = 'high')
+    {
+        return self::create([
+            'type' => 'service_request',
+            'title' => 'Yêu cầu dịch vụ mới',
+            'message' => "Khách hàng {$serviceRequest->customer_name} đã gửi yêu cầu dịch vụ cho xe {$serviceRequest->license_plate}",
+            'recipient_roles' => 'admin,manager',
+            'notifiable_type' => ServiceRequest::class,
+            'notifiable_id' => $serviceRequest->id,
+            'priority' => $priority,
+            'additional_data' => json_encode([
+                'service_request_code' => $serviceRequest->code,
+                'customer_phone' => $serviceRequest->customer_phone,
+                'license_plate' => $serviceRequest->license_plate,
+            ]),
+        ]);
+    }
+
+    public function getAdditionalDataAttribute($value)
+    {
+        return $value ? json_decode($value, true) : null;
+    }
+
+    public function setAdditionalDataAttribute($value)
+    {
+        $this->attributes['additional_data'] = is_array($value) ? json_encode($value) : $value;
+    }
 }
+

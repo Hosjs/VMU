@@ -53,9 +53,8 @@ class CustomerService {
    * Get customer statistics
    */
   async getStatistics(): Promise<CustomerStatistics> {
-    return apiService.get<CustomerStatistics>(`${this.BASE_PATH}-statistics`);
+    return apiService.get<CustomerStatistics>(`${this.BASE_PATH}/statistics`);
   }
 }
 
 export const customerService = new CustomerService();
-

@@ -40,7 +40,7 @@ class UserController extends Controller
 
         // Filter by active status
         if ($isActive !== null) {
-            $query->active($isActive == 1);
+            $query->where('is_active', $isActive);
         }
 
         // Filter by department
@@ -50,15 +50,13 @@ class UserController extends Controller
 
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $users = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $users,
-        ]);
+        // Return trực tiếp pagination response (không wrap)
+        return response()->json($users);
     }
 
     /**
@@ -109,6 +107,7 @@ class UserController extends Controller
                 'address' => $request->address,
                 'is_active' => $request->get('is_active', true),
                 'notes' => $request->notes,
+                'custom_permissions' => $request->custom_permissions,
             ]);
 
             // Gán role
@@ -215,6 +214,7 @@ class UserController extends Controller
                 'address' => $request->address,
                 'is_active' => $request->get('is_active', $user->is_active),
                 'notes' => $request->notes,
+                'custom_permissions' => $request->custom_permissions,
             ];
 
             if ($request->filled('password')) {
@@ -400,5 +400,28 @@ class UserController extends Controller
             'data' => $stats,
         ]);
     }
-}
 
+    /**
+     * Lấy danh sách trạng thái người dùng
+     */
+    public function statuses()
+    {
+        $statuses = [
+            [
+                'value' => '1',
+                'label' => 'Hoạt động',
+                'description' => 'Tài khoản đang hoạt động bình thường'
+            ],
+            [
+                'value' => '0',
+                'label' => 'Khóa',
+                'description' => 'Tài khoản đã bị vô hiệu hóa'
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $statuses,
+        ]);
+    }
+}

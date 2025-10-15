@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import type { Route } from './+types/users';
 import { Card } from '~/components/ui/Card';
 import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
@@ -15,22 +16,43 @@ import { roleService } from '~/services/role.service';
 import type { AuthUser, Role } from '~/types/auth';
 import { formatters } from '~/utils/formatters';
 import { validators } from '~/utils/validators';
+import { getUserRoleId } from '~/utils/user';
 import { Toast } from '~/components/ui/Toast';
+import { PermissionSelector } from '~/components/permissions';
+import { parsePermissions } from '~/utils/permissions';
+
+// Export loader function for React Router v7
+export async function loader({ request }: Route.LoaderArgs) {
+  // React Router v7 data loader - return null vì chúng ta load data trong component
+  return null;
+}
 
 export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [positions, setPositions] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<Array<{ value: string; label: string; description: string }>>([]);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
+
+  // ✅ Sử dụng useRef thay vì useState để tránh re-render và gọi lặp
+  const isInitializedRef = useRef(false);
 
   const createModal = useModal();
   const editModal = useModal();
   const deleteModal = useModal();
 
-  // Load roles, departments, positions on mount - WRAPPED với error handling
+  // Load roles, departments, positions on mount - CHỈ GỌI 1 LẦN
   useEffect(() => {
+    // ✅ Check ref để tránh gọi lặp trong React Strict Mode
+    if (isInitializedRef.current) {
+      console.log('⚠️ Skipping duplicate initialization call');
+      return;
+    }
+
+    isInitializedRef.current = true; // ✅ Đánh dấu ngay lập tức
+
     const initData = async () => {
       try {
         console.log('🔵 Loading initial data for Users page...');
@@ -38,16 +60,18 @@ export default function AdminUsers() {
           loadRoles(),
           loadDepartments(),
           loadPositions(),
+          loadStatuses(),
         ]);
         console.log('✅ Initial data loaded successfully');
       } catch (error) {
         console.error('❌ Failed to initialize users page:', error);
         setInitError('Không thể tải dữ liệu khởi tạo. Vui lòng refresh trang.');
+        isInitializedRef.current = false; // ✅ Reset để có thể retry
       }
     };
 
     initData();
-  }, []);
+  }, []); // ← Empty dependency array, chỉ chạy 1 lần khi mount
 
   const loadRoles = async () => {
     try {
@@ -82,6 +106,17 @@ export default function AdminUsers() {
     }
   };
 
+  const loadStatuses = async () => {
+    try {
+      const data = await userService.getStatuses();
+      setStatuses(data || []);
+      console.log('✅ Statuses loaded:', data?.length || 0);
+    } catch (error) {
+      console.error('❌ Failed to load statuses:', error);
+      setStatuses([]); // Set empty array thay vì crash
+    }
+  };
+
   const {
     data,
     isLoading,
@@ -95,6 +130,7 @@ export default function AdminUsers() {
     sortBy,
     sortDirection,
     search,
+    filters,
   } = useTable<AuthUser>({
     fetchData: async (params) => {
       try {
@@ -241,7 +277,7 @@ export default function AdminUsers() {
               className="w-full md:w-96"
             />
             <Select
-              value=""
+              value={filters.role_id || ''}
               onChange={(e) => handleFilter('role_id', e.target.value || undefined)}
               className="w-full md:w-48"
             >
@@ -253,13 +289,16 @@ export default function AdminUsers() {
               ))}
             </Select>
             <Select
-              value=""
+              value={filters.is_active || ''}
               onChange={(e) => handleFilter('is_active', e.target.value || undefined)}
               className="w-full md:w-48"
             >
               <option value="">Tất cả trạng thái</option>
-              <option value="1">Hoạt động</option>
-              <option value="0">Khóa</option>
+              {(statuses || []).map((status) => (
+                <option key={status.value} value={status.value} title={status.description}>
+                  {status.label}
+                </option>
+              ))}
             </Select>
           </div>
           <Button variant="primary" onClick={handleCreate}>
@@ -383,23 +422,24 @@ function UserFormModal({
 }: UserFormModalProps) {
   const isEdit = !!user;
 
-  const initialValues: UserFormData = {
+  const initialValues: UserFormData = useMemo(() => ({
     name: user?.name || '',
     email: user?.email || '',
     password: '',
     phone: user?.phone || '',
-    role_id: user?.role_id || (roles[0]?.id || 1),
+    role_id: getUserRoleId(user || null),
     employee_code: (user as any)?.employee_code || '',
     position: (user as any)?.position || '',
     department: (user as any)?.department || '',
-    hire_date: (user as any)?.hire_date || '',
+    hire_date: formatters.dateForInput((user as any)?.hire_date),
     salary: (user as any)?.salary || undefined,
-    birth_date: (user as any)?.birth_date || '',
+    birth_date: formatters.dateForInput((user as any)?.birth_date),
     gender: (user as any)?.gender || 'male',
     address: user?.address || '',
     is_active: (user as any)?.is_active !== false,
     notes: (user as any)?.notes || '',
-  };
+    custom_permissions: (user as any)?.custom_permissions || {},
+  }), [user]);
 
   const validateForm = (values: UserFormData): Record<string, string> => {
     const errors: Record<string, string> = {};
@@ -431,6 +471,7 @@ function UserFormModal({
     handleBlur,
     handleSubmit,
     reset,
+    setValues,
   } = useForm<UserFormData>({
     initialValues,
     validate: validateForm,
@@ -450,6 +491,44 @@ function UserFormModal({
       }
     },
   });
+
+  // Reset form khi user thay đổi hoặc modal mở/đóng
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🔵 Modal opened with user:', user);
+
+      const newValues: UserFormData = {
+        name: user?.name || '',
+        email: user?.email || '',
+        password: '',
+        phone: user?.phone || '',
+        role_id: getUserRoleId(user || null),
+        employee_code: (user as any)?.employee_code || '',
+        position: (user as any)?.position || '',
+        department: (user as any)?.department || '',
+        hire_date: formatters.dateForInput((user as any)?.hire_date),
+        salary: (user as any)?.salary || undefined,
+        birth_date: formatters.dateForInput((user as any)?.birth_date),
+        gender: (user as any)?.gender || 'male',
+        address: user?.address || '',
+        is_active: (user as any)?.is_active !== false,
+        notes: (user as any)?.notes || '',
+        custom_permissions: (user as any)?.custom_permissions || {},
+      };
+
+      setValues(newValues);
+    }
+  }, [isOpen, user, setValues]);
+
+  // Get selected role's permissions để hiển thị mặc định
+  const selectedRole = useMemo(() => {
+    return roles.find(r => r.id === values.role_id);
+  }, [roles, values.role_id]);
+
+  const selectedRolePermissions = useMemo(() => {
+    if (!selectedRole) return {};
+    return parsePermissions(selectedRole);
+  }, [selectedRole]);
 
   const handleClose = () => {
     reset();
@@ -630,6 +709,50 @@ function UserFormModal({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+
+          {/* Custom Permissions Section */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Quyền hạn tùy chỉnh</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {selectedRole ? (
+                    <>
+                      Vai trò <strong>{selectedRole.display_name}</strong> có các quyền mặc định.
+                      Bạn có thể tùy chỉnh quyền riêng cho user này.
+                    </>
+                  ) : (
+                    'Chọn vai trò để xem quyền mặc định'
+                  )}
+                </p>
+              </div>
+              {values.custom_permissions && Object.keys(values.custom_permissions).length > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleChange('custom_permissions', {})}
+                >
+                  Xóa tùy chỉnh
+                </Button>
+              )}
+            </div>
+
+            {selectedRole && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>💡 Lưu ý:</strong> Quyền tùy chỉnh sẽ ghi đè quyền mặc định của vai trò.
+                  Nếu không tick gì, user sẽ sử dụng quyền mặc định của vai trò <strong>{selectedRole.display_name}</strong>.
+                </p>
+              </div>
+            )}
+
+            <PermissionSelector
+              value={values.custom_permissions || {}}
+              onChange={(permissions) => handleChange('custom_permissions', permissions)}
+              mode="compact"
+            />
           </div>
 
           {errors.submit && (

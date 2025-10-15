@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import { PageTransitionProvider } from "./components/LoadingSystem";
 import { AuthProvider } from "./contexts/AuthContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -51,10 +52,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ></div>
 
         <AuthProvider>
-            {/* PageTransition cho public routes (home, login, register) */}
-            <PageTransitionProvider>
-                {children}
-            </PageTransitionProvider>
+            <NotificationProvider>
+                {/* PageTransition cho public routes (home, login, register) */}
+                <PageTransitionProvider>
+                    {children}
+                </PageTransitionProvider>
+            </NotificationProvider>
         </AuthProvider>
         <ScrollRestoration />
         <Scripts />

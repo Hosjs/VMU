@@ -27,6 +27,7 @@ return new class extends Migration
             $table->decimal('salary', 15, 2)->nullable(); // Lương
             $table->boolean('is_active')->default(true); // Trạng thái hoạt động
             $table->text('notes')->nullable(); // Ghi chú
+            $table->text('custom_permissions')->nullable(); // Quyền tùy chỉnh override role: users:view,create|orders:view
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

@@ -13,24 +13,19 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Tên dịch vụ
+            $table->string('name'); // Tên dịch vụ (6 dịch vụ trung tâm)
             $table->string('code')->unique(); // Mã dịch vụ
             $table->text('description')->nullable(); // Mô tả dịch vụ
-            $table->unsignedBigInteger('category_id'); // Không dùng foreignId
-
-            // Giá báo cho khách hàng
-            $table->decimal('quote_price', 15, 2)->default(0); // Giá báo cho khách
-            // Giá quyết toán với đối tác
-            $table->decimal('settlement_price', 15, 2)->default(0); // Giá thanh toán cho đối tác
+            $table->unsignedBigInteger('category_id'); // Danh mục dịch vụ
 
             $table->string('unit')->default('lần'); // Đơn vị tính
             $table->integer('estimated_time')->default(60); // Thời gian ước tính (phút)
 
-            // Thay JSON images bằng cột đơn giản
+            // Ảnh minh họa
             $table->string('main_image')->nullable(); // Ảnh chính
             $table->text('gallery_images')->nullable(); // Danh sách URL ảnh phụ, cách nhau bởi dấu |
 
-            $table->text('notes')->nullable(); // Ghi chú
+            $table->text('notes')->nullable(); // Ghi chú về dịch vụ
 
             // Bảo hành
             $table->boolean('has_warranty')->default(false);

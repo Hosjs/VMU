@@ -3,7 +3,7 @@ export interface Role {
   name: string;
   display_name: string;
   description?: string;
-  permissions?: string[];
+  permissions?: string[] | Record<string, string[]> | string; // Hỗ trợ nhiều format
 }
 
 export interface AuthUser {
@@ -17,6 +17,18 @@ export interface AuthUser {
   email_verified_at?: string;
   created_at: string;
   updated_at: string;
+  // Custom permissions cho từng user (ghi đè permissions của role)
+  custom_permissions?: Record<string, string[]>;
+  // Thông tin nhân viên
+  employee_code?: string;
+  position?: string;
+  department?: string;
+  hire_date?: string;
+  salary?: number;
+  birth_date?: string;
+  gender?: 'male' | 'female' | 'other';
+  is_active?: boolean;
+  notes?: string;
 }
 
 export interface LoginCredentials {
@@ -48,8 +60,8 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser?: () => Promise<void>;
   hasRole: (role: string) => boolean;
   hasPermission: (permission: string) => boolean;
-  updateUser: (user: AuthUser) => void;
+  updateUser?: (user: AuthUser) => void;
 }
-

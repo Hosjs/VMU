@@ -2,35 +2,32 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Role;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $roles = [
             [
                 'name' => 'admin',
-                'display_name' => 'Quản trị viên',
-                'description' => 'Có toàn quyền truy cập và quản lý hệ thống',
+                'display_name' => 'Admin',
+                'description' => 'System Administrator - Full Access',
                 'permissions' => json_encode([
                     'users' => ['view', 'create', 'edit', 'delete'],
                     'roles' => ['view', 'create', 'edit', 'delete'],
                     'customers' => ['view', 'create', 'edit', 'delete'],
                     'vehicles' => ['view', 'create', 'edit', 'delete'],
-                    'orders' => ['view', 'create', 'edit', 'delete', 'approve'],
-                    'invoices' => ['view', 'create', 'edit', 'delete', 'approve'],
-                    'payments' => ['view', 'create', 'edit', 'delete', 'verify'],
-                    'settlements' => ['view', 'create', 'edit', 'delete', 'approve'],
-                    'warehouses' => ['view', 'create', 'edit', 'delete'],
                     'products' => ['view', 'create', 'edit', 'delete'],
                     'services' => ['view', 'create', 'edit', 'delete'],
+                    'categories' => ['view', 'create', 'edit', 'delete'],
+                    'orders' => ['view', 'create', 'edit', 'delete', 'approve', 'cancel'],
+                    'invoices' => ['view', 'create', 'edit', 'delete', 'approve'],
+                    'payments' => ['view', 'create', 'edit', 'delete', 'confirm', 'verify'],
+                    'settlements' => ['view', 'create', 'edit', 'delete', 'approve'],
+                    'warehouses' => ['view', 'create', 'edit', 'delete'],
+                    'stocks' => ['view', 'create', 'edit', 'delete', 'transfer'],
                     'providers' => ['view', 'create', 'edit', 'delete'],
                     'reports' => ['view', 'export'],
                     'settings' => ['view', 'edit'],
@@ -39,82 +36,91 @@ class RoleSeeder extends Seeder
             ],
             [
                 'name' => 'manager',
-                'display_name' => 'Quản lý',
-                'description' => 'Quản lý hoạt động kinh doanh và nhân sự',
+                'display_name' => 'Manager',
+                'description' => 'Garage Manager - Manage operations',
                 'permissions' => json_encode([
-                    'users' => ['view', 'edit'],
-                    'customers' => ['view', 'create', 'edit'],
-                    'vehicles' => ['view', 'create', 'edit'],
-                    'orders' => ['view', 'create', 'edit', 'approve'],
-                    'invoices' => ['view', 'create', 'edit'],
-                    'payments' => ['view', 'create'],
-                    'settlements' => ['view', 'create', 'edit'],
-                    'warehouses' => ['view', 'edit'],
+                    'users' => ['view', 'create', 'edit'],
+                    'customers' => ['view', 'create', 'edit', 'delete'],
+                    'vehicles' => ['view', 'create', 'edit', 'delete'],
                     'products' => ['view', 'create', 'edit'],
                     'services' => ['view', 'create', 'edit'],
+                    'categories' => ['view'],
+                    'orders' => ['view', 'create', 'edit', 'approve', 'cancel'],
+                    'invoices' => ['view', 'create', 'edit', 'approve'],
+                    'payments' => ['view', 'create', 'edit', 'confirm'],
+                    'settlements' => ['view', 'create', 'edit', 'approve'],
+                    'warehouses' => ['view', 'create', 'edit'],
+                    'stocks' => ['view', 'create', 'edit', 'transfer'],
                     'providers' => ['view', 'create', 'edit'],
                     'reports' => ['view', 'export'],
+                    'settings' => ['view'],
                 ]),
                 'is_active' => true,
             ],
             [
                 'name' => 'accountant',
-                'display_name' => 'Kế toán',
-                'description' => 'Quản lý tài chính, hóa đơn và thanh toán',
+                'display_name' => 'Accountant',
+                'description' => 'Accountant - Financial management',
                 'permissions' => json_encode([
                     'customers' => ['view'],
-                    'orders' => ['view', 'edit'],
-                    'invoices' => ['view', 'create', 'edit', 'approve'],
-                    'payments' => ['view', 'create', 'edit', 'verify'],
-                    'settlements' => ['view', 'create', 'edit', 'approve'],
-                    'warehouses' => ['view'],
+                    'vehicles' => ['view'],
                     'products' => ['view'],
                     'services' => ['view'],
-                    'providers' => ['view'],
+                    'orders' => ['view'],
+                    'invoices' => ['view', 'create', 'edit', 'approve'],
+                    'payments' => ['view', 'create', 'edit', 'delete', 'confirm', 'verify'],
+                    'settlements' => ['view', 'create', 'edit', 'delete', 'approve'],
                     'reports' => ['view', 'export'],
                 ]),
                 'is_active' => true,
             ],
             [
-                'name' => 'employee',
-                'display_name' => 'Nhân viên',
-                'description' => 'Nhân viên bán hàng và chăm sóc khách hàng',
+                'name' => 'mechanic',
+                'display_name' => 'Mechanic',
+                'description' => 'Technician - Perform repairs',
                 'permissions' => json_encode([
-                    'customers' => ['view', 'create', 'edit'],
-                    'vehicles' => ['view', 'create', 'edit'],
-                    'orders' => ['view', 'create', 'edit'],
-                    'invoices' => ['view', 'create'],
-                    'payments' => ['view', 'create'],
-                    'warehouses' => ['view'],
+                    'customers' => ['view'],
+                    'vehicles' => ['view'],
                     'products' => ['view'],
                     'services' => ['view'],
+                    'orders' => ['view', 'edit'],
+                    'stocks' => ['view'],
                 ]),
                 'is_active' => true,
             ],
             [
-                'name' => 'mechanic',
-                'display_name' => 'Thợ máy',
-                'description' => 'Kỹ thuật viên sửa chữa và bảo dưỡng xe',
+                'name' => 'employee',
+                'display_name' => 'Employee',
+                'description' => 'Service Employee - Handle requests',
                 'permissions' => json_encode([
-                    'customers' => ['view'],
-                    'vehicles' => ['view', 'edit'],
-                    'orders' => ['view', 'edit'],
-                    'order_items' => ['view', 'edit'],
-                    'inspections' => ['view', 'create', 'edit'],
-                    'warehouses' => ['view'],
+                    'customers' => ['view', 'create', 'edit'],
+                    'vehicles' => ['view', 'create', 'edit'],
                     'products' => ['view'],
                     'services' => ['view'],
+                    'orders' => ['view', 'create', 'edit'],
+                    'invoices' => ['view'],
+                ]),
+                'is_active' => true,
+            ],
+            [
+                'name' => 'warehouse',
+                'display_name' => 'Warehouse Staff',
+                'description' => 'Warehouse Staff - Manage inventory',
+                'permissions' => json_encode([
+                    'products' => ['view', 'create', 'edit'],
+                    'categories' => ['view'],
+                    'warehouses' => ['view', 'create', 'edit', 'delete'],
+                    'stocks' => ['view', 'create', 'edit', 'delete', 'transfer'],
+                    'providers' => ['view'],
                 ]),
                 'is_active' => true,
             ],
         ];
 
         foreach ($roles as $role) {
-            Role::updateOrCreate(
-                ['name' => $role['name']],
-                $role
-            );
+            Role::create($role);
         }
+
+        $this->command->info('Created ' . count($roles) . ' roles with permissions');
     }
 }
-

@@ -1,5 +1,9 @@
 import { Card } from '~/components/ui/Card';
 
+export async function loader({ request }: Route.LoaderArgs) {
+  return null;
+}
+
 export default function AdminRoles() {
   return (
     <div>
@@ -16,4 +20,3 @@ export default function AdminRoles() {
     </div>
   );
 }
-

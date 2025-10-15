@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
@@ -29,7 +29,17 @@ export default function Settlements() {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Sử dụng useRef để tránh gọi API 2 lần
+  const isInitializedRef = useRef(false);
+
   useEffect(() => {
+    // ✅ Check ref để tránh gọi lặp trong React Strict Mode
+    if (isInitializedRef.current) {
+      console.log('⚠️ Skipping duplicate initialization call (settlements)');
+      return;
+    }
+
+    isInitializedRef.current = true;
     loadSettlements();
   }, []);
 

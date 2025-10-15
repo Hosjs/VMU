@@ -18,6 +18,7 @@ export interface UserFormData {
   address?: string;
   is_active?: boolean;
   notes?: string;
+  custom_permissions?: Record<string, string[]>;
 }
 
 export interface UserStatistics {
@@ -117,6 +118,23 @@ class UserService {
   }
 
   /**
+   * Get list of user statuses
+   */
+  async getStatuses(): Promise<Array<{ value: string; label: string; description: string }>> {
+    try {
+      const response = await apiService.get<Array<{ value: string; label: string; description: string }>>(`${this.BASE_PATH}/statuses`);
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch statuses:', error);
+      // Return default statuses if API fails
+      return [
+        { value: '1', label: 'Hoạt động', description: 'Tài khoản đang hoạt động bình thường' },
+        { value: '0', label: 'Khóa', description: 'Tài khoản đã bị vô hiệu hóa' },
+      ];
+    }
+  }
+
+  /**
    * Change user password
    */
   async changePassword(id: number, oldPassword: string, newPassword: string): Promise<void> {
@@ -144,4 +162,3 @@ class UserService {
 }
 
 export const userService = new UserService();
-

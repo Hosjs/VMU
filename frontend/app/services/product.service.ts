@@ -54,16 +54,15 @@ class ProductService {
    * Get product statistics
    */
   async getStatistics(): Promise<ProductStatistics> {
-    return apiService.get<ProductStatistics>(`${this.BASE_PATH}-statistics`);
+    return apiService.get<ProductStatistics>(`${this.BASE_PATH}/statistics`);
   }
 
   /**
    * Get low stock products
    */
-  async getLowStockProducts(params: TableQueryParams): Promise<PaginatedResponse<Product>> {
-    return apiService.getPaginated<Product>(`${this.BASE_PATH}-low-stock`, params);
+  async getLowStock(params: TableQueryParams): Promise<PaginatedResponse<Product>> {
+    return apiService.getPaginated<Product>(`${this.BASE_PATH}/low-stock`, params);
   }
 }
 
 export const productService = new ProductService();
-

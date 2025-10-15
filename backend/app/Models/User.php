@@ -34,6 +34,7 @@ class User extends Authenticatable
         'salary',
         'is_active',
         'notes',
+        'custom_permissions',
     ];
 
     /**
@@ -60,6 +61,7 @@ class User extends Authenticatable
             'hire_date' => 'date',
             'salary' => 'decimal:2',
             'is_active' => 'boolean',
+            'custom_permissions' => 'array',
         ];
     }
 

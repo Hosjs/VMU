@@ -35,6 +35,9 @@ export function Table<T>({
     }
   };
 
+  // Đảm bảo data luôn là mảng, không bao giờ undefined
+  const safeData = data || [];
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -72,14 +75,14 @@ export function Table<T>({
                 </div>
               </td>
             </tr>
-          ) : data.length === 0 ? (
+          ) : safeData.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500">
                 {emptyMessage}
               </td>
             </tr>
           ) : (
-            data.map((item) => (
+            safeData.map((item) => (
               <tr key={keyExtractor(item)} className="hover:bg-gray-50">
                 {columns.map((column) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

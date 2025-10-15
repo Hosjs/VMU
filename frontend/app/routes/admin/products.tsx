@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Button } from '~/components/ui/Button';
@@ -15,11 +15,20 @@ import { useModal } from '~/hooks/useModal';
 import { useForm } from '~/hooks/useForm';
 import type { Product, Category } from '~/types/product';
 import { formatters } from '~/utils/formatters';
+import type { Route } from './+types/products';
+
+// Export loader function for React Router v7
+export async function loader({ request }: Route.LoaderArgs) {
+  return null;
+}
 
 export default function Products() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // ✅ Sử dụng useRef để tránh gọi API 2 lần
+    const isInitializedRef = useRef(false);
 
     const createModal = useModal();
     const editModal = useModal();
@@ -51,6 +60,13 @@ export default function Products() {
     });
 
     useEffect(() => {
+        // ✅ Check ref để tránh gọi lặp trong React Strict Mode
+        if (isInitializedRef.current) {
+            console.log('⚠️ Skipping duplicate initialization call (products)');
+            return;
+        }
+
+        isInitializedRef.current = true;
         loadCategories();
     }, []);
 
@@ -61,6 +77,7 @@ export default function Products() {
         } catch (error) {
             console.error('Error loading categories:', error);
             setCategories([]);
+            isInitializedRef.current = false; // ✅ Reset để có thể retry
         }
     };
 

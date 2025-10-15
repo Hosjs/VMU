@@ -50,15 +50,13 @@ class ProductController extends Controller
 
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $products = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-        ]);
+        // Return trực tiếp pagination response (không wrap)
+        return response()->json($products);
     }
 
     /**
@@ -282,10 +280,7 @@ class ProductController extends Controller
             })
             ->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-        ]);
+        // Return trực tiếp pagination response (không wrap)
+        return response()->json($products);
     }
 }
-

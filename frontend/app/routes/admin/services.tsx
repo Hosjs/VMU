@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { Route } from './+types/services';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Button } from '~/components/ui/Button';
@@ -18,10 +19,18 @@ import type { Category } from '~/types/product';
 import { formatters } from '~/utils/formatters';
 import { validators } from '~/utils/validators';
 
+// Export loader function for React Router v7
+export async function loader({ request }: Route.LoaderArgs) {
+  return null;
+}
+
 export default function Services() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // ✅ Sử dụng useRef để tránh gọi API 2 lần
+    const isInitializedRef = useRef(false);
 
     const createModal = useModal();
     const editModal = useModal();
@@ -55,6 +64,13 @@ export default function Services() {
     });
 
     useEffect(() => {
+        // ✅ Check ref để tránh gọi lặp trong React Strict Mode
+        if (isInitializedRef.current) {
+            console.log('⚠️ Skipping duplicate initialization call (services)');
+            return;
+        }
+
+        isInitializedRef.current = true;
         loadCategories();
     }, []);
 
@@ -65,6 +81,7 @@ export default function Services() {
         } catch (error) {
             console.error('Error loading categories:', error);
             setCategories([]);
+            isInitializedRef.current = false; // ✅ Reset để có thể retry
         }
     };
 

@@ -31,9 +31,8 @@ class RoleController extends Controller
 
         // Filter by active status
         if ($isActive !== null) {
-            $query->where('is_active', $isActive == 1);
+            $query->where('is_active', $isActive === 'true' ? 1 : 0);
         }
-
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');

@@ -181,6 +181,7 @@ class ApiService {
 
   /**
    * GET request that returns paginated data
+   * Backend trả về trực tiếp Laravel pagination response (không wrap)
    */
   async getPaginated<T>(
     endpoint: string,
@@ -194,7 +195,7 @@ class ApiService {
 
     if (params.search) queryParams.search = params.search;
     if (params.sort_by) queryParams.sort_by = params.sort_by;
-    if (params.sort_direction) queryParams.sort_order = params.sort_direction;
+    if (params.sort_direction) queryParams.sort_direction = params.sort_direction; // ✅ ĐÚNG: sort_direction
     if (params.filters) {
       Object.entries(params.filters).forEach(([key, value]) => {
         queryParams[key] = value;
@@ -204,8 +205,9 @@ class ApiService {
     const queryString = this.buildQueryString(queryParams);
     const url = `${endpoint}?${queryString}`;
 
-    const response = await httpClient.get<{ success: boolean; data: PaginatedResponse<T> }>(url, token || undefined);
-    return response.data;
+    // Backend trả về trực tiếp pagination response, không wrap trong {success, data}
+    const response = await httpClient.get<PaginatedResponse<T>>(url, token || undefined);
+    return response;
   }
 
   /**

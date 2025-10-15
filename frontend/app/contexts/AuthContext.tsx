@@ -12,8 +12,12 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AuthUser, LoginCredentials, AuthContextType, RegisterData } from '~/types/auth';
 import { authService } from '~/services/auth.service';
+import { hasRole as checkHasRole, hasPermission as checkHasPermission } from '~/utils/permissions';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Export AuthContext để có thể dùng trong usePermissions
+export { AuthContext };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -75,6 +79,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentUser);
   };
 
+  // Update user data manually
+  const updateUser = (updatedUser: AuthUser) => {
+    setUser(updatedUser);
+  };
+
+  // Check if user has role
+  const hasRole = (role: string) => checkHasRole(user, role);
+
+  // Check if user has permission
+  const hasPermission = (permission: string) => checkHasPermission(user, permission);
+
   return (
     <AuthContext.Provider
       value={{
@@ -85,6 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         refreshUser,
+        updateUser,
+        hasRole,
+        hasPermission,
       }}
     >
       {children}

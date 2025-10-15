@@ -36,6 +36,9 @@ export function useTable<T>({
     total: 0,
   });
 
+  // ✅ Flag để tránh gọi API 2 lần do React Strict Mode
+  const isInitialLoadRef = useRef(false);
+
   // Store fetchData in ref to avoid recreating loadData on every render
   const fetchDataRef = useRef(fetchData);
   useEffect(() => {
@@ -57,27 +60,36 @@ export function useTable<T>({
       };
 
       const response = await fetchDataRef.current(params);
-      setData(response.data);
+
+      // Đảm bảo data luôn là mảng
+      setData(response.data || []);
 
       // Laravel pagination properties are at root level, not nested in meta
       setMeta({
-        current_page: response.current_page,
-        from: response.from,
-        last_page: response.last_page,
-        per_page: response.per_page,
-        to: response.to,
-        total: response.total,
+        current_page: response.current_page || 1,
+        from: response.from || 0,
+        last_page: response.last_page || 1,
+        per_page: response.per_page || perPage,
+        to: response.to || 0,
+        total: response.total || 0,
       });
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to load data');
       setError(error);
+      setData([]); // Reset data về mảng rỗng khi có lỗi
       console.error('Table load error:', error);
     } finally {
       setIsLoading(false);
     }
   }, [page, perPage, sortBy, sortDirection, search, filters]);
 
+  // ✅ Sửa useEffect để tránh gọi lặp do React Strict Mode
   useEffect(() => {
+    // Chỉ prevent duplicate call cho lần mount đầu tiên
+    // Khi dependencies thay đổi, vẫn cho phép gọi lại
+    if (!isInitialLoadRef.current) {
+      isInitialLoadRef.current = true;
+    }
     loadData();
   }, [loadData]);
 

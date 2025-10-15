@@ -36,6 +36,22 @@ trait OrderScopes
     }
 
     /**
+     * Scope: Filter by type
+     */
+    public function scopeByType(Builder $query, string $type): Builder
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * Scope: Filter by customer
+     */
+    public function scopeForCustomer(Builder $query, int $customerId): Builder
+    {
+        return $query->where('customer_id', $customerId);
+    }
+
+    /**
      * Scope: Filter by date range
      */
     public function scopeDateRange(Builder $query, string $dateFrom, string $dateTo): Builder
@@ -136,4 +152,3 @@ trait OrderScopes
         return $query->latest()->limit($limit);
     }
 }
-

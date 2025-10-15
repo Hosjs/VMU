@@ -68,6 +68,21 @@ export const formatters = {
     });
   },
 
+  // Format date for HTML input (YYYY-MM-DD)
+  dateForInput: (value?: string | Date): string => {
+    if (!value) return '';
+
+    try {
+      const date = typeof value === 'string' ? new Date(value) : value;
+      if (isNaN(date.getTime())) return '';
+
+      // Format as YYYY-MM-DD for HTML input type="date"
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  },
+
   // Format phone number
   phone: (value: string): string => {
     if (!value) return '';
@@ -85,31 +100,20 @@ export const formatters = {
   // Format license plate
   licensePlate: (value: string): string => {
     if (!value) return '';
-    const cleaned = value.replace(/[^0-9A-Z]/g, '').toUpperCase();
-
-    // Format: 30A-12345
-    if (cleaned.length >= 5) {
-      const prefix = cleaned.slice(0, 3);
-      const suffix = cleaned.slice(3);
-      return `${prefix}-${suffix}`;
-    }
-    return cleaned;
+    return value.toUpperCase();
   },
 
   // Format percentage
-  percentage: (value: number, decimals: number = 2): string => {
-    if (isNaN(value)) return '0%';
-    return `${value.toFixed(decimals)}%`;
+  percentage: (value: number): string => {
+    return `${value.toFixed(2)}%`;
   },
 
   // Format file size
   fileSize: (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
-
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   },
 
@@ -176,17 +180,35 @@ export const formatters = {
   },
 
   // Format relative time (time ago)
-  timeAgo: (date: string | Date): string => {
-    const past = typeof date === 'string' ? new Date(date) : date;
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+  timeAgo: (value: string | Date): string => {
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(date.getTime())) return '';
 
-    if (seconds < 60) return 'vừa xong';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} phút trước`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} giờ trước`;
-    if (seconds < 2592000) return `${Math.floor(seconds / 86400)} ngày trước`;
-    if (seconds < 31536000) return `${Math.floor(seconds / 2592000)} tháng trước`;
-    return `${Math.floor(seconds / 31536000)} năm trước`;
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    const diffWeek = Math.floor(diffDay / 7);
+    const diffMonth = Math.floor(diffDay / 30);
+    const diffYear = Math.floor(diffDay / 365);
+
+    if (diffSec < 60) {
+      return 'Vừa xong';
+    } else if (diffMin < 60) {
+      return `${diffMin} phút trước`;
+    } else if (diffHour < 24) {
+      return `${diffHour} giờ trước`;
+    } else if (diffDay < 7) {
+      return `${diffDay} ngày trước`;
+    } else if (diffWeek < 4) {
+      return `${diffWeek} tuần trước`;
+    } else if (diffMonth < 12) {
+      return `${diffMonth} tháng trước`;
+    } else {
+      return `${diffYear} năm trước`;
+    }
   },
 
   // Format status badge text
@@ -223,4 +245,3 @@ export const formatters = {
     return statusMap[status] || status;
   },
 };
-

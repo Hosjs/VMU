@@ -65,9 +65,8 @@ class RoleService {
    * Get available permissions
    */
   async getAvailablePermissions(): Promise<AvailablePermissions> {
-    return apiService.get<AvailablePermissions>(`${this.BASE_PATH}-permissions`);
+    return apiService.get<AvailablePermissions>(`${this.BASE_PATH}/permissions`);
   }
 }
 
 export const roleService = new RoleService();
-

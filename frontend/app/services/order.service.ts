@@ -4,33 +4,33 @@ import { apiService } from './api.service';
 
 export const orderService = {
   async getAll(params?: TableQueryParams): Promise<PaginatedResponse<Order>> {
-    return apiService.getPaginated<Order>('/orders', params);
+    return apiService.getPaginated<Order>('/admin/orders', params);
   },
 
   async getById(id: number): Promise<Order> {
-    return apiService.get<Order>(`/orders/${id}`);
+    return apiService.get<Order>(`/admin/orders/${id}`);
   },
 
   async create(data: CreateOrderData): Promise<Order> {
-    return apiService.post<Order>('/orders', data);
+    return apiService.post<Order>('/admin/orders', data);
   },
 
   async update(id: number, data: Partial<Order>): Promise<Order> {
-    return apiService.put<Order>(`/orders/${id}`, data);
+    return apiService.put<Order>(`/admin/orders/${id}`, data);
   },
 
   async updateStatus(
     id: number,
     status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   ): Promise<Order> {
-    return apiService.post<Order>(`/orders/${id}/status`, { status });
+    return apiService.post<Order>(`/admin/orders/${id}/update-status`, { status });
   },
 
   async delete(id: number): Promise<void> {
-    return apiService.delete<void>(`/orders/${id}`);
+    return apiService.delete<void>(`/admin/orders/${id}`);
   },
 
   async getByCustomer(customerId: number): Promise<Order[]> {
-    return apiService.get<Order[]>(`/customers/${customerId}/orders`);
+    return apiService.get<Order[]>(`/admin/customers/${customerId}/orders`);
   },
 };

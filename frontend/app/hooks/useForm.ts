@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 interface UseFormOptions<T> {
   initialValues: T;
@@ -15,6 +15,22 @@ export function useForm<T extends Record<string, any>>({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Use ref to store previous initialValues for deep comparison
+  const prevInitialValuesRef = useRef<string>();
+
+  // Update values when initialValues change (important for edit mode)
+  useEffect(() => {
+    const currentInitialValues = JSON.stringify(initialValues);
+
+    // Only update if initialValues actually changed
+    if (prevInitialValuesRef.current !== currentInitialValues) {
+      prevInitialValuesRef.current = currentInitialValues;
+      setValues(initialValues);
+      setErrors({});
+      setTouched({});
+    }
+  }, [initialValues]);
 
   const handleChange = useCallback((name: keyof T, value: any) => {
     setValues(prev => ({

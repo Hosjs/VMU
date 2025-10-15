@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // Tên role: admin, manager, accountant, employee, mechanic
-            $table->string('display_name'); // Tên hiển thị: Quản trị viên, Quản lý, Kế toán, Nhân viên, Thợ máy
+            $table->string('name')->unique(); // Mã role: admin, manager, accountant, mechanic, employee
+            $table->string('display_name'); // Tên hiển thị: Admin, Manager, Accountant, Mechanic, Employee
             $table->text('description')->nullable(); // Mô tả quyền
-            $table->json('permissions')->nullable(); // Danh sách quyền chi tiết
+            $table->json('permissions')->nullable(); // Danh sách quyền chi tiết dạng JSON
             $table->boolean('is_active')->default(true); // Trạng thái hoạt động
             $table->timestamps();
         });

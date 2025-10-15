@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card } from '~/components/ui/Card';
 import { LoadingSpinner } from '~/components/LoadingSystem';
 import { dashboardService, type DashboardOverview } from '~/services/dashboard.service';
 import { formatters } from '~/utils/formatters';
 import { Link } from 'react-router';
+
+// Export loader function for React Router v7
+export async function loader({ request }: Route.LoaderArgs) {
+  return null;
+}
 
 export default function AdminDashboard() {
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
@@ -13,7 +18,15 @@ export default function AdminDashboard() {
     date_to: new Date().toISOString().split('T')[0],
   });
 
+  // ✅ Sử dụng useRef để tránh gọi API 2 lần lúc mount
+  const isInitializedRef = useRef(false);
+
   useEffect(() => {
+    // ✅ Chỉ prevent duplicate call cho lần mount đầu tiên
+    // Khi dateRange thay đổi, vẫn cho phép gọi lại API
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true;
+    }
     loadOverview();
   }, [dateRange]);
 

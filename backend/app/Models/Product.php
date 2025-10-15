@@ -17,8 +17,12 @@ class Product extends Model
         'description',
         'category_id',
         'primary_warehouse_id',
-        'quote_price',
-        'settlement_price',
+        'vehicle_brand_id',
+        'vehicle_model_id',
+        'compatible_years',
+        'is_universal',
+        'cost_price',
+        'suggested_price',
         'unit',
         'main_image',
         'gallery_images',
@@ -27,28 +31,31 @@ class Product extends Model
         'track_by_serial',
         'track_by_batch',
         'shelf_life_days',
-        'auto_transfer_enabled',
-        'transfer_threshold',
         'track_stock',
         'has_warranty',
         'warranty_months',
-        'supplier_name',
+        'supplier_id',
         'supplier_code',
+        'min_stock_level',
+        'max_stock_level',
+        'reorder_point',
         'is_active',
     ];
 
     protected $casts = [
-        'quote_price' => 'decimal:2',
-        'settlement_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'suggested_price' => 'decimal:2',
+        'is_universal' => 'boolean',
         'is_stockable' => 'boolean',
         'track_by_serial' => 'boolean',
         'track_by_batch' => 'boolean',
         'shelf_life_days' => 'integer',
-        'auto_transfer_enabled' => 'boolean',
-        'transfer_threshold' => 'integer',
         'track_stock' => 'boolean',
         'has_warranty' => 'boolean',
         'warranty_months' => 'integer',
+        'min_stock_level' => 'integer',
+        'max_stock_level' => 'integer',
+        'reorder_point' => 'integer',
         'is_active' => 'boolean',
     ];
 
@@ -64,6 +71,21 @@ class Product extends Model
     public function primaryWarehouse()
     {
         return $this->belongsTo(Warehouse::class, 'primary_warehouse_id');
+    }
+
+    public function vehicleBrand()
+    {
+        return $this->belongsTo(VehicleBrand::class);
+    }
+
+    public function vehicleModel()
+    {
+        return $this->belongsTo(VehicleModel::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Provider::class, 'supplier_id');
     }
 
     public function warehouseStocks()

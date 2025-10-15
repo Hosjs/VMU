@@ -46,27 +46,27 @@ class OrderController extends Controller
 
         // Filter by status
         if ($status) {
-            $query->status($status);
+            $query->where('status', $status);
         }
 
         // Filter by payment status
         if ($paymentStatus) {
-            $query->paymentStatus($paymentStatus);
+            $query->where('payment_status', $paymentStatus);
         }
 
         // Filter by type
         if ($type) {
-            $query->type($type);
+            $query->where('type', $type);
         }
 
         // Filter by customer
         if ($customerId) {
-            $query->forCustomer($customerId);
+            $query->where('customer_id', $customerId);
         }
 
         // Filter by date range
         if ($dateFrom && $dateTo) {
-            $query->whereBetween('quote_date', [$dateFrom, $dateTo]);
+            $query->whereBetween('created_at', [$dateFrom, $dateTo]);
         }
 
         // Sort

@@ -15,6 +15,7 @@ class Provider extends Model
         'name',
         'business_name',
         'tax_code',
+        'provider_type',
         'contact_person',
         'phone',
         'email',

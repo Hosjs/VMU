@@ -14,43 +14,40 @@ import type {
 export const warehouseService = {
   // Warehouse CRUD
   async getAll(params?: TableQueryParams): Promise<PaginatedResponse<Warehouse>> {
-    return apiService.getPaginated<Warehouse>('/warehouses', params);
+    return apiService.getPaginated<Warehouse>('/admin/warehouses', params);
   },
 
   async getById(id: number): Promise<Warehouse> {
-    return apiService.get<Warehouse>(`/warehouses/${id}`);
+    return apiService.get<Warehouse>(`/admin/warehouses/${id}`);
   },
 
   async create(data: CreateWarehouseData): Promise<Warehouse> {
-    return apiService.post<Warehouse>('/warehouses', data);
+    return apiService.post<Warehouse>('/admin/warehouses', data);
   },
 
   async update(id: number, data: Partial<CreateWarehouseData>): Promise<Warehouse> {
-    return apiService.put<Warehouse>(`/warehouses/${id}`, data);
+    return apiService.put<Warehouse>(`/admin/warehouses/${id}`, data);
   },
 
   async delete(id: number): Promise<void> {
-    await apiService.delete(`/warehouses/${id}`);
+    await apiService.delete(`/admin/warehouses/${id}`);
   },
 
   // Warehouse Stock Management
   async getStocks(warehouseId: number, params?: TableQueryParams): Promise<PaginatedResponse<WarehouseStock>> {
-    const response = await apiService.getPaginated<WarehouseStock>(`/warehouses/${warehouseId}/stocks`, params);
-    return response.data;
+    return apiService.getPaginated<WarehouseStock>(`/admin/warehouses/${warehouseId}/stocks`, params);
   },
 
   async getStockByProduct(warehouseId: number, productId: number): Promise<WarehouseStock> {
-    const response = await apiService.get<WarehouseStock>(`/warehouses/${warehouseId}/stocks/${productId}`);
-    return response.data;
+    return apiService.get<WarehouseStock>(`/admin/warehouses/${warehouseId}/stocks/${productId}`);
   },
 
   async updateStock(warehouseId: number, productId: number, data: any): Promise<WarehouseStock> {
-    const response = await apiService.put<WarehouseStock>(`/warehouses/${warehouseId}/stocks/${productId}`, data);
-    return response.data;
+    return apiService.put<WarehouseStock>(`/admin/warehouses/${warehouseId}/stocks/${productId}`, data);
   },
 
   async adjustStock(warehouseId: number, productId: number, quantity: number, reason: string): Promise<WarehouseStock> {
-    const response = await apiService.post<WarehouseStock>(`/warehouses/${warehouseId}/stocks/${productId}/adjust`, {
+    const response = await apiService.post<WarehouseStock>(`/admin/warehouses/${warehouseId}/stocks/${productId}/adjust`, {
       quantity,
       reason
     });

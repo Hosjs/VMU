@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Admin\CategoryController;
 use App\Http\Controllers\Api\Admin\InvoiceController;
 use App\Http\Controllers\Api\Admin\PaymentController;
 use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,18 @@ Route::middleware('auth:api')->group(function () {
     });
 
     // =====================
+    // NOTIFICATIONS ROUTES
+    // =====================
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+        Route::get('/stream', [NotificationController::class, 'stream']); // SSE endpoint
+    });
+
+    // =====================
     // ADMIN ROUTES
     // =====================
     Route::prefix('admin')->group(function () {
@@ -63,28 +76,30 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/dashboard/top-products', [DashboardController::class, 'topProducts']);
 
         // Users Management
-        Route::apiResource('users', UserController::class);
+        Route::get('/users/departments', [UserController::class, 'departments']);
+        Route::get('/users/positions', [UserController::class, 'positions']);
+        Route::get('/users/statistics', [UserController::class, 'statistics']);
+        Route::get('/users/statuses', [UserController::class, 'statuses']);
         Route::post('/users/{id}/activate', [UserController::class, 'activate']);
-        Route::get('/users-departments', [UserController::class, 'departments']);
-        Route::get('/users-positions', [UserController::class, 'positions']);
-        Route::get('/users-statistics', [UserController::class, 'statistics']);
+        Route::apiResource('users', UserController::class);
 
         // Roles Management
+        Route::get('/roles/permissions', [RoleController::class, 'getPermissions']);
+        Route::get('/roles/statistics', [RoleController::class, 'statistics']);
         Route::apiResource('roles', RoleController::class);
-        Route::get('/roles-permissions', [RoleController::class, 'availablePermissions']);
 
         // Customers Management
         Route::apiResource('customers', CustomerController::class);
-        Route::get('/customers-statistics', [CustomerController::class, 'statistics']);
+        Route::get('/customers/statistics', [CustomerController::class, 'statistics']);
 
         // Services Management
         Route::apiResource('services', ServiceController::class);
-        Route::get('/services-statistics', [ServiceController::class, 'statistics']);
+        Route::get('/services/statistics', [ServiceController::class, 'statistics']);
 
         // Products Management
         Route::apiResource('products', ProductController::class);
-        Route::get('/products-statistics', [ProductController::class, 'statistics']);
-        Route::get('/products-low-stock', [ProductController::class, 'lowStock']);
+        Route::get('/products/statistics', [ProductController::class, 'statistics']);
+        Route::get('/products/low-stock', [ProductController::class, 'lowStock']);
 
         // Categories Management
         Route::apiResource('categories', CategoryController::class);
@@ -96,29 +111,29 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/orders/{id}/update-payment-status', [OrderController::class, 'updatePaymentStatus']);
         Route::post('/orders/{id}/assign-staff', [OrderController::class, 'assignStaff']);
         Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
-        Route::get('/orders-statistics', [OrderController::class, 'statistics']);
+        Route::get('/orders/statistics', [OrderController::class, 'statistics']);
 
         // Warehouses Management
         Route::apiResource('warehouses', WarehouseController::class);
         Route::get('/warehouses/{id}/stocks', [WarehouseController::class, 'stocks']);
         Route::post('/warehouses/{id}/stocktake', [WarehouseController::class, 'stocktake']);
-        Route::get('/warehouses-statistics', [WarehouseController::class, 'statistics']);
+        Route::get('/warehouses/statistics', [WarehouseController::class, 'statistics']);
 
         // Providers Management
         Route::apiResource('providers', ProviderController::class);
         Route::post('/providers/{id}/update-rating', [ProviderController::class, 'updateRating']);
-        Route::get('/providers-statistics', [ProviderController::class, 'statistics']);
+        Route::get('/providers/statistics', [ProviderController::class, 'statistics']);
 
         // Invoices Management
         Route::apiResource('invoices', InvoiceController::class)->only(['index', 'show']);
         Route::post('/invoices/{id}/update-status', [InvoiceController::class, 'updateStatus']);
         Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel']);
-        Route::get('/invoices-statistics', [InvoiceController::class, 'statistics']);
+        Route::get('/invoices/statistics', [InvoiceController::class, 'statistics']);
 
         // Payments Management
         Route::apiResource('payments', PaymentController::class)->only(['index', 'show']);
         Route::post('/payments/{id}/confirm', [PaymentController::class, 'confirm']);
         Route::post('/payments/{id}/cancel', [PaymentController::class, 'cancel']);
-        Route::get('/payments-statistics', [PaymentController::class, 'statistics']);
+        Route::get('/payments/statistics', [PaymentController::class, 'statistics']);
     });
 });

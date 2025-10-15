@@ -31,17 +31,15 @@ class CustomerController extends Controller
             $query->where('is_active', $isActive == 1);
         }
 
-        // Sort
+        // Sort - Chuẩn hóa dùng sort_direction
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $customers = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $customers,
-        ]);
+        // Return trực tiếp pagination response (không wrap)
+        return response()->json($customers);
     }
 
     /**

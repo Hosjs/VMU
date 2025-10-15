@@ -14,8 +14,6 @@ class Service extends Model
         'code',
         'description',
         'category_id',
-        'quote_price',
-        'settlement_price',
         'unit',
         'estimated_time',
         'main_image',
@@ -27,8 +25,6 @@ class Service extends Model
     ];
 
     protected $casts = [
-        'quote_price' => 'decimal:2',
-        'settlement_price' => 'decimal:2',
         'estimated_time' => 'integer',
         'has_warranty' => 'boolean',
         'warranty_months' => 'integer',

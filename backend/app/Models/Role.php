@@ -18,6 +18,7 @@ class Role extends Model
     ];
 
     protected $casts = [
+        'permissions' => 'array', // Cast JSON to array automatically
         'is_active' => 'boolean',
     ];
 
