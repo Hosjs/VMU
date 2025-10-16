@@ -6,11 +6,10 @@ export * from './service';
 export * from './product';
 export * from './order';
 export * from './invoice';
-export * from './provider';
-export * from './warehouse';
-export * from './vehicle';
-export * from './settlement';
+export type { Provider } from './provider';
+export type { Warehouse } from './warehouse';
+export type { Vehicle } from './vehicle';
+export type { Settlement } from './settlement';
 export * from './direct-sale';
 export * from './warranty';
 export * from './notification';
-

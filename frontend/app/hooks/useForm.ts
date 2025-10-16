@@ -17,7 +17,7 @@ export function useForm<T extends Record<string, any>>({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Use ref to store previous initialValues for deep comparison
-  const prevInitialValuesRef = useRef<string>();
+  const prevInitialValuesRef = useRef<string | undefined>(undefined);
 
   // Update values when initialValues change (important for edit mode)
   useEffect(() => {

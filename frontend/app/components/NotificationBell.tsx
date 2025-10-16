@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useNotifications } from '~/contexts/NotificationContext';
-import { notificationService, type Notification } from '~/services/notification.service';
+import { notificationService, type Notification } from '~/services/Common/notification.service';
 import { formatters } from '~/utils/formatters';
 
 export function NotificationBell() {
@@ -201,4 +201,3 @@ export function NotificationBell() {
     </div>
   );
 }
-

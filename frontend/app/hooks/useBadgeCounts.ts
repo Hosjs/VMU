@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { badgeService, type BadgeCounts } from '~/services/badge.service';
+import { badgeService, type BadgeCounts } from '~/services/Common/badge.service';
 
 interface UseBadgeCountsOptions {
   /**

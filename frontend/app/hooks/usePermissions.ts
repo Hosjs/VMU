@@ -11,6 +11,7 @@
 
 import { useContext } from 'react';
 import { AuthContext } from '~/contexts/AuthContext';
+import type { AuthUser } from '~/types/auth';
 import {
   hasPermission,
   hasAnyPermission,
@@ -25,8 +26,28 @@ import {
   type PermissionMap,
 } from '~/utils/permissions';
 
-export function usePermissions() {
-  const { user } = useContext(AuthContext);
+interface PermissionContextValue {
+  hasPermission: (permission: string) => boolean;
+  hasAnyPermission: (permissions: string[]) => boolean;
+  hasAllPermissions: (permissions: string[]) => boolean;
+  canAccessModule: (module: string) => boolean;
+  getUserPermissions: () => PermissionMap;
+  getAccessibleModules: () => string[];
+  isAdmin: () => boolean;
+  isManager: () => boolean;
+  hasRole: (roleName: string) => boolean;
+  hasAnyRole: (roleNames: string[]) => boolean;
+  user: AuthUser | null;
+}
+
+export function usePermissions(): PermissionContextValue {
+  const authContext = useContext(AuthContext);
+
+  if (!authContext) {
+    throw new Error('usePermissions must be used within AuthProvider');
+  }
+
+  const { user } = authContext;
 
   return {
     /**
@@ -108,4 +129,3 @@ export function usePermissions() {
     user,
   };
 }
-

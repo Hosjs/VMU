@@ -1,140 +1,91 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type React from 'react';
-import { authService } from '~/services/auth.service';
+/**
+ * Permission Context
+ * Cung cấp quyền hạn của user cho toàn bộ ứng dụng
+ * Tích hợp với AuthContext
+ */
 
-interface PermissionContextType {
-  permissions: string[];
-  role: string | null;
-  roleDisplayName: string | null;
+import { createContext, useContext, type ReactNode } from 'react';
+import { AuthContext } from './AuthContext';
+import {
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions,
+  canAccessModule,
+  getUserPermissions,
+  getAccessibleModules,
+  isAdmin,
+  isManager,
+  hasRole,
+  hasAnyRole,
+  type PermissionMap,
+} from '~/utils/permissions';
+import type { AuthUser } from '~/types/auth';
+
+interface PermissionContextValue {
+  user: AuthUser | null;
   isLoading: boolean;
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
-  hasRole: (role: string) => boolean;
-  refresh: () => Promise<void>;
+  canAccessModule: (module: string) => boolean;
+  getUserPermissions: () => PermissionMap;
+  getAccessibleModules: () => string[];
+  isAdmin: () => boolean;
+  isManager: () => boolean;
+  hasRole: (roleName: string) => boolean;
+  hasAnyRole: (roleNames: string[]) => boolean;
 }
 
-const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
+export const PermissionContext = createContext<PermissionContextValue | undefined>(undefined);
 
 interface PermissionProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**
- * Permission Provider
- * Quản lý permissions của user hiện tại
- * Sử dụng: Wrap App component với <PermissionProvider>
+ * PermissionProvider
+ * Wrap app với provider này để sử dụng permissions
  */
 export function PermissionProvider({ children }: PermissionProviderProps) {
-  const [permissions, setPermissions] = useState<string[]>([]);
-  const [role, setRole] = useState<string | null>(null);
-  const [roleDisplayName, setRoleDisplayName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const authContext = useContext(AuthContext);
 
-  const fetchPermissions = async () => {
-    try {
-      setIsLoading(true);
-      const response = await authService.getPermissions();
-      setPermissions(response.permissions || []);
-      setRole(response.role || null);
-      setRoleDisplayName(response.role_display_name || null);
-    } catch (error) {
-      console.error('Failed to fetch permissions:', error);
-      setPermissions([]);
-      setRole(null);
-      setRoleDisplayName(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!authContext) {
+    throw new Error('PermissionProvider must be used within AuthProvider');
+  }
 
-  useEffect(() => {
-    // Fetch permissions khi mount
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchPermissions();
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
+  const { user, isLoading } = authContext;
 
-  /**
-   * Kiểm tra có permission cụ thể
-   * Hỗ trợ wildcard: users.* sẽ match users.view, users.create, etc
-   */
-  const hasPermission = (permission: string): boolean => {
-    // Admin có tất cả quyền
-    if (role === 'admin') return true;
-
-    // Check exact match
-    if (permissions.includes(permission)) return true;
-
-    // Check wildcard
-    const parts = permission.split('.');
-    if (parts.length === 2) {
-      const wildcardPermission = `${parts[0]}.*`;
-      if (permissions.includes(wildcardPermission)) return true;
-    }
-
-    return false;
-  };
-
-  /**
-   * Kiểm tra có bất kỳ permission nào
-   */
-  const hasAnyPermission = (perms: string[]): boolean => {
-    if (role === 'admin') return true;
-    return perms.some(p => hasPermission(p));
-  };
-
-  /**
-   * Kiểm tra có tất cả permissions
-   */
-  const hasAllPermissions = (perms: string[]): boolean => {
-    if (role === 'admin') return true;
-    return perms.every(p => hasPermission(p));
-  };
-
-  /**
-   * Kiểm tra có role cụ thể
-   */
-  const hasRole = (roleName: string): boolean => {
-    return role === roleName;
-  };
-
-  /**
-   * Refresh permissions
-   */
-  const refresh = async () => {
-    await fetchPermissions();
+  const value: PermissionContextValue = {
+    user,
+    isLoading,
+    hasPermission: (permission: string) => hasPermission(user, permission),
+    hasAnyPermission: (permissions: string[]) => hasAnyPermission(user, permissions),
+    hasAllPermissions: (permissions: string[]) => hasAllPermissions(user, permissions),
+    canAccessModule: (module: string) => canAccessModule(user, module),
+    getUserPermissions: () => getUserPermissions(user),
+    getAccessibleModules: () => getAccessibleModules(user),
+    isAdmin: () => isAdmin(user),
+    isManager: () => isManager(user),
+    hasRole: (roleName: string) => hasRole(user, roleName),
+    hasAnyRole: (roleNames: string[]) => hasAnyRole(user, roleNames),
   };
 
   return (
-    <PermissionContext.Provider
-      value={{
-        permissions,
-        role,
-        roleDisplayName,
-        isLoading,
-        hasPermission,
-        hasAnyPermission,
-        hasAllPermissions,
-        hasRole,
-        refresh,
-      }}
-    >
+    <PermissionContext.Provider value={value}>
       {children}
     </PermissionContext.Provider>
   );
 }
 
 /**
- * Hook để sử dụng permission context
+ * Hook để sử dụng permissions
  */
-export function usePermissions(): PermissionContextType {
+export function usePermissions() {
   const context = useContext(PermissionContext);
-  if (!context) {
+
+  if (context === undefined) {
     throw new Error('usePermissions must be used within a PermissionProvider');
   }
+
   return context;
 }

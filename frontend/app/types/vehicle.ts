@@ -139,14 +139,13 @@ export interface PartnerVehicleHandover {
 
 export interface CreateVehicleData {
   customer_id: number;
-  brand_id: number;
-  model_id: number;
   license_plate: string;
-  vin?: string;
-  engine_number?: string;
+  brand_id?: number;
+  model_id?: number;
   year?: number;
   color?: string;
-  mileage?: number;
+  vin?: string;
+  engine_number?: string;
   notes?: string;
 }
 
@@ -295,4 +294,3 @@ export interface CreatePartnerQuotationData {
   warranty_months?: number;
   provider_notes?: string;
 }
-

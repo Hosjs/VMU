@@ -7,13 +7,13 @@ import {
     ScrollRestoration,
 } from "react-router";
 
-import type { Route } from "./+types/root";
 import { PageTransitionProvider } from "./components/LoadingSystem";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { PermissionProvider } from "./contexts/PermissionContext";
 import "./app.css";
 
-export const links: Route.LinksFunction = () => [
+export const links = () => [
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
     {
         rel: "preconnect",
@@ -32,6 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <head>
             <meta charSet="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Thắng Trường - Hệ thống quản lý Garage</title>
             <Meta />
             <Links />
         </head>
@@ -52,12 +53,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ></div>
 
         <AuthProvider>
-            <NotificationProvider>
-                {/* PageTransition cho public routes (home, login, register) */}
-                <PageTransitionProvider>
-                    {children}
-                </PageTransitionProvider>
-            </NotificationProvider>
+            <PermissionProvider>
+                <NotificationProvider>
+                    <PageTransitionProvider>
+                        {children}
+                    </PageTransitionProvider>
+                </NotificationProvider>
+            </PermissionProvider>
         </AuthProvider>
         <ScrollRestoration />
         <Scripts />
@@ -67,11 +69,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    console.log('🔄 App component rendering at:', new Date().toISOString());
     return <Outlet />;
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+export function ErrorBoundary({ error }: { error: unknown }) {
     let message = "Oops!";
     let details = "An unexpected error occurred.";
     let stack: string | undefined;

@@ -8,105 +8,31 @@ use App\Models\Invoice;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\HasPermissions;
 
 class BadgeController extends Controller
 {
+    use HasPermissions;
+
     /**
      * Lấy số đếm cho tất cả badge trên sidebar
-     * Số liệu động dựa theo role và trạng thái
+     * Số liệu động dựa theo permissions thực tế của user
      */
     public function getCounts(Request $request)
     {
         $user = Auth::user();
-        $role = $user->role->name ?? 'employee';
 
         $counts = [
-            'orders' => 0,
-            'invoices' => 0,
-            'service_requests' => 0,
-            'work_orders' => 0,
-            'notifications' => 0,
+            'orders' => $this->getOrdersCount($user),
+            'invoices' => $this->getInvoicesCount($user),
+            'service_requests' => $this->getServiceRequestsCount($user),
+            'work_orders' => $this->getWorkOrdersCount($user),
+            'notifications' => $user->notifications()->where('is_read', false)->count(),
         ];
-
-        switch ($role) {
-            case 'admin':
-                // Admin: Đếm đơn hàng chưa xác nhận + đang thực hiện
-                $counts['orders'] = Order::whereIn('status', ['draft', 'quoted', 'confirmed', 'in_progress'])
-                    ->count();
-
-                // Hóa đơn chưa thanh toán hoặc thanh toán 1 phần
-                $counts['invoices'] = Invoice::whereIn('payment_status', ['pending', 'partial'])
-                    ->whereIn('status', ['draft', 'pending', 'sent'])
-                    ->count();
-
-                // Yêu cầu dịch vụ chưa xử lý
-                $counts['service_requests'] = ServiceRequest::whereIn('status', ['pending', 'quoted'])
-                    ->count();
-
-                break;
-
-            case 'manager':
-                // Manager: Đơn hàng cần quản lý
-                $counts['orders'] = Order::whereIn('status', ['confirmed', 'in_progress'])
-                    ->count();
-
-                // Yêu cầu dịch vụ cần xử lý
-                $counts['service_requests'] = ServiceRequest::whereIn('status', ['pending', 'quoted', 'approved'])
-                    ->count();
-
-                break;
-
-            case 'accountant':
-                // Accountant: Hóa đơn cần xử lý
-                $counts['invoices'] = Invoice::whereIn('payment_status', ['pending', 'partial'])
-                    ->whereIn('status', ['draft', 'pending', 'sent'])
-                    ->count();
-
-                // Đơn hàng cần quyết toán
-                $counts['orders'] = Order::where('status', 'completed')
-                    ->whereIn('payment_status', ['pending', 'partial'])
-                    ->count();
-
-                break;
-
-            case 'mechanic':
-                // Mechanic: Lệnh sửa chữa được giao
-                $counts['work_orders'] = Order::where('type', 'service')
-                    ->where('technician_id', $user->id)
-                    ->whereIn('status', ['confirmed', 'in_progress'])
-                    ->count();
-
-                // Yêu cầu dịch vụ được giao
-                $counts['service_requests'] = ServiceRequest::where('assigned_to', $user->id)
-                    ->whereIn('status', ['approved', 'in_progress'])
-                    ->count();
-
-                break;
-
-            case 'employee':
-                // Employee: Công việc được giao
-                $counts['work_orders'] = Order::where(function($query) use ($user) {
-                        $query->where('salesperson_id', $user->id)
-                              ->orWhere('technician_id', $user->id);
-                    })
-                    ->whereIn('status', ['confirmed', 'in_progress'])
-                    ->count();
-
-                break;
-
-            default:
-                break;
-        }
-
-        // Đếm thông báo chưa đọc (tất cả role)
-        $counts['notifications'] = $user->notifications()
-            ->where('is_read', false)
-            ->count();
 
         return response()->json([
             'success' => true,
             'data' => $counts,
-            'role' => $role,
         ]);
     }
 
@@ -116,56 +42,23 @@ class BadgeController extends Controller
     public function getCount(Request $request, $type)
     {
         $user = Auth::user();
-        $role = $user->role->name ?? 'employee';
         $count = 0;
 
         switch ($type) {
             case 'orders':
-                if ($role === 'admin') {
-                    $count = Order::whereIn('status', ['draft', 'quoted', 'confirmed', 'in_progress'])->count();
-                } elseif ($role === 'manager') {
-                    $count = Order::whereIn('status', ['confirmed', 'in_progress'])->count();
-                } elseif ($role === 'accountant') {
-                    $count = Order::where('status', 'completed')
-                        ->whereIn('payment_status', ['pending', 'partial'])
-                        ->count();
-                }
+                $count = $this->getOrdersCount($user);
                 break;
 
             case 'invoices':
-                if (in_array($role, ['admin', 'accountant'])) {
-                    $count = Invoice::whereIn('payment_status', ['pending', 'partial'])
-                        ->whereIn('status', ['draft', 'pending', 'sent'])
-                        ->count();
-                }
+                $count = $this->getInvoicesCount($user);
                 break;
 
             case 'service_requests':
-                if ($role === 'admin') {
-                    $count = ServiceRequest::whereIn('status', ['pending', 'quoted'])->count();
-                } elseif ($role === 'manager') {
-                    $count = ServiceRequest::whereIn('status', ['pending', 'quoted', 'approved'])->count();
-                } elseif ($role === 'mechanic') {
-                    $count = ServiceRequest::where('assigned_to', $user->id)
-                        ->whereIn('status', ['approved', 'in_progress'])
-                        ->count();
-                }
+                $count = $this->getServiceRequestsCount($user);
                 break;
 
             case 'work_orders':
-                if ($role === 'mechanic') {
-                    $count = Order::where('type', 'service')
-                        ->where('technician_id', $user->id)
-                        ->whereIn('status', ['confirmed', 'in_progress'])
-                        ->count();
-                } elseif ($role === 'employee') {
-                    $count = Order::where(function($query) use ($user) {
-                            $query->where('salesperson_id', $user->id)
-                                  ->orWhere('technician_id', $user->id);
-                        })
-                        ->whereIn('status', ['confirmed', 'in_progress'])
-                        ->count();
-                }
+                $count = $this->getWorkOrdersCount($user);
                 break;
 
             case 'notifications':
@@ -183,8 +76,112 @@ class BadgeController extends Controller
             'success' => true,
             'type' => $type,
             'count' => $count,
-            'role' => $role,
         ]);
     }
-}
 
+    /**
+     * Đếm orders dựa trên permissions
+     */
+    private function getOrdersCount($user): int
+    {
+        // Không có quyền view orders
+        if (!$user->hasPermission('orders.view')) {
+            return 0;
+        }
+
+        $query = Order::query();
+
+        // Có quyền manage_all => đếm tất cả orders cần xử lý
+        if ($user->hasPermission('orders.manage_all')) {
+            return $query->whereIn('status', ['draft', 'quoted', 'confirmed', 'in_progress'])->count();
+        }
+
+        // Có quyền approve => đếm orders cần approve
+        if ($user->hasPermission('orders.approve')) {
+            return $query->whereIn('status', ['confirmed', 'in_progress'])->count();
+        }
+
+        // Có quyền manage_own => đếm orders được giao
+        if ($user->hasPermission('orders.manage_own')) {
+            return $query->where(function($q) use ($user) {
+                    $q->where('salesperson_id', $user->id)
+                      ->orWhere('technician_id', $user->id);
+                })
+                ->whereIn('status', ['confirmed', 'in_progress'])
+                ->count();
+        }
+
+        // Chỉ có quyền view => không hiển thị badge
+        return 0;
+    }
+
+    /**
+     * Đếm invoices dựa trên permissions
+     */
+    private function getInvoicesCount($user): int
+    {
+        // Không có quyền view invoices
+        if (!$user->hasPermission('invoices.view')) {
+            return 0;
+        }
+
+        // Có quyền approve hoặc manage invoices
+        if ($user->hasAnyPermission(['invoices.approve', 'invoices.edit', 'payments.confirm'])) {
+            return Invoice::whereIn('payment_status', ['pending', 'partial'])
+                ->whereIn('status', ['draft', 'pending', 'sent'])
+                ->count();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Đếm service requests dựa trên permissions
+     */
+    private function getServiceRequestsCount($user): int
+    {
+        // Không có quyền view service requests
+        if (!$user->hasPermission('service_requests.view')) {
+            return 0;
+        }
+
+        $query = ServiceRequest::query();
+
+        // Có quyền manage_all
+        if ($user->hasPermission('service_requests.manage_all')) {
+            return $query->whereIn('status', ['pending', 'quoted', 'approved'])->count();
+        }
+
+        // Có quyền approve
+        if ($user->hasPermission('service_requests.approve')) {
+            return $query->whereIn('status', ['pending', 'quoted'])->count();
+        }
+
+        // Có quyền manage_own => đếm requests được giao
+        if ($user->hasPermission('service_requests.manage_own')) {
+            return $query->where('assigned_to', $user->id)
+                ->whereIn('status', ['approved', 'in_progress'])
+                ->count();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Đếm work orders (đơn hàng được giao) dựa trên permissions
+     */
+    private function getWorkOrdersCount($user): int
+    {
+        // Mechanic hoặc employee có orders được giao
+        if ($user->hasPermission('orders.manage_own')) {
+            return Order::where(function($query) use ($user) {
+                    $query->where('technician_id', $user->id)
+                          ->orWhere('salesperson_id', $user->id);
+                })
+                ->whereIn('status', ['confirmed', 'in_progress'])
+                ->count();
+        }
+
+        return 0;
+    }
+}

@@ -64,7 +64,7 @@ interface CanProps {
  * </Can>
  */
 export function Can({ permission, role, logic = 'any', children, fallback = null }: CanProps) {
-  const { hasPermission, hasAnyPermission, hasAllPermissions, hasRole, isLoading } = usePermissions();
+  const { hasPermission, hasAnyPermission, hasAllPermissions, hasRole, hasAnyRole, isLoading } = usePermissions();
 
   // Đang loading
   if (isLoading) {
@@ -74,7 +74,7 @@ export function Can({ permission, role, logic = 'any', children, fallback = null
   // Kiểm tra role
   if (role) {
     const roles = Array.isArray(role) ? role : [role];
-    const hasRequiredRole = roles.some(r => hasRole(r));
+    const hasRequiredRole = hasAnyRole(roles);
 
     if (!hasRequiredRole) {
       return <>{fallback}</>;
@@ -101,25 +101,14 @@ export function Can({ permission, role, logic = 'any', children, fallback = null
   return <>{children}</>;
 }
 
-interface CannotProps extends Omit<CanProps, 'fallback'> {
-  /**
-   * Children hiển thị khi KHÔNG có permission
-   */
-  children: React.ReactNode;
-}
-
 /**
- * Component Cannot - Ngược lại của Can
- * Hiển thị nội dung khi KHÔNG có permissions
- *
- * @example
- * <Cannot permission="users.delete">
- *   <p>Bạn không có quyền xóa user</p>
- * </Cannot>
+ * Component Cannot - Ngược lại với Can
+ * Hiển thị nội dung khi KHÔNG có permission
  */
-export function Cannot({ permission, role, logic = 'any', children }: CannotProps) {
-  const { hasPermission, hasAnyPermission, hasAllPermissions, hasRole, isLoading } = usePermissions();
+export function Cannot({ permission, role, logic = 'any', children, fallback = null }: CanProps) {
+  const { hasPermission, hasAnyPermission, hasAllPermissions, hasRole, hasAnyRole, isLoading } = usePermissions();
 
+  // Đang loading
   if (isLoading) {
     return null;
   }
@@ -127,10 +116,10 @@ export function Cannot({ permission, role, logic = 'any', children }: CannotProp
   // Kiểm tra role
   if (role) {
     const roles = Array.isArray(role) ? role : [role];
-    const hasRequiredRole = roles.some(r => hasRole(r));
+    const hasRequiredRole = hasAnyRole(roles);
 
     if (hasRequiredRole) {
-      return null;
+      return <>{fallback}</>;
     }
   }
 
@@ -147,7 +136,7 @@ export function Cannot({ permission, role, logic = 'any', children }: CannotProp
     }
 
     if (hasRequiredPermission) {
-      return null;
+      return <>{fallback}</>;
     }
   }
 
