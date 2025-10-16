@@ -39,7 +39,20 @@ class ProductService {
   async deleteProduct(id: number): Promise<void> {
     return apiService.delete<void>(`${this.BASE_PATH}/${id}`);
   }
+
+  async getStatistics(): Promise<{
+    total: number;
+    low_stock: number;
+    out_of_stock: number;
+    total_value: number;
+  }> {
+    return apiService.get<{
+      total: number;
+      low_stock: number;
+      out_of_stock: number;
+      total_value: number;
+    }>(`${this.BASE_PATH}/statistics`);
+  }
 }
 
 export const productService = new ProductService();
-

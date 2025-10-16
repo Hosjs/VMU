@@ -83,22 +83,23 @@ export function useTable<T>({
     }
   }, [page, perPage, sortBy, sortDirection, search, filters]);
 
-  // ✅ Sửa useEffect để tránh gọi lặp do React Strict Mode
+  // ✅ Sửa useEffect để tránh gọi 2 lần do React Strict Mode
   useEffect(() => {
-    let isMounted = true;
+    // Trong development với Strict Mode, React mount 2 lần
+    // Chỉ gọi API khi thực sự cần thiết
+    let cancelled = false;
 
-    // Chỉ gọi loadData nếu component vẫn mounted
     const fetchData = async () => {
-      if (isMounted) {
+      if (!cancelled) {
         await loadData();
       }
     };
 
     fetchData();
 
-    // Cleanup function để prevent memory leak
+    // Cleanup: prevent calling API if component unmounts
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
   }, [loadData]);
 

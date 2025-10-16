@@ -9,7 +9,6 @@
 
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { usePermissions } from '~/hooks/usePermissions';
 import { invoiceService, paymentService } from '~/services';
 import {
   CurrencyDollarIcon,
@@ -17,10 +16,14 @@ import {
   ArrowTrendingUpIcon,
   ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '~/contexts/AuthContext';
 
+/**
+ * Financial Module Index
+ */
 export default function FinancialIndex() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { hasPermission } = useAuth();
   const [invoiceStats, setInvoiceStats] = useState<any>(null);
   const [paymentStats, setPaymentStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +54,12 @@ export default function FinancialIndex() {
     }
   };
 
-  if (!hasPermission('invoices.view') && !hasPermission('payments.view') && !hasPermission('settlements.view')) {
+  // Check if user has any financial module permission
+  const hasAnyPermission = hasPermission('invoices.view') ||
+                          hasPermission('payments.view') ||
+                          hasPermission('settlements.view');
+
+  if (!hasAnyPermission) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Bạn không có quyền truy cập module này</p>

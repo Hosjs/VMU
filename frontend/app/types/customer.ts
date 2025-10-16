@@ -7,6 +7,7 @@ export interface Customer {
   birth_date?: string;
   gender?: 'male' | 'female' | 'other';
   user_id?: number;
+  customer_code?: string; // ✅ Thêm customer_code
   insurance_company?: string;
   insurance_number?: string;
   insurance_expiry?: string;
@@ -17,6 +18,7 @@ export interface Customer {
   updated_at: string;
   user?: any;
   vehicles?: any[];
+  vehicles_count?: number; // ✅ Thêm vehicles_count từ backend
 }
 
 export interface CustomerVehicle {

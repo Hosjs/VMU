@@ -31,7 +31,8 @@ export interface UserStatistics {
 class UserService {
   private readonly BASE_PATH = '/management/users';
 
-  async getUsers(params: TableQueryParams): Promise<PaginatedResponse<AuthUser>> {
+  // ✅ Arrow function để bind context - FIX context loss
+  getUsers = async (params: TableQueryParams): Promise<PaginatedResponse<AuthUser>> => {
     return apiService.getPaginated<AuthUser>(this.BASE_PATH, params);
   }
 

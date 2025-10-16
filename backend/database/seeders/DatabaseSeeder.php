@@ -28,121 +28,228 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 2. USERS (Admin)
+        // 2. USERS WITH ROLES
         // =====================
-        $this->command->info('👤 Đang tạo Admin user...');
+        $this->command->info('👥 Đang tạo Users với Roles...');
 
-        $adminRole = Role::where('name', 'admin')->first();
+        $roles = Role::all()->keyBy('name');
 
+        // Admin User - FULL QUYỀN
         $admin = User::create([
-            'name' => 'Admin',
+            'name' => 'Nguyễn Văn Admin',
             'email' => 'admin@gara.com',
             'password' => Hash::make('password'),
             'phone' => '0901234567',
             'employee_code' => 'EMP-001',
-            'position' => 'Quản trị viên',
+            'position' => 'Quản trị viên hệ thống',
             'department' => 'Quản lý',
-            'hire_date' => now()->subYears(2),
+            'hire_date' => now()->subYears(3),
+            'salary' => 30000000,
+            'role_id' => $roles['admin']->id, // ✅ Gán role trực tiếp
+            'custom_permissions' => null, // Admin không cần custom permissions
             'is_active' => true,
             'email_verified_at' => now(),
         ]);
 
-        if ($adminRole) {
-            UserRole::create([
-                'user_id' => $admin->id,
-                'role_id' => $adminRole->id,
-            ]);
-        }
+        // Log vào user_roles cho audit trail
+        UserRole::create([
+            'user_id' => $admin->id,
+            'role_id' => $roles['admin']->id,
+            'assigned_by' => null, // System assigned
+            'is_active' => true,
+        ]);
 
-        $this->command->info('✅ Đã tạo Admin: admin@gara.com / password');
+        // Manager User
+        $manager = User::create([
+            'name' => 'Trần Thị Manager',
+            'email' => 'manager@gara.com',
+            'password' => Hash::make('password'),
+            'phone' => '0902345678',
+            'employee_code' => 'EMP-002',
+            'position' => 'Giám đốc điều hành',
+            'department' => 'Quản lý',
+            'hire_date' => now()->subYears(2),
+            'salary' => 25000000,
+            'role_id' => $roles['manager']->id, // ✅ Gán role trực tiếp
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        UserRole::create([
+            'user_id' => $manager->id,
+            'role_id' => $roles['manager']->id,
+            'assigned_by' => $admin->id,
+            'is_active' => true,
+        ]);
+
+        // Accountant User
+        $accountant = User::create([
+            'name' => 'Lê Văn Kế Toán',
+            'email' => 'accountant@gara.com',
+            'password' => Hash::make('password'),
+            'phone' => '0903456789',
+            'employee_code' => 'EMP-003',
+            'position' => 'Kế toán trưởng',
+            'department' => 'Kế toán',
+            'hire_date' => now()->subYears(2),
+            'salary' => 15000000,
+            'role_id' => $roles['accountant']->id, // ✅ Gán role trực tiếp
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        UserRole::create([
+            'user_id' => $accountant->id,
+            'role_id' => $roles['accountant']->id,
+            'assigned_by' => $admin->id,
+            'is_active' => true,
+        ]);
+
+        // Mechanic Users
+        $mechanic1 = User::create([
+            'name' => 'Phạm Văn Sửa',
+            'email' => 'mechanic1@gara.com',
+            'password' => Hash::make('password'),
+            'phone' => '0904567890',
+            'employee_code' => 'EMP-004',
+            'position' => 'Thợ cơ khí chính',
+            'department' => 'Kỹ thuật',
+            'hire_date' => now()->subYear(),
+            'salary' => 12000000,
+            'role_id' => $roles['mechanic']->id, // ✅ Gán role trực tiếp
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        UserRole::create([
+            'user_id' => $mechanic1->id,
+            'role_id' => $roles['mechanic']->id,
+            'assigned_by' => $admin->id,
+            'is_active' => true,
+        ]);
+
+        $mechanic2 = User::create([
+            'name' => 'Hoàng Văn Điện',
+            'email' => 'mechanic2@gara.com',
+            'password' => Hash::make('password'),
+            'phone' => '0905678901',
+            'employee_code' => 'EMP-005',
+            'position' => 'Thợ điện',
+            'department' => 'Kỹ thuật',
+            'hire_date' => now()->subMonths(6),
+            'salary' => 10000000,
+            'role_id' => $roles['mechanic']->id, // ✅ Gán role trực tiếp
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        UserRole::create([
+            'user_id' => $mechanic2->id,
+            'role_id' => $roles['mechanic']->id,
+            'assigned_by' => $admin->id,
+            'is_active' => true,
+        ]);
+
+        // Employee Users
+        $employee1 = User::create([
+            'name' => 'Ngô Thị Tư Vấn',
+            'email' => 'employee1@gara.com',
+            'password' => Hash::make('password'),
+            'phone' => '0906789012',
+            'employee_code' => 'EMP-006',
+            'position' => 'Nhân viên tư vấn',
+            'department' => 'Dịch vụ khách hàng',
+            'hire_date' => now()->subMonths(8),
+            'salary' => 8000000,
+            'role_id' => $roles['employee']->id, // ✅ Gán role trực tiếp
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        UserRole::create([
+            'user_id' => $employee1->id,
+            'role_id' => $roles['employee']->id,
+            'assigned_by' => $admin->id,
+            'is_active' => true,
+        ]);
+
+        // Warehouse User
+        $warehouse = User::create([
+            'name' => 'Đỗ Văn Kho',
+            'email' => 'warehouse@gara.com',
+            'password' => Hash::make('password'),
+            'phone' => '0907890123',
+            'employee_code' => 'EMP-007',
+            'position' => 'Quản lý kho',
+            'department' => 'Kho vận',
+            'hire_date' => now()->subMonths(10),
+            'salary' => 9000000,
+            'role_id' => $roles['warehouse']->id, // ✅ Gán role trực tiếp
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        UserRole::create([
+            'user_id' => $warehouse->id,
+            'role_id' => $roles['warehouse']->id,
+            'assigned_by' => $admin->id,
+            'is_active' => true,
+        ]);
+
+        $this->command->info('✅ Đã tạo 7 users với roles');
+        $this->command->table(
+            ['Email', 'Role', 'Position'],
+            [
+                [$admin->email, 'Admin', $admin->position],
+                [$manager->email, 'Manager', $manager->position],
+                [$accountant->email, 'Accountant', $accountant->position],
+                [$mechanic1->email, 'Mechanic', $mechanic1->position],
+                [$mechanic2->email, 'Mechanic', $mechanic2->position],
+                [$employee1->email, 'Employee', $employee1->position],
+                [$warehouse->email, 'Warehouse', $warehouse->position],
+            ]
+        );
         $this->command->newLine();
 
         // =====================
-        // 3. VEHICLE BRANDS & MODELS
+        // 3. MASTER DATA
         // =====================
-        $this->command->info('🚗 Đang tạo Vehicle Brands & Models...');
+        $this->command->info('📦 Đang tạo Master Data...');
         $this->call([
+            // Tạo Brands và Models TRƯỚC để Products và Vehicles có thể reference
             VehicleBrandSeeder::class,
             VehicleModelSeeder::class,
-        ]);
-        $this->command->newLine();
 
-        // =====================
-        // 4. CATEGORIES (CHỈ PHỤ TÙNG)
-        // =====================
-        $this->command->info('📦 Đang tạo Categories (phụ tùng)...');
-        $this->call([
+            // Sau đó mới tạo Categories, Products, Services
             CategorySeeder::class,
-        ]);
-        $this->command->newLine();
-
-        // =====================
-        // 5. SERVICES (6 DỊCH VỤ CHÍNH - ĐỘC LẬP)
-        // =====================
-        $this->command->info('🔧 Đang tạo Services (độc lập)...');
-        $this->call([
             ServiceSeeder::class,
-        ]);
-        $this->command->newLine();
-
-        // =====================
-        // 6. PROVIDERS (GARA + NHÀ CUNG CẤP)
-        // =====================
-        $this->command->info('🏢 Đang tạo Providers...');
-        $this->call([
-            ProviderSeeder::class,
-        ]);
-        $this->command->newLine();
-
-        // =====================
-        // 7. WAREHOUSES
-        // =====================
-        $this->command->info('🏭 Đang tạo Warehouses...');
-        $this->call([
-            WarehouseSeeder::class,
-        ]);
-        $this->command->newLine();
-
-        // =====================
-        // 8. PRODUCTS (PHỤ TÙNG)
-        // =====================
-        $this->command->info('📦 Đang tạo Products...');
-        $this->call([
             ProductSeeder::class,
-        ]);
-        $this->command->newLine();
 
-        // =====================
-        // 9. COMPLETE WORKFLOW DATA
-        // =====================
-        $this->command->info('📊 Đang tạo dữ liệu workflow hoàn chỉnh...');
-        $this->call([
-            CompleteDataSeeder::class,
+            // Cuối cùng tạo Customers, Vehicles, Warehouses, Providers
+            WarehouseSeeder::class,
+            ProviderSeeder::class,
+            CustomerSeeder::class,
+            VehicleSeeder::class,
         ]);
-        $this->command->newLine();
 
-        // =====================
-        // HOÀN TẤT
-        // =====================
+        $this->command->newLine();
         $this->command->info('✅ Seed database hoàn tất!');
         $this->command->newLine();
-        $this->command->info('📊 TỔNG KẾT:');
-        $this->command->info('   - Roles: ' . Role::count());
-        $this->command->info('   - Users: ' . User::count());
-        $this->command->info('   - Categories: ' . \App\Models\Category::count() . ' (CHỈ phụ tùng)');
-        $this->command->info('   - Services: ' . \App\Models\Service::count() . ' (6 dịch vụ chính - độc lập)');
-        $this->command->info('   - Vehicle Brands: ' . \App\Models\VehicleBrand::count());
-        $this->command->info('   - Vehicle Models: ' . \App\Models\VehicleModel::count());
-        $this->command->info('   - Providers: ' . \App\Models\Provider::count() . ' (gara + supplier)');
-        $this->command->info('   - Warehouses: ' . \App\Models\Warehouse::count());
-        $this->command->info('   - Products: ' . \App\Models\Product::count());
-        $this->command->info('   - Customers: ' . \App\Models\Customer::count());
-        $this->command->info('   - Vehicles: ' . \App\Models\Vehicle::count());
-        $this->command->info('   - Service Requests: ' . \App\Models\ServiceRequest::count());
-        $this->command->info('   - Orders: ' . \App\Models\Order::count());
-        $this->command->info('   - Order Items: ' . \App\Models\OrderItem::count());
-        $this->command->info('   - Vehicle Service History: ' . \App\Models\VehicleServiceHistory::count());
-        $this->command->newLine();
-        $this->command->info('🎉 Database đã sẵn sàng với dữ liệu test hoàn chỉnh!');
+
+        // Display login credentials
+        $this->command->table(
+            ['Role', 'Email', 'Password'],
+            [
+                ['Admin', 'admin@gara.com', 'password'],
+                ['Manager', 'manager@gara.com', 'password'],
+                ['Accountant', 'accountant@gara.com', 'password'],
+                ['Mechanic', 'mechanic1@gara.com', 'password'],
+                ['Mechanic', 'mechanic2@gara.com', 'password'],
+                ['Employee', 'employee1@gara.com', 'password'],
+                ['Employee', 'employee2@gara.com', 'password'],
+                ['Warehouse', 'warehouse@gara.com', 'password'],
+                ['Custom', 'custom@gara.com', 'password'],
+            ]
+        );
     }
 }

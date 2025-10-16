@@ -25,8 +25,8 @@ interface PageTransitionContextType {
   isTransitioning: boolean;
   progress: number;
   setIsTransitioning: (value: boolean) => void;
-  transitionType: 'default' | 'progress' | 'car' | 'gradient';
-  setTransitionType: (type: 'default' | 'progress' | 'car' | 'gradient') => void;
+  transitionType: 'default' | 'progress' | 'car' | 'gradient' | 'preloader';
+  setTransitionType: (type: 'default' | 'progress' | 'car' | 'gradient' | 'preloader') => void;
   animationType: 'fade' | 'slide' | 'scale' | 'blur' | 'default';
   setAnimationType: (type: 'fade' | 'slide' | 'scale' | 'blur' | 'default') => void;
 }
@@ -576,7 +576,7 @@ export const usePageTransition = () => useContext(PageTransitionContext);
 export function PageTransitionProvider({ children }: { children: React.ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [transitionType, setTransitionType] = useState<'default' | 'progress' | 'car' | 'gradient'>('gradient');
+  const [transitionType, setTransitionType] = useState<'default' | 'progress' | 'car' | 'gradient' | 'preloader'>('gradient');
   const [animationType, setAnimationType] = useState<'fade' | 'slide' | 'scale' | 'blur' | 'default'>('default');
   const location = useLocation();
   const navigation = useNavigation();
@@ -710,7 +710,7 @@ export function useNavigateWithTransition() {
   const navigateWithTransition = (
     to: string,
     options?: {
-      transitionType?: 'default' | 'progress' | 'car' | 'gradient';
+      transitionType?: 'default' | 'progress' | 'car' | 'gradient' | 'preloader';
       animationType?: 'fade' | 'slide' | 'scale' | 'blur' | 'default';
       delay?: number;
       replace?: boolean;
@@ -786,7 +786,3 @@ export function useRouteAnimation(routePath: string, animation: 'fade' | 'slide'
  *    const navigate = useNavigateWithTransition();
  *    navigate('/path', { transitionType: 'car', animationType: 'fade' });
  */
-
-
-
-

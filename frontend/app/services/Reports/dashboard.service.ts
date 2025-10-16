@@ -1,12 +1,19 @@
 import { apiService } from '../api.service';
 
 export interface DashboardOverview {
-  total_customers: number;
-  total_orders: number;
-  total_revenue: number;
-  total_profit: number;
-  pending_orders: number;
-  low_stock_products: number;
+  orders: {
+    total: number;
+    pending: number;
+    in_progress: number;
+  };
+  revenue: {
+    today: number;
+    this_month: number;
+  };
+  customers: {
+    total: number;
+    new_this_month: number;
+  };
 }
 
 export interface RevenueReport {
@@ -32,7 +39,15 @@ class DashboardService {
   private readonly BASE_PATH = '/reports';
 
   async getOverview(): Promise<DashboardOverview> {
-    return apiService.get<DashboardOverview>(`${this.BASE_PATH}/dashboard/overview`);
+    console.log('🔍 Calling dashboard API:', `${this.BASE_PATH}/dashboard/overview`);
+    try {
+      const response = await apiService.get<DashboardOverview>(`${this.BASE_PATH}/dashboard/overview`);
+      console.log('✅ Dashboard API Response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Dashboard API Error:', error);
+      throw error;
+    }
   }
 
   async getRevenueReport(params?: { from?: string; to?: string }): Promise<RevenueReport[]> {
@@ -49,4 +64,3 @@ class DashboardService {
 }
 
 export const dashboardService = new DashboardService();
-

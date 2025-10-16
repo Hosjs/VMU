@@ -54,8 +54,8 @@ export interface Vehicle {
   created_at: string;
   updated_at: string;
   customer?: any;
-  brand?: VehicleBrand;
-  model?: VehicleModel;
+  brand?: VehicleBrand; // ✅ Thêm brand object
+  model?: VehicleModel; // ✅ Thêm model object
 }
 
 export interface VehicleInspection {

@@ -5,10 +5,11 @@ namespace App\Models;
 use App\QueryScopes\ProviderScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
 {
-    use HasFactory, ProviderScopes;
+    use HasFactory, ProviderScopes, SoftDeletes;
 
     protected $fillable = [
         'code',

@@ -1,5 +1,6 @@
 import { apiService } from '../api.service';
 import type { Role } from '~/types/auth';
+import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
 export interface RoleFormData {
   name: string;
@@ -23,8 +24,8 @@ export interface AvailablePermissions {
 class RoleService {
   private readonly BASE_PATH = '/management/roles';
 
-  async getRoles(params?: { search?: string; is_active?: boolean }): Promise<Role[]> {
-    return apiService.get<Role[]>(this.BASE_PATH, params);
+  async getRoles(params?: TableQueryParams): Promise<PaginatedResponse<Role>> {
+    return apiService.get<PaginatedResponse<Role>>(this.BASE_PATH, params);
   }
 
   async getRoleById(id: number): Promise<Role> {

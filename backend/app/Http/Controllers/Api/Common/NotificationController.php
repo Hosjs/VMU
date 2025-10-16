@@ -18,8 +18,11 @@ class NotificationController extends Controller
 
         // Filter by user or role
         $query->where(function ($q) use ($user) {
-            $q->where('user_id', $user->id)
-              ->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+            $q->where('user_id', $user->id);
+            // Only check role if user has one
+            if ($user->role) {
+                $q->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+            }
         });
 
         // Filter by read status
@@ -54,14 +57,20 @@ class NotificationController extends Controller
         $user = $request->user();
 
         $count = Notification::where(function ($q) use ($user) {
-            $q->where('user_id', $user->id)
-              ->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+            $q->where('user_id', $user->id);
+            // Only check role if user has one
+            if ($user->role) {
+                $q->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+            }
         })
         ->unread()
         ->notExpired()
         ->count();
 
-        return response()->json(['count' => $count]);
+        return response()->json([
+            'success' => true,
+            'data' => ['count' => $count]
+        ]);
     }
 
     /**
@@ -86,8 +95,11 @@ class NotificationController extends Controller
         $user = $request->user();
 
         Notification::where(function ($q) use ($user) {
-            $q->where('user_id', $user->id)
-              ->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+            $q->where('user_id', $user->id);
+            // Only check role if user has one
+            if ($user->role) {
+                $q->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+            }
         })
         ->unread()
         ->update([
@@ -109,4 +121,3 @@ class NotificationController extends Controller
         return response()->json(['message' => 'Đã xóa thông báo']);
     }
 }
-

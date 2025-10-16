@@ -33,7 +33,7 @@ use App\Http\Controllers\Api\Reports\DashboardController;
 
 // Common
 use App\Http\Controllers\Api\Common\BadgeController;
-use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Api\Common\NotificationController;
 
 /*
 |--------------------------------------------------------------------------

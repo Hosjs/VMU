@@ -1,6 +1,6 @@
 /**
  * Permission Management Utilities
- * Xử lý kiểm tra quyền hạn của user dựa trên role và permissions
+ * Xử lý kiểm tra quyền hạn của user dựa trên role v�� permissions
  */
 
 import type { AuthUser, Role } from '~/types/auth';
@@ -19,6 +19,7 @@ export type PermissionMap = Record<string, string[]>;
  * Danh sách tất cả permissions có sẵn trong hệ thống
  */
 export const AVAILABLE_PERMISSIONS: PermissionMap = {
+  dashboard: ['view'],
   users: ['view', 'create', 'edit', 'delete'],
   roles: ['view', 'create', 'edit', 'delete'],
   customers: ['view', 'create', 'edit', 'delete'],

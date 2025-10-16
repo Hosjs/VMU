@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router';
 import { useState, useMemo, useCallback } from 'react';
 import type { AuthUser } from '~/types/auth';
 import { useBadgeCounts } from '~/hooks/useBadgeCounts';
-import { usePermissions } from '~/hooks/usePermissions';
+import { useAuth } from '~/contexts/AuthContext';
 import {
   HomeIcon,
   UsersIcon,
@@ -51,7 +51,7 @@ interface SidebarProps {
  */
 export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   const location = useLocation();
-  const { hasAnyPermission } = usePermissions();
+  const { hasAnyPermission } = useAuth();
 
   // Sử dụng hook để lấy badge counts động
   const { counts } = useBadgeCounts({

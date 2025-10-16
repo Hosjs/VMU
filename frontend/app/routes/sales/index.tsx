@@ -9,7 +9,7 @@
 
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { usePermissions } from '~/hooks/usePermissions';
+import { useAuth } from '~/contexts/AuthContext';
 import { orderService } from '~/services';
 import {
   ShoppingCartIcon,
@@ -30,7 +30,7 @@ interface OrderStats {
 
 export default function SalesIndex() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { hasPermission } = useAuth();
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -116,11 +116,11 @@ export default function SalesIndex() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Đang xử lý</p>
-              <p className="text-3xl font-bold text-blue-600">
+              <p className="text-3xl font-bold text-yellow-600">
                 {loading ? '...' : stats?.in_progress || 0}
               </p>
             </div>
-            <ShoppingCartIcon className="w-12 h-12 text-blue-500" />
+            <ClipboardDocumentListIcon className="w-12 h-12 text-yellow-500" />
           </div>
         </div>
 
@@ -149,46 +149,52 @@ export default function SalesIndex() {
         </div>
       </div>
 
-      {/* Revenue */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-blue-100 text-sm mb-1">Tổng doanh thu</p>
-            <p className="text-3xl font-bold">
-              {loading ? '...' : formatCurrency(stats?.total_revenue || 0)}
-            </p>
+      {/* Revenue Summary */}
+      {stats && (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm mb-1">Tổng doanh thu</p>
+              <p className="text-3xl font-bold">
+                {loading ? '...' : formatCurrency(stats?.total_revenue || 0)}
+              </p>
+            </div>
+            <ShoppingCartIcon className="w-16 h-16 text-blue-200" />
           </div>
-          <ShoppingCartIcon className="w-16 h-16 text-blue-200" />
         </div>
-      </div>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div
-          onClick={() => navigate('/sales/orders')}
-          className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center">
-            <ShoppingCartIcon className="w-12 h-12 text-blue-500 mr-4" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Quản lý Đơn hàng</h3>
-              <p className="text-gray-600 text-sm">Xem và quản lý đơn hàng</p>
+        {hasPermission('orders.view') && (
+          <div
+            onClick={() => navigate('/sales/orders')}
+            className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center">
+              <ShoppingCartIcon className="w-12 h-12 text-blue-500 mr-4" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Đơn hàng</h3>
+                <p className="text-gray-600 text-sm">Quản lý đơn hàng bán hàng</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div
-          onClick={() => navigate('/sales/service-requests')}
-          className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center">
-            <ClipboardDocumentListIcon className="w-12 h-12 text-purple-500 mr-4" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Yêu cầu Dịch vụ</h3>
-              <p className="text-gray-600 text-sm">Xem yêu cầu từ khách hàng</p>
+        {hasPermission('orders.view') && (
+          <div
+            onClick={() => navigate('/sales/service-requests')}
+            className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center">
+              <ClipboardDocumentListIcon className="w-12 h-12 text-green-500 mr-4" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Yêu cầu dịch vụ</h3>
+                <p className="text-gray-600 text-sm">Quản lý yêu cầu sửa chữa</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

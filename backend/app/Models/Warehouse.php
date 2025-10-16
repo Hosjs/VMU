@@ -5,10 +5,11 @@ namespace App\Models;
 use App\QueryScopes\WarehouseScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Warehouse extends Model
 {
-    use HasFactory, WarehouseScopes;
+    use HasFactory, WarehouseScopes, SoftDeletes;
 
     protected $fillable = [
         'code',

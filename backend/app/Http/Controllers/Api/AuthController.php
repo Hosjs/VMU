@@ -36,6 +36,17 @@ class AuthController extends Controller
         }
 
         try {
+            // Lấy role mặc định 'employee'
+            $defaultRole = Role::where('name', 'employee')->first();
+
+            if (!$defaultRole) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Default role not found. Please run RoleSeeder first.'
+                ], 500);
+            }
+
+            // Tạo user với role_id
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -43,18 +54,17 @@ class AuthController extends Controller
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'gender' => $request->gender,
+                'role_id' => $defaultRole->id, // ✅ Gán role_id trực tiếp
                 'is_active' => true,
             ]);
 
-            // Gán role mặc định là 'employee'
-            $defaultRole = Role::where('name', 'employee')->first();
-            if ($defaultRole) {
-                UserRole::create([
-                    'user_id' => $user->id,
-                    'role_id' => $defaultRole->id,
-                    'is_active' => true,
-                ]);
-            }
+            // Log vào user_roles cho audit trail
+            UserRole::create([
+                'user_id' => $user->id,
+                'role_id' => $defaultRole->id,
+                'assigned_by' => null, // Self registration
+                'is_active' => true,
+            ]);
 
             // Tạo JWT token
             $token = $user->createToken('GarageApp')->accessToken;
@@ -116,6 +126,9 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // Load role qua relationship (role_id → roles)
+        $user->load('role');
+
         // Tạo JWT token
         $token = $user->createToken('GarageApp')->accessToken;
 
@@ -123,7 +136,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login successful',
             'data' => [
-                'user' => $user->load('role'),
+                'user' => $user, // Đã load role
                 'token' => $token,
                 'token_type' => 'Bearer',
             ]
@@ -144,10 +157,13 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Load role và custom_permissions
+        $user->load('role');
+
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $user->load('role')
+                'user' => $user
             ]
         ]);
     }

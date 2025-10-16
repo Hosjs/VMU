@@ -23,12 +23,18 @@ class ProductSeeder extends Seeder
         $brakeCat = Category::where('code', 'BRAKE')->first();
         $tireCat = Category::where('code', 'TIRE')->first();
 
-        // Lấy brands
+        // Kiểm tra nếu categories chưa có thì return
+        if (!$engineOilCat || !$oilFilterCat || !$airFilterCat || !$brakeCat || !$tireCat) {
+            $this->command->warn('Categories not found. Please run CategorySeeder first.');
+            return;
+        }
+
+        // Lấy brands (có thể null nếu chưa seed)
         $toyota = VehicleBrand::where('name', 'Toyota')->first();
         $honda = VehicleBrand::where('name', 'Honda')->first();
         $mazda = VehicleBrand::where('name', 'Mazda')->first();
 
-        // Lấy models
+        // Lấy models (có thể null nếu chưa seed)
         $vios = VehicleModel::where('name', 'Vios')->first();
         $camry = VehicleModel::where('name', 'Camry')->first();
         $civic = VehicleModel::where('name', 'Civic')->first();
@@ -42,7 +48,7 @@ class ProductSeeder extends Seeder
                 'sku' => 'CASTROL-5W30-4L',
                 'description' => 'Dầu động cơ tổng hợp cao cấp Castrol 5W-30 dành cho Toyota',
                 'category_id' => $engineOilCat->id,
-                'vehicle_brand_id' => $toyota->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
                 'vehicle_model_id' => null, // Dùng chung cho tất cả dòng Toyota
                 'compatible_years' => '2015,2016,2017,2018,2019,2020,2021,2022,2023,2024',
                 'is_universal' => false,
@@ -64,7 +70,7 @@ class ProductSeeder extends Seeder
                 'sku' => 'SHELL-5W40-4L',
                 'description' => 'Dầu động cơ tổng hợp Shell Helix 5W-40 cho Honda',
                 'category_id' => $engineOilCat->id,
-                'vehicle_brand_id' => $honda->id,
+                'vehicle_brand_id' => $honda ? $honda->id : null,
                 'vehicle_model_id' => null,
                 'compatible_years' => '2015,2016,2017,2018,2019,2020,2021,2022,2023,2024',
                 'is_universal' => false,
@@ -108,8 +114,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'TOY-VIOS-OILF-001',
                 'description' => 'Lọc dầu chính hãng Toyota cho Vios đời 2018-2023',
                 'category_id' => $oilFilterCat->id,
-                'vehicle_brand_id' => $toyota->id,
-                'vehicle_model_id' => $vios->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
+                'vehicle_model_id' => $vios ? $vios->id : null,
                 'compatible_years' => '2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 45000,
@@ -130,8 +136,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'TOY-CAMRY-OILF-001',
                 'description' => 'Lọc dầu chính hãng Toyota cho Camry đời 2019-2024',
                 'category_id' => $oilFilterCat->id,
-                'vehicle_brand_id' => $toyota->id,
-                'vehicle_model_id' => $camry->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
+                'vehicle_model_id' => $camry ? $camry->id : null,
                 'compatible_years' => '2019,2020,2021,2022,2023,2024',
                 'is_universal' => false,
                 'cost_price' => 55000,
@@ -152,8 +158,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'HON-CIVIC-OILF-001',
                 'description' => 'Lọc dầu chính hãng Honda cho Civic đời 2016-2023',
                 'category_id' => $oilFilterCat->id,
-                'vehicle_brand_id' => $honda->id,
-                'vehicle_model_id' => $civic->id,
+                'vehicle_brand_id' => $honda ? $honda->id : null,
+                'vehicle_model_id' => $civic ? $civic->id : null,
                 'compatible_years' => '2016,2017,2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 48000,
@@ -176,8 +182,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'TOY-VIOS-AIRF-001',
                 'description' => 'Lọc gió động cơ chính hãng Toyota cho Vios đời 2018-2023',
                 'category_id' => $airFilterCat->id,
-                'vehicle_brand_id' => $toyota->id,
-                'vehicle_model_id' => $vios->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
+                'vehicle_model_id' => $vios ? $vios->id : null,
                 'compatible_years' => '2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 85000,
@@ -198,8 +204,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'HON-CRV-AIRF-001',
                 'description' => 'Lọc gió động cơ chính hãng Honda cho CR-V đời 2017-2023',
                 'category_id' => $airFilterCat->id,
-                'vehicle_brand_id' => $honda->id,
-                'vehicle_model_id' => $crv->id,
+                'vehicle_brand_id' => $honda ? $honda->id : null,
+                'vehicle_model_id' => $crv ? $crv->id : null,
                 'compatible_years' => '2017,2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 95000,
@@ -222,8 +228,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'TOY-VIOS-BRKP-F01',
                 'description' => 'Má phanh trước chính hãng Toyota cho Vios, bộ 4 má',
                 'category_id' => $brakeCat->id,
-                'vehicle_brand_id' => $toyota->id,
-                'vehicle_model_id' => $vios->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
+                'vehicle_model_id' => $vios ? $vios->id : null,
                 'compatible_years' => '2015,2016,2017,2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 380000,
@@ -244,8 +250,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'TOY-VIOS-BRKP-R01',
                 'description' => 'Má phanh sau chính hãng Toyota cho Vios, bộ 4 má',
                 'category_id' => $brakeCat->id,
-                'vehicle_brand_id' => $toyota->id,
-                'vehicle_model_id' => $vios->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
+                'vehicle_model_id' => $vios ? $vios->id : null,
                 'compatible_years' => '2015,2016,2017,2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 320000,
@@ -268,8 +274,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'BRIDGE-185-60-R15',
                 'description' => 'Lốp Bridgestone Turanza T001 185/60R15 cho Toyota Vios',
                 'category_id' => $tireCat->id,
-                'vehicle_brand_id' => $toyota->id,
-                'vehicle_model_id' => $vios->id,
+                'vehicle_brand_id' => $toyota ? $toyota->id : null,
+                'vehicle_model_id' => $vios ? $vios->id : null,
                 'compatible_years' => '2015,2016,2017,2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 850000,
@@ -290,8 +296,8 @@ class ProductSeeder extends Seeder
                 'sku' => 'MICHELIN-215-55-R17',
                 'description' => 'Lốp Michelin Primacy SUV 215/55R17 cho Honda CR-V',
                 'category_id' => $tireCat->id,
-                'vehicle_brand_id' => $honda->id,
-                'vehicle_model_id' => $crv->id,
+                'vehicle_brand_id' => $honda ? $honda->id : null,
+                'vehicle_model_id' => $crv ? $crv->id : null,
                 'compatible_years' => '2017,2018,2019,2020,2021,2022,2023',
                 'is_universal' => false,
                 'cost_price' => 1450000,

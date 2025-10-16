@@ -29,15 +29,24 @@ class UserResource extends JsonResource
 
             // Salary (Admin Only)
             'salary' => $this->when(
-                $request->user()?->role?->name === 'admin',
+                $request->user()?->hasRole('admin'),
                 (float) $this->salary
             ),
 
-            // Status & Role
-            'is_active' => (bool) $this->is_active,
+            // Role & Permissions
+            'role_id' => $this->role_id, // ✅ Thêm role_id
             'role' => new RoleResource($this->whenLoaded('role')),
             'role_name' => $this->role?->name,
+            'role_display_name' => $this->role?->display_name,
 
+            // Custom Permissions (Admin Only)
+            'custom_permissions' => $this->when(
+                $request->user()?->hasRole('admin'),
+                $this->custom_permissions
+            ),
+
+            // Status
+            'is_active' => (bool) $this->is_active,
             'notes' => $this->notes,
             'email_verified_at' => $this->email_verified_at?->format('Y-m-d H:i:s'),
 
@@ -46,4 +55,3 @@ class UserResource extends JsonResource
         ];
     }
 }
-

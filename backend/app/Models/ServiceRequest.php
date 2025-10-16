@@ -5,10 +5,11 @@ namespace App\Models;
 use App\QueryScopes\ServiceRequestScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ServiceRequest extends Model
 {
-    use HasFactory, ServiceRequestScopes;
+    use HasFactory, ServiceRequestScopes, SoftDeletes;
 
     protected $fillable = [
         'code',

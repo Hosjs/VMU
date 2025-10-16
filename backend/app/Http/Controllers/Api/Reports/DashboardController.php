@@ -21,22 +21,32 @@ class DashboardController extends Controller
 
     public function overview()
     {
-        $this->authorizePermission('dashboard.view');
+        // Dashboard available for all authenticated users
+        // No specific permission required
+
+        $user = auth()->user();
 
         // Scope data theo permission
         $ordersQuery = Order::query();
-        $ordersQuery = $this->scopeByPermission(
-            $ordersQuery,
-            'orders.manage_all',
-            'orders.manage_own',
-            'salesperson_id'
-        );
+
+        // Only filter by user if they don't have manage_all permission
+        if (!$user->hasPermission('orders.manage_all')) {
+            if ($user->hasPermission('orders.manage_own')) {
+                $ordersQuery->where(function($q) use ($user) {
+                    $q->where('salesperson_id', $user->id)
+                      ->orWhere('technician_id', $user->id);
+                });
+            } else {
+                // If no order permissions at all, return empty
+                $ordersQuery->whereRaw('1 = 0');
+            }
+        }
 
         $data = [
             'orders' => [
                 'total' => $ordersQuery->count(),
-                'pending' => $ordersQuery->where('status', 'pending')->count(),
-                'in_progress' => $ordersQuery->where('status', 'in_progress')->count(),
+                'pending' => (clone $ordersQuery)->where('status', 'pending')->count(),
+                'in_progress' => (clone $ordersQuery)->where('status', 'in_progress')->count(),
             ],
             'revenue' => [
                 'today' => Invoice::whereDate('created_at', today())->sum('total_amount'),
@@ -87,8 +97,6 @@ class DashboardController extends Controller
     public function profitReport()
     {
         $this->authorizePermission('reports.financial');
-
-        // Logic tính lợi nhuận
         $revenue = Invoice::where('status', 'paid')->sum('total_amount');
         $cost = Order::sum('cost_amount'); // Giả sử có trường này
 
@@ -139,4 +147,3 @@ class DashboardController extends Controller
         ]);
     }
 }
-

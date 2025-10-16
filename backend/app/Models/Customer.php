@@ -5,10 +5,11 @@ namespace App\Models;
 use App\QueryScopes\CustomerScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
 {
-    use HasFactory, CustomerScopes;
+    use HasFactory, CustomerScopes, SoftDeletes;
 
     protected $fillable = [
         'name',

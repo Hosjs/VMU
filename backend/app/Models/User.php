@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\QueryScopes\UserScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
@@ -11,7 +12,7 @@ use Laravel\Passport\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, UserScopes;
+    use HasApiTokens, HasFactory, Notifiable, UserScopes, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'department',
         'hire_date',
         'salary',
+        'role_id', // ✅ Thêm role_id vào fillable
         'is_active',
         'notes',
         'custom_permissions',
@@ -61,7 +63,7 @@ class User extends Authenticatable
             'hire_date' => 'date',
             'salary' => 'decimal:2',
             'is_active' => 'boolean',
-            'custom_permissions' => 'array',
+            'custom_permissions' => 'array', // JSON -> Array
         ];
     }
 
@@ -69,18 +71,28 @@ class User extends Authenticatable
     // RELATIONSHIPS
     // =====================
 
+    /**
+     * Get the role of the user (direct relationship)
+     * 1 User = 1 Role
+     */
     public function role()
     {
-        return $this->hasOneThrough(
-            Role::class,
-            UserRole::class,
-            'user_id',
-            'id',
-            'id',
-            'role_id'
-        )->where('user_roles.is_active', true);
+        return $this->belongsTo(Role::class);
     }
 
+    /**
+     * Get role history (audit trail)
+     * Lịch sử thay đổi role
+     */
+    public function roleHistory()
+    {
+        return $this->hasMany(UserRole::class)->orderBy('assigned_at', 'desc');
+    }
+
+    /**
+     * Get current role from user_roles (for backward compatibility)
+     * Deprecated: Sử dụng relation role() thay thế
+     */
     public function userRole()
     {
         return $this->hasOne(UserRole::class)->where('is_active', true);

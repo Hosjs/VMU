@@ -10,7 +10,6 @@ import {
 import { PageTransitionProvider } from "./components/LoadingSystem";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import { PermissionProvider } from "./contexts/PermissionContext";
 import "./app.css";
 
 export const links = () => [
@@ -53,13 +52,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ></div>
 
         <AuthProvider>
-            <PermissionProvider>
-                <NotificationProvider>
-                    <PageTransitionProvider>
-                        {children}
-                    </PageTransitionProvider>
-                </NotificationProvider>
-            </PermissionProvider>
+            <NotificationProvider>
+                <PageTransitionProvider>
+                    {children}
+                </PageTransitionProvider>
+            </NotificationProvider>
         </AuthProvider>
         <ScrollRestoration />
         <Scripts />

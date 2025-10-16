@@ -5,10 +5,11 @@ namespace App\Models;
 use App\QueryScopes\SettlementScopes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Settlement extends Model
 {
-    use HasFactory, SettlementScopes;
+    use HasFactory, SettlementScopes, SoftDeletes;
 
     protected $fillable = [
         'settlement_number',
@@ -113,4 +114,3 @@ class Settlement extends Model
         return $this->hasMany(SettlementPayment::class);
     }
 }
-

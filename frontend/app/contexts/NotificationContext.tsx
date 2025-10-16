@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';import { notificationService, type Notification } from '~/services/Common/notification.service';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { notificationService, type Notification } from '~/services/Common/notification.service';
 import { useAuth } from './AuthContext';
 
 interface NotificationContextType {

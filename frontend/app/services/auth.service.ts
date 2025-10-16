@@ -75,7 +75,22 @@ class AuthService {
    * Get current authenticated user from API
    */
   async getCurrentUser(): Promise<AuthUser> {
-    return apiService.get<AuthUser>('/auth/me');
+    const response = await apiService.get<any>('/auth/me');
+
+    // ✅ Backend trả về { user: {...} }, cần unwrap
+    const user = response.user || response;
+
+    // ✅ LƯU user vào localStorage để persist khi reload
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+
+    return user;
+  }
+
+  /**
+   * Update stored user in localStorage (không gọi API)
+   */
+  updateStoredUser(user: AuthUser): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   /**

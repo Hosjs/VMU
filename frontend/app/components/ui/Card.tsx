@@ -5,11 +5,15 @@ interface CardProps {
   className?: string;
   title?: string;
   footer?: ReactNode;
+  onClick?: () => void;
 }
 
-export function Card({ children, className = '', title, footer }: CardProps) {
+export function Card({ children, className = '', title, footer, onClick }: CardProps) {
   return (
-    <div className={`bg-white shadow rounded-lg overflow-hidden ${className}`}>
+    <div
+      className={`bg-white shadow rounded-lg overflow-hidden ${className}`}
+      onClick={onClick}
+    >
       {title && (
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">{title}</h3>
@@ -24,4 +28,3 @@ export function Card({ children, className = '', title, footer }: CardProps) {
     </div>
   );
 }
-

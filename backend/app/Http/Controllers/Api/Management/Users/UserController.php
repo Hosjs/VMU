@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Management\Users;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\UserRole;
 use App\Traits\HasPermissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -41,15 +42,14 @@ class UserController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
                   ->orWhere('employee_code', 'like', "%{$search}%");
             });
         }
 
-        // Filter by role
+        // Filter by role - SỬA: dùng role_id trực tiếp
         if ($roleId) {
-            $query->whereHas('userRole', function($q) use ($roleId) {
-                $q->where('role_id', $roleId);
-            });
+            $query->where('role_id', $roleId);
         }
 
         // Filter by status
@@ -64,15 +64,12 @@ class UserController extends Controller
 
         // Sort
         $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->input('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
 
         $users = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $users
-        ]);
+        return response()->json($users); // Laravel pagination format
     }
 
     /**
@@ -83,7 +80,7 @@ class UserController extends Controller
     {
         $this->authorizePermission('users.view');
 
-        $user = User::with(['role'])->findOrFail($id);
+        $user = User::with(['role', 'roleHistory'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -108,6 +105,9 @@ class UserController extends Controller
             'employee_code' => 'nullable|string|unique:users,employee_code',
             'position' => 'nullable|string',
             'department' => 'nullable|string',
+            'hire_date' => 'nullable|date',
+            'salary' => 'nullable|numeric',
+            'custom_permissions' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -115,6 +115,14 @@ class UserController extends Controller
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Chỉ admin mới được set custom_permissions
+        if ($request->has('custom_permissions') && !$request->user()->hasRole('admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only admin can set custom permissions'
+            ], 403);
         }
 
         $user = User::create([
@@ -125,21 +133,20 @@ class UserController extends Controller
             'employee_code' => $request->employee_code,
             'position' => $request->position,
             'department' => $request->department,
+            'hire_date' => $request->hire_date,
+            'salary' => $request->salary,
+            'role_id' => $request->role_id, // ✅ Gán role_id trực tiếp
+            'custom_permissions' => $request->custom_permissions,
             'is_active' => true,
         ]);
 
-        // Assign role
-        $user->userRole()->create([
+        // Log vào user_roles cho audit trail
+        UserRole::create([
+            'user_id' => $user->id,
             'role_id' => $request->role_id,
+            'assigned_by' => $request->user()->id,
             'is_active' => true,
         ]);
-
-        // Custom permissions (if provided)
-        if ($request->has('custom_permissions')) {
-            $user->update([
-                'custom_permissions' => $request->custom_permissions
-            ]);
-        }
 
         return response()->json([
             'success' => true,
@@ -187,9 +194,26 @@ class UserController extends Controller
         $user->update($data);
 
         // Update role if provided
-        if ($request->has('role_id')) {
-            $user->userRole()->update([
-                'role_id' => $request->role_id
+        if ($request->has('role_id') && $request->role_id != $user->role_id) {
+            $oldRoleId = $user->role_id;
+
+            // Cập nhật role_id trực tiếp trong users table
+            $user->update(['role_id' => $request->role_id]);
+
+            // Đánh dấu role cũ là inactive trong audit trail
+            if ($oldRoleId) {
+                UserRole::where('user_id', $user->id)
+                    ->where('role_id', $oldRoleId)
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+            }
+
+            // Tạo record mới trong audit trail
+            UserRole::create([
+                'user_id' => $user->id,
+                'role_id' => $request->role_id,
+                'assigned_by' => $request->user()->id,
+                'is_active' => true,
             ]);
         }
 

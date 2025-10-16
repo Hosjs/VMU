@@ -9,7 +9,7 @@
 
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { usePermissions } from '~/hooks/usePermissions';
+import { useAuth } from '~/contexts/AuthContext';
 import { customerService } from '~/services';
 import {
     UsersIcon,
@@ -19,20 +19,28 @@ import {
 } from '@heroicons/react/24/outline';
 
 interface CustomerStats {
-    total_customers: number;
-    active_customers: number;
-    total_vehicles: number;
-    new_this_month: number;
+    total: number;
+    active: number;
+    inactive: number;
+    with_insurance: number;
+    total_orders: number;
+    total_revenue: number;
+    total_vehicles?: number;
+    new_this_month?: number;
+    total_customers?: number;
+    active_customers?: number;
 }
 
 export default function CustomersIndex() {
     const navigate = useNavigate();
-    const { hasPermission } = usePermissions();
+    const { hasPermission } = useAuth();
     const [stats, setStats] = useState<CustomerStats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchStats();
+        if (hasPermission('customers.view')) {
+            fetchStats();
+        }
     }, []);
 
     const fetchStats = async () => {
@@ -47,6 +55,7 @@ export default function CustomersIndex() {
         }
     };
 
+    // Check if user has permission
     if (!hasPermission('customers.view')) {
         return (
             <div className="text-center py-12">
@@ -92,7 +101,7 @@ export default function CustomersIndex() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600">Khách hàng hoạt động</p>
-                            <p className="text-3xl font-bold text-gray-900">
+                            <p className="text-3xl font-bold text-green-600">
                                 {loading ? '...' : stats?.active_customers || 0}
                             </p>
                         </div>
@@ -103,8 +112,8 @@ export default function CustomersIndex() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Tổng số xe</p>
-                            <p className="text-3xl font-bold text-gray-900">
+                            <p className="text-sm text-gray-600">Tổng phương tiện</p>
+                            <p className="text-3xl font-bold text-purple-600">
                                 {loading ? '...' : stats?.total_vehicles || 0}
                             </p>
                         </div>
@@ -115,9 +124,9 @@ export default function CustomersIndex() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Mới tháng này</p>
-                            <p className="text-3xl font-bold text-gray-900">
-                                {loading ? '...' : stats?.new_this_month || 0}
+                            <p className="text-sm text-gray-600">Có bảo hiểm</p>
+                            <p className="text-3xl font-bold text-orange-600">
+                                {loading ? '...' : stats?.with_insurance || 0}
                             </p>
                         </div>
                         <ChartBarIcon className="w-12 h-12 text-orange-500" />
@@ -127,31 +136,35 @@ export default function CustomersIndex() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                    onClick={() => navigate('/customers/list')}
-                    className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
-                >
-                    <div className="flex items-center">
-                        <UsersIcon className="w-12 h-12 text-blue-500 mr-4" />
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Danh sách khách hàng</h3>
-                            <p className="text-gray-600 text-sm">Xem và quản lý khách hàng</p>
+                {hasPermission('customers.view') && (
+                    <div
+                        onClick={() => navigate('/customers/list')}
+                        className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+                    >
+                        <div className="flex items-center">
+                            <UsersIcon className="w-12 h-12 text-blue-500 mr-4" />
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">Danh sách khách hàng</h3>
+                                <p className="text-gray-600 text-sm">Quản lý thông tin khách hàng</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                <div
-                    onClick={() => navigate('/customers/vehicles')}
-                    className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
-                >
-                    <div className="flex items-center">
-                        <TruckIcon className="w-12 h-12 text-purple-500 mr-4" />
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Quản lý xe</h3>
-                            <p className="text-gray-600 text-sm">Xem và quản lý thông tin xe</p>
+                {hasPermission('vehicles.view') && (
+                    <div
+                        onClick={() => navigate('/customers/vehicles')}
+                        className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+                    >
+                        <div className="flex items-center">
+                            <TruckIcon className="w-12 h-12 text-purple-500 mr-4" />
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">Phương tiện</h3>
+                                <p className="text-gray-600 text-sm">Quản lý phương tiện khách hàng</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

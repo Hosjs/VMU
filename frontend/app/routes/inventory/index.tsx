@@ -9,40 +9,45 @@
 
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { usePermissions } from '~/hooks/usePermissions';
 import { productService } from '~/services';
+import { useAuth } from '~/contexts/AuthContext';
 import {
     CubeIcon,
     BuildingStorefrontIcon,
     ExclamationTriangleIcon,
-    ChartBarIcon,
     PlusIcon
 } from '@heroicons/react/24/outline';
 
 export default function InventoryIndex() {
     const navigate = useNavigate();
-    const { hasPermission } = usePermissions();
+    const { hasPermission } = useAuth();
+    const [stats, setStats] = useState<any>(null);
     const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (hasPermission('products.view')) {
-            fetchLowStock();
+            fetchStats();
         }
     }, []);
 
-    const fetchLowStock = async () => {
+    const fetchStats = async () => {
         try {
             setLoading(true);
-            const products = await productService.getLowStockProducts();
-            setLowStockProducts(products);
+            const [statsData, lowStock] = await Promise.all([
+                productService.getStatistics(),
+                productService.getLowStockProducts()
+            ]);
+            setStats(statsData);
+            setLowStockProducts(lowStock);
         } catch (error) {
-            console.error('Failed to fetch low stock:', error);
+            console.error('Failed to fetch inventory stats:', error);
         } finally {
             setLoading(false);
         }
     };
 
+    // Check permissions
     if (!hasPermission('products.view') && !hasPermission('warehouses.view')) {
         return (
             <div className="text-center py-12">
@@ -88,7 +93,9 @@ export default function InventoryIndex() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600">Tổng sản phẩm</p>
-                            <p className="text-3xl font-bold text-gray-900">-</p>
+                            <p className="text-3xl font-bold text-gray-900">
+                                {loading ? '...' : stats?.total_products || 0}
+                            </p>
                         </div>
                         <CubeIcon className="w-12 h-12 text-blue-500" />
                     </div>
@@ -97,8 +104,10 @@ export default function InventoryIndex() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Số kho</p>
-                            <p className="text-3xl font-bold text-gray-900">-</p>
+                            <p className="text-sm text-gray-600">Tổng kho</p>
+                            <p className="text-3xl font-bold text-gray-900">
+                                {loading ? '...' : stats?.total_warehouses || 0}
+                            </p>
                         </div>
                         <BuildingStorefrontIcon className="w-12 h-12 text-purple-500" />
                     </div>
@@ -106,19 +115,15 @@ export default function InventoryIndex() {
             </div>
 
             {/* Low Stock Alert */}
-            {hasPermission('products.view') && lowStockProducts.length > 0 && (
-                <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg">
-                    <div className="flex items-center">
-                        <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 mr-3" />
-                        <div>
-                            <h3 className="text-sm font-medium text-orange-800">
-                                Cảnh báo tồn kho thấp
-                            </h3>
-                            <p className="text-sm text-orange-700 mt-1">
-                                Có {lowStockProducts.length} sản phẩm có tồn kho thấp. Vui lòng nhập thêm hàng.
-                            </p>
-                        </div>
+            {lowStockProducts.length > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
+                        <h3 className="font-semibold text-orange-900">Cảnh báo tồn kho thấp</h3>
                     </div>
+                    <p className="text-sm text-orange-700">
+                        Có {lowStockProducts.length} sản phẩm đang có số lượng tồn kho thấp. Cần nhập hàng ngay.
+                    </p>
                 </div>
             )}
 
@@ -132,8 +137,8 @@ export default function InventoryIndex() {
                         <div className="flex items-center">
                             <CubeIcon className="w-12 h-12 text-blue-500 mr-4" />
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Quản lý Sản phẩm</h3>
-                                <p className="text-gray-600 text-sm">Xem và quản lý sản phẩm</p>
+                                <h3 className="text-lg font-semibold text-gray-900">Sản phẩm</h3>
+                                <p className="text-gray-600 text-sm">Quản lý danh mục sản phẩm</p>
                             </div>
                         </div>
                     </div>
@@ -147,63 +152,13 @@ export default function InventoryIndex() {
                         <div className="flex items-center">
                             <BuildingStorefrontIcon className="w-12 h-12 text-purple-500 mr-4" />
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Quản lý Kho</h3>
-                                <p className="text-gray-600 text-sm">Xem và quản lý kho hàng</p>
+                                <h3 className="text-lg font-semibold text-gray-900">Kho hàng</h3>
+                                <p className="text-gray-600 text-sm">Quản lý kho và tồn kho</p>
                             </div>
                         </div>
                     </div>
                 )}
             </div>
-
-            {/* Low Stock Products Table */}
-            {hasPermission('products.view') && lowStockProducts.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Sản phẩm tồn kho thấp</h3>
-                    </div>
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sản phẩm</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mã SKU</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tồn kho</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mức tối thiểu</th>
-                        </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                        {lowStockProducts.slice(0, 5).map((product) => (
-                            <tr key={product.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {product.name}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {product.sku}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {product.stock_quantity}
-                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {product.min_stock_level}
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                    {lowStockProducts.length > 5 && (
-                        <div className="px-6 py-4 bg-gray-50 text-center">
-                            <button
-                                onClick={() => navigate('/inventory/products')}
-                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                                Xem tất cả ({lowStockProducts.length})
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 }
-
