@@ -26,20 +26,31 @@ class PaymentController extends Controller
         $this->authorizePermission('payments.view');
 
         $perPage = $request->input('per_page', 20);
+        $search = $request->input('search');
         $status = $request->input('status');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Payment::with(['invoice', 'receivedBy']);
+        // ✅ 1 query duy nhất với eager loading
+        $query = Payment::query()
+            ->with(['invoice:id,invoice_number,customer_id', 'invoice.customer:id,name,phone', 'receivedBy:id,name']);
 
-        if ($status) {
-            $query->where('status', $status);
+        // Search
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('transaction_id', 'like', "%{$search}%")
+                  ->orWhereHas('invoice', fn($q) => $q->where('invoice_number', 'like', "%{$search}%"));
+            });
         }
 
-        $payments = $query->latest()->paginate($perPage);
+        // Filter với when()
+        $query->when($status, fn($q) => $q->where('status', $status));
 
-        return response()->json([
-            'success' => true,
-            'data' => $payments
-        ]);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
+
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     /**

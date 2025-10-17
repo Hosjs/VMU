@@ -24,23 +24,28 @@ class CustomerController extends Controller
 
         $perPage = $request->input('per_page', 20);
         $search = $request->input('search');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Customer::with(['vehicles']);
+        $query = Customer::query();
+
+        // ✅ Thêm withCount để đếm số xe
+        $query->withCount('vehicles');
 
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('customer_code', 'like', "%{$search}%");
             });
         }
 
-        $customers = $query->latest()->paginate($perPage);
+        // ✅ Thêm sorting
+        $query->orderBy($sortBy, $sortDirection);
 
-        return response()->json([
-            'success' => true,
-            'data' => $customers
-        ]);
+        // ✅ QUAN TRỌNG: Trả về pagination trực tiếp, KHÔNG wrap trong {success, data}
+        return $query->paginate($perPage);
     }
 
     public function show($id)

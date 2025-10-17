@@ -5,6 +5,16 @@ import type { Notification } from '~/types/notification';
 class NotificationService {
   private readonly BASE_PATH = '/notifications';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getNotifications = this.getNotifications.bind(this);
+    this.getUnreadCount = this.getUnreadCount.bind(this);
+    this.markAsRead = this.markAsRead.bind(this);
+    this.markAllAsRead = this.markAllAsRead.bind(this);
+    this.deleteNotification = this.deleteNotification.bind(this);
+    this.getNotificationIcon = this.getNotificationIcon.bind(this);
+  }
+
   async getNotifications(params?: Partial<TableQueryParams> & { unread_only?: boolean; type?: string }): Promise<PaginatedResponse<Notification>> {
     const defaultParams: TableQueryParams = { page: 1, per_page: 10 };
     return apiService.getPaginated<Notification>(this.BASE_PATH, { ...defaultParams, ...params });

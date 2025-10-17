@@ -16,6 +16,17 @@ export interface ProductFormData {
 class ProductService {
   private readonly BASE_PATH = '/inventory/products';
 
+  constructor() {
+    // ✅ Bind methods
+    this.getProducts = this.getProducts.bind(this);
+    this.getProductById = this.getProductById.bind(this);
+    this.getLowStockProducts = this.getLowStockProducts.bind(this);
+    this.createProduct = this.createProduct.bind(this);
+    this.updateProduct = this.updateProduct.bind(this);
+    this.deleteProduct = this.deleteProduct.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getProducts(params: TableQueryParams): Promise<PaginatedResponse<Product>> {
     return apiService.getPaginated<Product>(this.BASE_PATH, params);
   }

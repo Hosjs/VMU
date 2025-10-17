@@ -22,20 +22,32 @@ class SettlementController extends Controller
         $this->authorizePermission('settlements.view');
 
         $perPage = $request->get('per_page', 20);
+        $search = $request->get('search');
         $status = $request->get('status');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Settlement::with(['provider', 'createdBy', 'approvedBy']);
+        // ✅ 1 query duy nhất với eager loading
+        $query = Settlement::query()
+            ->with(['provider:id,name,code', 'createdBy:id,name', 'approvedBy:id,name'])
+            ->withCount('payments');
 
-        if ($status) {
-            $query->where('status', $status);
+        // Search
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('settlement_code', 'like', "%{$search}%")
+                  ->orWhereHas('provider', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            });
         }
 
-        $settlements = $query->latest()->paginate($perPage);
+        // Filter
+        $query->when($status, fn($q) => $q->where('status', $status));
 
-        return response()->json([
-            'success' => true,
-            'data' => $settlements
-        ]);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
+
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)

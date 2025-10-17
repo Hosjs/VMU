@@ -24,22 +24,32 @@ class ServiceController extends Controller
 
         $perPage = $request->get('per_page', 15);
         $search = $request->get('search');
+        $categoryId = $request->get('category_id');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Service::query();
+        // ✅ 1 query duy nhất với eager loading
+        $query = Service::query()
+            ->with(['category:id,name'])
+            ->withCount('serviceRequests');
 
+        // Search
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        $services = $query->latest()->paginate($perPage);
+        // Filter
+        $query->when($categoryId, fn($q) => $q->where('category_id', $categoryId));
 
-        return response()->json([
-            'success' => true,
-            'data' => $services
-        ]);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
+
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)
@@ -136,4 +146,3 @@ class ServiceController extends Controller
         ]);
     }
 }
-

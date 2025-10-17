@@ -23,6 +23,20 @@ const USER_KEY = 'auth_user';
 // ============================================
 
 class AuthService {
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.login = this.login.bind(this);
+    this.register = this.register.bind(this);
+    this.logout = this.logout.bind(this);
+    this.getCurrentUser = this.getCurrentUser.bind(this);
+    this.updateStoredUser = this.updateStoredUser.bind(this);
+    this.getPermissions = this.getPermissions.bind(this);
+    this.getToken = this.getToken.bind(this);
+    this.getStoredUser = this.getStoredUser.bind(this);
+    this.clearAuth = this.clearAuth.bind(this);
+    this.isAuthenticated = this.isAuthenticated.bind(this);
+  }
+
   /**
    * Login user
    */

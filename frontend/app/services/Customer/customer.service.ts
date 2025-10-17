@@ -14,6 +14,16 @@ export interface CustomerStatistics {
 class CustomerService {
   private readonly BASE_PATH = '/customers';
 
+  constructor() {
+    // ✅ Bind tất cả methods để giữ context
+    this.getCustomers = this.getCustomers.bind(this);
+    this.getCustomerById = this.getCustomerById.bind(this);
+    this.createCustomer = this.createCustomer.bind(this);
+    this.updateCustomer = this.updateCustomer.bind(this);
+    this.deleteCustomer = this.deleteCustomer.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getCustomers(params: TableQueryParams): Promise<PaginatedResponse<Customer>> {
     return apiService.getPaginated<Customer>(this.BASE_PATH, params);
   }
@@ -40,4 +50,3 @@ class CustomerService {
 }
 
 export const customerService = new CustomerService();
-

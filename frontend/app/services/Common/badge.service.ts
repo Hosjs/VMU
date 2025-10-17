@@ -9,6 +9,11 @@ export interface BadgeCounts {
 }
 
 class BadgeService {
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getCounts = this.getCounts.bind(this);
+  }
+
   async getCounts(): Promise<BadgeCounts> {
     return apiService.get<BadgeCounts>('/badges/counts');
   }

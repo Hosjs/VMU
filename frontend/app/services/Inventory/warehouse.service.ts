@@ -13,6 +13,14 @@ export interface WarehouseFormData {
 class WarehouseService {
   private readonly BASE_PATH = '/inventory/warehouses';
 
+  constructor() {
+    // ✅ Bind methods
+    this.getWarehouses = this.getWarehouses.bind(this);
+    this.getWarehouseById = this.getWarehouseById.bind(this);
+    this.createWarehouse = this.createWarehouse.bind(this);
+    this.updateWarehouse = this.updateWarehouse.bind(this);
+  }
+
   async getWarehouses(params?: TableQueryParams): Promise<PaginatedResponse<Warehouse>> {
     return apiService.getPaginated<Warehouse>(this.BASE_PATH, params || { page: 1, per_page: 10 });
   }

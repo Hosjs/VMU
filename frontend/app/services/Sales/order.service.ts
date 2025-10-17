@@ -14,6 +14,16 @@ export interface OrderStatistics {
 class OrderService {
   private readonly BASE_PATH = '/sales/orders';
 
+  constructor() {
+    // ✅ Bind methods
+    this.getOrders = this.getOrders.bind(this);
+    this.getOrderById = this.getOrderById.bind(this);
+    this.updateOrderStatus = this.updateOrderStatus.bind(this);
+    this.assignStaff = this.assignStaff.bind(this);
+    this.cancelOrder = this.cancelOrder.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getOrders(params: TableQueryParams): Promise<PaginatedResponse<Order>> {
     return apiService.getPaginated<Order>(this.BASE_PATH, params);
   }
@@ -40,4 +50,3 @@ class OrderService {
 }
 
 export const orderService = new OrderService();
-

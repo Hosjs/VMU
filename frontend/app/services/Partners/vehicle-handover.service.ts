@@ -49,6 +49,17 @@ export interface VehicleHandoverFormData {
 class VehicleHandoverService {
   private readonly BASE_PATH = '/partners/vehicle-handovers';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getHandovers = this.getHandovers.bind(this);
+    this.getHandoverById = this.getHandoverById.bind(this);
+    this.createHandover = this.createHandover.bind(this);
+    this.updateHandover = this.updateHandover.bind(this);
+    this.deleteHandover = this.deleteHandover.bind(this);
+    this.acknowledgeHandover = this.acknowledgeHandover.bind(this);
+    this.returnVehicle = this.returnVehicle.bind(this);
+  }
+
   async getHandovers(params: TableQueryParams): Promise<PaginatedResponse<PartnerVehicleHandover>> {
     return apiService.getPaginated<PartnerVehicleHandover>(this.BASE_PATH, params);
   }
@@ -83,4 +94,3 @@ class VehicleHandoverService {
 }
 
 export const vehicleHandoverService = new VehicleHandoverService();
-

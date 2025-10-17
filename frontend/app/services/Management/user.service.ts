@@ -31,8 +31,21 @@ export interface UserStatistics {
 class UserService {
   private readonly BASE_PATH = '/management/users';
 
-  // ✅ Arrow function để bind context - FIX context loss
-  getUsers = async (params: TableQueryParams): Promise<PaginatedResponse<AuthUser>> => {
+  constructor() {
+    // ✅ Bind methods để giữ context this
+    this.getUsers = this.getUsers.bind(this);
+    this.getUserById = this.getUserById.bind(this);
+    this.createUser = this.createUser.bind(this);
+    this.updateUser = this.updateUser.bind(this);
+    this.deleteUser = this.deleteUser.bind(this);
+    this.activateUser = this.activateUser.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+    this.getDepartments = this.getDepartments.bind(this);
+    this.getPositions = this.getPositions.bind(this);
+  }
+
+  // ✅ Hàm thông thường - không dùng arrow function
+  async getUsers(params: TableQueryParams): Promise<PaginatedResponse<AuthUser>> {
     return apiService.getPaginated<AuthUser>(this.BASE_PATH, params);
   }
 

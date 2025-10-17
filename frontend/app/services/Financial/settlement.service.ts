@@ -17,6 +17,14 @@ export interface SettlementFormData {
 class SettlementService {
   private readonly BASE_PATH = '/financial/settlements';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getSettlements = this.getSettlements.bind(this);
+    this.getSettlementById = this.getSettlementById.bind(this);
+    this.createSettlement = this.createSettlement.bind(this);
+    this.approveSettlement = this.approveSettlement.bind(this);
+  }
+
   async getSettlements(params: TableQueryParams): Promise<PaginatedResponse<Settlement>> {
     return apiService.getPaginated<Settlement>(this.BASE_PATH, params);
   }

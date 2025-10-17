@@ -14,39 +14,32 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Notification::query();
+        $perPage = $request->get('per_page', 15);
+        $unreadOnly = $request->get('unread_only');
+        $type = $request->get('type');
 
-        // Filter by user or role
-        $query->where(function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-            // Only check role if user has one
-            if ($user->role) {
-                $q->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
-            }
-        });
+        // ✅ 1 query duy nhất với all conditions
+        $query = Notification::query()
+            ->with(['sender:id,name', 'notifiable'])
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                // Only check role if user has one
+                if ($user->role) {
+                    $q->orWhereRaw("FIND_IN_SET(?, recipient_roles)", [$user->role->name]);
+                }
+            })
+            ->notExpired();
 
-        // Filter by read status
-        if ($request->has('unread_only') && $request->unread_only) {
-            $query->unread();
-        }
+        // Filters with when()
+        $query->when($unreadOnly, fn($q) => $q->unread())
+              ->when($type, fn($q) => $q->byType($type));
 
-        // Filter by type
-        if ($request->has('type')) {
-            $query->byType($request->type);
-        }
-
-        // Not expired
-        $query->notExpired();
-
-        // Order by priority and date
+        // Sort by priority and date
         $query->orderByRaw("FIELD(priority, 'urgent', 'high', 'normal', 'low')")
               ->orderBy('created_at', 'desc');
 
-        // Paginate
-        $perPage = $request->get('per_page', 15);
-        $notifications = $query->with(['sender', 'notifiable'])->paginate($perPage);
-
-        return response()->json($notifications);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     /**

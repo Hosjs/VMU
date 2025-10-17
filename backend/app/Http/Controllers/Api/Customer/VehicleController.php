@@ -25,26 +25,32 @@ class VehicleController extends Controller
         $perPage = $request->input('per_page', 20);
         $search = $request->input('search');
         $customerId = $request->input('customer_id');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Vehicle::with(['customer', 'brand', 'model']);
+        // ✅ 1 query duy nhất với eager loading tối ưu
+        $query = Vehicle::query()
+            ->with(['customer:id,name,phone', 'brand:id,name', 'model:id,name'])
+            ->withCount(['orders', 'serviceRequests']);
 
+        // Search
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('license_plate', 'like', "%{$search}%")
-                  ->orWhere('vin', 'like', "%{$search}%");
+                  ->orWhere('vin', 'like', "%{$search}%")
+                  ->orWhere('engine_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"));
             });
         }
 
-        if ($customerId) {
-            $query->where('customer_id', $customerId);
-        }
+        // Filter
+        $query->when($customerId, fn($q) => $q->where('customer_id', $customerId));
 
-        $vehicles = $query->latest()->paginate($perPage);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
 
-        return response()->json([
-            'success' => true,
-            'data' => $vehicles
-        ]);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)

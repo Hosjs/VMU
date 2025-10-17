@@ -30,43 +30,40 @@ class OrderController extends Controller
         $search = $request->input('search');
         $status = $request->input('status');
         $type = $request->input('type');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Order::with(['customer', 'vehicle', 'salesperson', 'technician']);
+        // ✅ 1 query duy nhất với eager loading tối ưu
+        $query = Order::query()
+            ->with(['customer:id,name,phone', 'vehicle:id,license_plate,brand,model',
+                   'salesperson:id,name', 'technician:id,name'])
+            ->withCount('items');
 
-        // Scope by permission: manage_all hoặc manage_own
+        // Scope by permission
         $query = $this->scopeByPermission(
             $query,
             'orders.manage_all',
             'orders.manage_own',
-            'salesperson_id' // Hoặc technician_id tùy context
+            'salesperson_id'
         );
 
-        // Search
+        // Search - tối ưu với whereHas
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                    ->orWhereHas('customer', function($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
+                  ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"));
             });
         }
 
-        // Filter by status
-        if ($status) {
-            $query->where('status', $status);
-        }
+        // Filters
+        $query->when($status, fn($q) => $q->where('status', $status))
+              ->when($type, fn($q) => $q->where('type', $type));
 
-        // Filter by type
-        if ($type) {
-            $query->where('type', $type);
-        }
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
 
-        $orders = $query->latest()->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => $orders
-        ]);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     /**

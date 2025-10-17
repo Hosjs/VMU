@@ -17,6 +17,17 @@ export interface CreateVehicleData {
 class VehicleService {
   private readonly BASE_PATH = '/vehicles';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getVehicles = this.getVehicles.bind(this);
+    this.getVehicle = this.getVehicle.bind(this);
+    this.getByLicensePlate = this.getByLicensePlate.bind(this);
+    this.getByCustomer = this.getByCustomer.bind(this);
+    this.createVehicle = this.createVehicle.bind(this);
+    this.updateVehicle = this.updateVehicle.bind(this);
+    this.deleteVehicle = this.deleteVehicle.bind(this);
+  }
+
   async getVehicles(params?: TableQueryParams): Promise<PaginatedResponse<Vehicle>> {
     return apiService.getPaginated<Vehicle>(this.BASE_PATH, params || { page: 1, per_page: 10 });
   }

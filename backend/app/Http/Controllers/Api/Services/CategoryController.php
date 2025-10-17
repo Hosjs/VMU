@@ -24,19 +24,26 @@ class CategoryController extends Controller
 
         $perPage = $request->get('per_page', 100);
         $search = $request->get('search');
+        $type = $request->get('type');
+        $sortBy = $request->input('sort_by', 'sort_order');
+        $sortDirection = $request->input('sort_direction', 'asc');
 
-        $query = Category::withCount('products');
+        // ✅ 1 query duy nhất với aggregate
+        $query = Category::query()
+            ->withCount(['products', 'services']);
 
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
-        }
+        // Search
+        $query->when($search, fn($q) => $q->where('name', 'like', "%{$search}%")
+            ->orWhere('code', 'like', "%{$search}%"));
 
-        $categories = $query->orderBy('sort_order')->paginate($perPage);
+        // Filter
+        $query->when($type, fn($q) => $q->where('type', $type));
 
-        return response()->json([
-            'success' => true,
-            'data' => $categories
-        ]);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
+
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)
@@ -131,4 +138,3 @@ class CategoryController extends Controller
         ]);
     }
 }
-

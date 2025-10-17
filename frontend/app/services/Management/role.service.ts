@@ -24,8 +24,19 @@ export interface AvailablePermissions {
 class RoleService {
   private readonly BASE_PATH = '/management/roles';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getRoles = this.getRoles.bind(this);
+    this.getRoleById = this.getRoleById.bind(this);
+    this.createRole = this.createRole.bind(this);
+    this.updateRole = this.updateRole.bind(this);
+    this.deleteRole = this.deleteRole.bind(this);
+    this.getAvailablePermissions = this.getAvailablePermissions.bind(this);
+  }
+
   async getRoles(params?: TableQueryParams): Promise<PaginatedResponse<Role>> {
-    return apiService.get<PaginatedResponse<Role>>(this.BASE_PATH, params);
+    // ✅ Sửa: getRoles nên dùng getPaginated thay vì get
+    return apiService.getPaginated<Role>(this.BASE_PATH, params || { page: 1, per_page: 10 });
   }
 
   async getRoleById(id: number): Promise<Role> {

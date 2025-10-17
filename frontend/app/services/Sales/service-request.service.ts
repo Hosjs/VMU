@@ -59,6 +59,21 @@ export interface ServiceRequestStatistics {
 class ServiceRequestService {
   private readonly BASE_PATH = '/sales/service-requests';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getServiceRequests = this.getServiceRequests.bind(this);
+    this.getServiceRequestById = this.getServiceRequestById.bind(this);
+    this.createServiceRequest = this.createServiceRequest.bind(this);
+    this.updateServiceRequest = this.updateServiceRequest.bind(this);
+    this.deleteServiceRequest = this.deleteServiceRequest.bind(this);
+    this.updateStatus = this.updateStatus.bind(this);
+    this.assignStaff = this.assignStaff.bind(this);
+    this.approveRequest = this.approveRequest.bind(this);
+    this.cancelRequest = this.cancelRequest.bind(this);
+    this.convertToOrder = this.convertToOrder.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getServiceRequests(params: TableQueryParams): Promise<PaginatedResponse<ServiceRequest>> {
     return apiService.getPaginated<ServiceRequest>(this.BASE_PATH, params);
   }
@@ -105,4 +120,3 @@ class ServiceRequestService {
 }
 
 export const serviceRequestService = new ServiceRequestService();
-

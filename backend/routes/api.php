@@ -210,14 +210,17 @@ Route::middleware('auth:api')->group(function () {
     // REPORTS - Báo cáo & Dashboard
     // =====================
     Route::prefix('reports')->group(function () {
-        Route::get('/dashboard/overview', [DashboardController::class, 'overview'])
-            ->middleware('permission:dashboard.view');
+        // Dashboard - available for all authenticated users
+        Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
+        Route::get('/dashboard/recent-orders', [DashboardController::class, 'recentOrders']);
+        Route::get('/dashboard/recent-invoices', [DashboardController::class, 'recentInvoices']);
+
+        // Reports - require specific permissions
         Route::get('/revenue', [DashboardController::class, 'revenueReport'])
             ->middleware('permission:reports.financial');
-        Route::get('/profit', [DashboardController::class, 'profitReport'])
-            ->middleware('permission:reports.financial');
-        Route::get('/top-customers', [DashboardController::class, 'topCustomers'])
-            ->middleware('permission:dashboard.view');
+        Route::get('/top-customers', [DashboardController::class, 'topCustomers']);
+        Route::get('/top-services', [DashboardController::class, 'topServices']);
+        Route::get('/top-products', [DashboardController::class, 'topProducts']);
     });
 
     // =====================

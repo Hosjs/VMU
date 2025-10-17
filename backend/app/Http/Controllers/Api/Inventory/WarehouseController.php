@@ -23,19 +23,24 @@ class WarehouseController extends Controller
 
         $perPage = $request->get('per_page', 20);
         $search = $request->get('search');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Warehouse::with('manager');
+        // ✅ 1 query duy nhất với eager loading và aggregate
+        $query = Warehouse::query()
+            ->with(['manager:id,name'])
+            ->withCount('stocks');
 
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
-        }
+        // Search
+        $query->when($search, fn($q) => $q->where('name', 'like', "%{$search}%")
+            ->orWhere('code', 'like', "%{$search}%")
+            ->orWhere('location', 'like', "%{$search}%"));
 
-        $warehouses = $query->latest()->paginate($perPage);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
 
-        return response()->json([
-            'success' => true,
-            'data' => $warehouses
-        ]);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)
@@ -128,4 +133,3 @@ class WarehouseController extends Controller
         ]);
     }
 }
-

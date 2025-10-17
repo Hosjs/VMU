@@ -24,26 +24,31 @@ class ProductController extends Controller
         $perPage = $request->input('per_page', 20);
         $search = $request->input('search');
         $categoryId = $request->input('category_id');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Product::with(['category']);
+        // ✅ 1 query duy nhất với eager loading và aggregate
+        $query = Product::query()
+            ->with(['category:id,name'])
+            ->withSum('stocks', 'quantity');
 
+        // Search
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%");
             });
         }
 
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
-        }
+        // Filter
+        $query->when($categoryId, fn($q) => $q->where('category_id', $categoryId));
 
-        $products = $query->latest()->paginate($perPage);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
 
-        return response()->json([
-            'success' => true,
-            'data' => $products
-        ]);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)
@@ -110,4 +115,3 @@ class ProductController extends Controller
         ]);
     }
 }
-

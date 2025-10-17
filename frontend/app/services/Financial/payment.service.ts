@@ -21,6 +21,15 @@ export interface PaymentStatistics {
 class PaymentService {
   private readonly BASE_PATH = '/financial/payments';
 
+  constructor() {
+    // ✅ Bind methods để giữ context
+    this.getPayments = this.getPayments.bind(this);
+    this.getPaymentById = this.getPaymentById.bind(this);
+    this.confirmPayment = this.confirmPayment.bind(this);
+    this.cancelPayment = this.cancelPayment.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getPayments(params: TableQueryParams): Promise<PaginatedResponse<Payment>> {
     return apiService.getPaginated<Payment>(this.BASE_PATH, params);
   }

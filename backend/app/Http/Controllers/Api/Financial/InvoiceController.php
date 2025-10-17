@@ -26,25 +26,35 @@ class InvoiceController extends Controller
         $this->authorizePermission('invoices.view');
 
         $perPage = $request->input('per_page', 20);
+        $search = $request->input('search');
         $status = $request->input('status');
         $paymentStatus = $request->input('payment_status');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = Invoice::with(['order', 'customer', 'createdBy', 'approvedBy']);
+        // ✅ 1 query duy nhất với eager loading tối ưu
+        $query = Invoice::query()
+            ->with(['order:id,order_number', 'customer:id,name,phone',
+                   'createdBy:id,name', 'approvedBy:id,name'])
+            ->withSum('payments', 'amount');
 
-        if ($status) {
-            $query->where('status', $status);
+        // Search
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            });
         }
 
-        if ($paymentStatus) {
-            $query->where('payment_status', $paymentStatus);
-        }
+        // Filters với when()
+        $query->when($status, fn($q) => $q->where('status', $status))
+              ->when($paymentStatus, fn($q) => $q->where('payment_status', $paymentStatus));
 
-        $invoices = $query->latest()->paginate($perPage);
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
 
-        return response()->json([
-            'success' => true,
-            'data' => $invoices
-        ]);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     /**

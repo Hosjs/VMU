@@ -5,132 +5,54 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="27c88a10-f167-43bd-8677-425c61336e3c" name="Changes" comment="Add permission middleware, enhance badge service, and update related resources">
-      <change afterPath="$PROJECT_DIR$/ADMIN_FEATURES_REAL_DATA_COMPLETION_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ADMIN_SYSTEM_COMPLETE_IMPLEMENTATION_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/COMPONENTS_PERMISSIONS_CLEANUP_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DASHBOARD_LOADING_FIX_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DATABASE_FINAL_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DATABASE_SEEDER_VALIDATION_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FIX_DUPLICATE_API_CALLS_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_ASYNC_PATTERN_STANDARDIZATION_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_AUDIT_COMPLETE_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_COMPLETE_AUDIT_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_COMPLETE_FIX_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_HOOKS_AUDIT_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_IMPLEMENTATION_COMPLETE_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FRONTEND_REFACTOR_USE_TABLE_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PERMISSION_SYSTEM_STANDARDIZATION_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SERVICES_CONTEXT_LOSS_FIX_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/DATABASE_AUDIT_COMPLETE_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/DATABASE_NO_FOREIGN_KEYS_REPORT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/DATABASE_ROLE_PERMISSION_STRUCTURE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/database/migrations/2025_10_16_100000_add_soft_deletes_to_tables.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/migrate_database.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/migration_script.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/test-dashboard-api.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ADMIN_ALL_FEATURES_COMPLETION_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ADMIN_FEATURES_COMPLETE_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ADMIN_PAGES_COMPLETION_PROGRESS.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BACKEND_PAGINATION_STANDARDIZATION_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SERVICES_CONTEXT_LOSS_FIX_FINAL_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SERVICES_DUPLICATE_CODE_FIX_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SERVICE_CONTEXT_BINDING_FIX_REPORT.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/5c6bcebe-cf3e-4cea-8efa-45b5c628b446.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/5c6bcebe-cf3e-4cea-8efa-45b5c628b446.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/laravel-idea.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/laravel-idea.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/phpunit.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/BadgeController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/CategoryController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/CustomerController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/DashboardController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/InvoiceController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/NotificationController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/OrderController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/PartnerServiceController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/PartnerVehicleHandoverController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/PaymentController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/ProductController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/ProviderController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/RoleController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/ServiceController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/SettlementController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/UserController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Admin/WarehouseController.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/AuthController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/AuthController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Common/BadgeController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Common/BadgeController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Common/NotificationController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Common/NotificationController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Customer/CustomerController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Customer/CustomerController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Customer/VehicleController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Customer/VehicleController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Financial/InvoiceController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Financial/InvoiceController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Financial/PaymentController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Financial/PaymentController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Financial/SettlementController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Financial/SettlementController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Management/Roles/RoleController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Management/Roles/RoleController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Management/Users/UserController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Management/Users/UserController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Inventory/ProductController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Inventory/ProductController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Inventory/WarehouseController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Inventory/WarehouseController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Partners/PartnerVehicleHandoverController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Partners/PartnerVehicleHandoverController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Partners/ProviderController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Partners/ProviderController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Reports/DashboardController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Reports/DashboardController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Http/Resources/UserResource.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Resources/UserResource.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Category.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Category.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Customer.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Customer.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Invoice.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Invoice.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Order.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Order.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Payment.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Payment.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Product.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Product.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Provider.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Provider.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Role.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Role.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Service.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Service.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/ServiceRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/ServiceRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Settlement.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Settlement.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/User.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/User.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Vehicle.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Vehicle.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/VehicleBrand.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/VehicleBrand.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/VehicleModel.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/VehicleModel.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app/Models/Warehouse.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Models/Warehouse.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/0001_01_01_000000_create_users_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database/migrations/0001_01_01_000000_create_users_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/2025_10_03_043417_create_user_roles_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database/migrations/2025_10_03_043417_create_user_roles_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/2025_10_16_092624_create_oauth_auth_codes_table.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/2025_10_16_092625_create_oauth_access_tokens_table.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/2025_10_16_092626_create_oauth_refresh_tokens_table.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/2025_10_16_092627_create_oauth_clients_table.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/migrations/2025_10_16_092628_create_oauth_device_codes_table.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/seeders/DatabaseSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database/seeders/DatabaseSeeder.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/seeders/ProductSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database/seeders/ProductSeeder.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/database/seeders/VehicleSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/database/seeders/VehicleSeeder.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Sales/OrderController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Sales/OrderController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Services/CategoryController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Services/CategoryController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Services/ServiceController.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app/Http/Controllers/Api/Services/ServiceController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/routes/api.php" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/api.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/LoadingSystem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/LoadingSystem.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/permissions/Can.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/permissions/PermissionButton.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/permissions/PermissionGate.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/permissions/PermissionSelector.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/permissions/index.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/components/ui/Card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/components/ui/Card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/contexts/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/contexts/AuthContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/contexts/NotificationContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/contexts/NotificationContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/contexts/PermissionContext.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/hooks/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/hooks/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/hooks/useAsync.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/hooks/useAsync.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/hooks/usePermissions.ts" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/hooks/useTable.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/hooks/useTable.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/layouts/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/layouts/Sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/root.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/root.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/customers/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/customers/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/routes/customers/list.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/customers/list.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/customers/vehicles.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/customers/vehicles.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/dashboard/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/dashboard/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/financial/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/financial/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/financial/invoices.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/financial/invoices.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/financial/payments.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/financial/payments.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/financial/settlements.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/financial/settlements.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/inventory/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/inventory/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/inventory/products.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/inventory/products.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/inventory/warehouses.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/inventory/warehouses.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/management/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/management/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/management/roles.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/management/roles.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/management/users.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/management/users.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/partners/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/partners/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/partners/providers.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/partners/providers.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/reports/dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/reports/dashboard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/sales/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/sales/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/sales/orders.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/sales/orders.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/routes/sales/service-requests.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/routes/sales/service-requests.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Common/badge.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Common/badge.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Common/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Common/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Common/notification.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Common/notification.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Customer/customer.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Customer/customer.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Customer/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Customer/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Customer/vehicle.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Customer/vehicle.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Financial/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Financial/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Financial/invoice.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Financial/invoice.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Financial/payment.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Financial/payment.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Financial/settlement.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Financial/settlement.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/services/Inventory/product.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Inventory/product.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/services/Management/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Management/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Inventory/warehouse.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Inventory/warehouse.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/services/Management/role.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Management/role.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/services/Management/user.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Management/user.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Partners/provider.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Partners/provider.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Partners/vehicle-handover.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Partners/vehicle-handover.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/services/Reports/dashboard.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Reports/dashboard.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Reports/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Reports/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Sales/order.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Sales/order.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/app/services/Sales/service-request.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/Sales/service-request.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/app/services/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/services/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/types/customer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/types/customer.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/types/vehicle.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/types/vehicle.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/utils/permissions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/utils/permissions.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -364,7 +286,10 @@
       <workItem from="1759841377919" duration="13108000" />
       <workItem from="1759887707253" duration="3237000" />
       <workItem from="1760539147737" duration="8445000" />
-      <workItem from="1760617111360" duration="22270000" />
+      <workItem from="1760617111360" duration="22467000" />
+      <workItem from="1760710519069" duration="306000" />
+      <workItem from="1760711328236" duration="2313000" />
+      <workItem from="1760719355708" duration="1780000" />
     </task>
     <task id="LOCAL-00001" summary="Initialize project structure with essential files and configurations">
       <option name="closed" value="true" />
@@ -406,7 +331,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760547673704</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Add permission middleware, enhance badge service, and update related resources">
+      <option name="closed" value="true" />
+      <created>1760641177072</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1760641177072</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

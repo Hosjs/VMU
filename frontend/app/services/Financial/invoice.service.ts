@@ -13,6 +13,15 @@ export interface InvoiceStatistics {
 class InvoiceService {
   private readonly BASE_PATH = '/financial/invoices';
 
+  constructor() {
+    // ✅ Bind methods
+    this.getInvoices = this.getInvoices.bind(this);
+    this.getInvoiceById = this.getInvoiceById.bind(this);
+    this.updateInvoiceStatus = this.updateInvoiceStatus.bind(this);
+    this.cancelInvoice = this.cancelInvoice.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getInvoices(params: TableQueryParams): Promise<PaginatedResponse<Invoice>> {
     return apiService.getPaginated<Invoice>(this.BASE_PATH, params);
   }
@@ -35,4 +44,3 @@ class InvoiceService {
 }
 
 export const invoiceService = new InvoiceService();
-

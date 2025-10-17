@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Customer;
+use App\Models\Product;
+use App\Models\WarehouseStock;
+use App\Models\Service;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Dashboard Controller
@@ -37,25 +41,69 @@ class DashboardController extends Controller
                       ->orWhere('technician_id', $user->id);
                 });
             } else {
-                // If no order permissions at all, return empty
-                $ordersQuery->whereRaw('1 = 0');
+                // If no order permissions at all, use all orders for stats
+                // (everyone can see general stats)
             }
         }
 
+        // Tính toán các thống kê
+        $totalOrders = $ordersQuery->count();
+        $pendingOrders = (clone $ordersQuery)->where('status', 'pending')->count();
+        $inProgressOrders = (clone $ordersQuery)->where('status', 'in_progress')->count();
+        $completedOrders = (clone $ordersQuery)->where('status', 'completed')->count();
+
+        // Doanh thu từ invoices
+        $invoicesQuery = Invoice::query();
+        $totalRevenue = $invoicesQuery->where('status', 'paid')->sum('total_amount');
+        $todayRevenue = (clone $invoicesQuery)->whereDate('created_at', today())->where('status', 'paid')->sum('total_amount');
+        $thisMonthRevenue = (clone $invoicesQuery)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->where('status', 'paid')->sum('total_amount');
+
+        // Lợi nhuận (từ actual_profit trong invoices)
+        $totalProfit = $invoicesQuery->where('status', 'paid')->sum('actual_profit');
+
+        // Khách hàng
+        $totalCustomers = Customer::count();
+        $activeCustomers = Customer::where('is_active', true)->count();
+        $newThisMonth = Customer::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+
+        // Sản phẩm sắp hết hàng
+        $lowStockProducts = Product::where('track_stock', true)
+            ->where('is_active', true)
+            ->whereHas('warehouseStocks', function($q) {
+                $q->select('product_id', DB::raw('SUM(available_quantity) as total_stock'))
+                    ->groupBy('product_id')
+                    ->havingRaw('SUM(available_quantity) <= products.min_stock_level');
+            })
+            ->count();
+
+        // Đơn hàng cần xử lý (pending + in_progress)
+        $ordersNeedAttention = (clone $ordersQuery)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
         $data = [
-            'orders' => [
-                'total' => $ordersQuery->count(),
-                'pending' => (clone $ordersQuery)->where('status', 'pending')->count(),
-                'in_progress' => (clone $ordersQuery)->where('status', 'in_progress')->count(),
-            ],
-            'revenue' => [
-                'today' => Invoice::whereDate('created_at', today())->sum('total_amount'),
-                'this_month' => Invoice::whereMonth('created_at', now()->month)->sum('total_amount'),
-            ],
-            'customers' => [
-                'total' => Customer::count(),
-                'new_this_month' => Customer::whereMonth('created_at', now()->month)->count(),
-            ]
+            // Tổng quan đơn hàng
+            'total_orders' => $totalOrders,
+            'pending_orders' => $pendingOrders,
+            'in_progress_orders' => $inProgressOrders,
+            'completed_orders' => $completedOrders,
+            'orders_need_attention' => $ordersNeedAttention,
+
+            // Doanh thu
+            'total_revenue' => (float) $totalRevenue,
+            'today_revenue' => (float) $todayRevenue,
+            'this_month_revenue' => (float) $thisMonthRevenue,
+
+            // Lợi nhuận
+            'total_profit' => (float) $totalProfit,
+
+            // Khách hàng
+            'total_customers' => $totalCustomers,
+            'active_customers' => $activeCustomers,
+            'new_customers_this_month' => $newThisMonth,
+
+            // Cảnh báo
+            'low_stock_products' => $lowStockProducts,
         ];
 
         return response()->json([
@@ -64,59 +112,101 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function recentOrders(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+
+        $orders = Order::with(['customer', 'vehicle', 'salesperson'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($orders);
+    }
+
+    public function recentInvoices(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+
+        $invoices = Invoice::with(['customer', 'order'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($invoices);
+    }
+
     public function revenueReport(Request $request)
     {
         $this->authorizePermission('reports.financial');
 
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = $request->input('start_date', now()->startOfMonth());
+        $endDate = $request->input('end_date', now()->endOfMonth());
+        $groupBy = $request->input('group_by', 'day'); // day, week, month
 
-        $query = Invoice::query();
+        $query = Invoice::query()
+            ->where('status', 'paid')
+            ->whereBetween('invoice_date', [$startDate, $endDate]);
 
-        if ($startDate) {
-            $query->whereDate('created_at', '>=', $startDate);
+        // Group by period
+        if ($groupBy === 'day') {
+            $data = $query->select(
+                DB::raw('DATE(invoice_date) as period'),
+                DB::raw('SUM(total_amount) as revenue'),
+                DB::raw('SUM(actual_profit) as profit'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get();
+        } elseif ($groupBy === 'week') {
+            $data = $query->select(
+                DB::raw('YEARWEEK(invoice_date) as period'),
+                DB::raw('SUM(total_amount) as revenue'),
+                DB::raw('SUM(actual_profit) as profit'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get();
+        } else { // month
+            $data = $query->select(
+                DB::raw('DATE_FORMAT(invoice_date, "%Y-%m") as period'),
+                DB::raw('SUM(total_amount) as revenue'),
+                DB::raw('SUM(actual_profit) as profit'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get();
         }
-        if ($endDate) {
-            $query->whereDate('created_at', '<=', $endDate);
-        }
 
-        $revenue = $query->where('status', 'paid')->sum('total_amount');
+        $totalRevenue = $query->sum('total_amount');
+        $totalProfit = $query->sum('actual_profit');
 
         return response()->json([
             'success' => true,
             'data' => [
-                'revenue' => $revenue,
-                'period' => [
-                    'start' => $startDate,
-                    'end' => $endDate
+                'chart_data' => $data,
+                'summary' => [
+                    'total_revenue' => (float) $totalRevenue,
+                    'total_profit' => (float) $totalProfit,
+                    'period' => [
+                        'start' => $startDate,
+                        'end' => $endDate
+                    ]
                 ]
             ]
         ]);
     }
 
-    public function profitReport()
+    public function topCustomers(Request $request)
     {
-        $this->authorizePermission('reports.financial');
-        $revenue = Invoice::where('status', 'paid')->sum('total_amount');
-        $cost = Order::sum('cost_amount'); // Giả sử có trường này
+        $limit = $request->input('limit', 10);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'revenue' => $revenue,
-                'cost' => $cost,
-                'profit' => $revenue - $cost
-            ]
-        ]);
-    }
-
-    public function topCustomers()
-    {
-        $this->authorizePermission('dashboard.view');
-
-        $customers = Customer::withCount('orders')
-            ->orderBy('orders_count', 'desc')
-            ->take(10)
+        $customers = Customer::select('customers.*')
+            ->withCount('orders')
+            ->withSum('invoices as total_spent', 'total_amount')
+            ->orderBy('total_spent', 'desc')
+            ->take($limit)
             ->get();
 
         return response()->json([
@@ -125,25 +215,36 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function topServices()
+    public function topServices(Request $request)
     {
-        $this->authorizePermission('dashboard.view');
+        $limit = $request->input('limit', 10);
 
-        // Logic top services
+        $services = Service::select('services.*')
+            ->withCount('serviceRequests')
+            ->orderBy('service_requests_count', 'desc')
+            ->take($limit)
+            ->get();
+
         return response()->json([
             'success' => true,
-            'data' => []
+            'data' => $services
         ]);
     }
 
-    public function topProducts()
+    public function topProducts(Request $request)
     {
-        $this->authorizePermission('dashboard.view');
+        $limit = $request->input('limit', 10);
 
-        // Logic top products
+        $products = Product::select('products.*')
+            ->withCount('orderItems')
+            ->withSum('orderItems as total_quantity', 'quantity')
+            ->orderBy('total_quantity', 'desc')
+            ->take($limit)
+            ->get();
+
         return response()->json([
             'success' => true,
-            'data' => []
+            'data' => $products
         ]);
     }
 }

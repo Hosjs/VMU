@@ -23,6 +23,17 @@ export interface ProviderStatistics {
 class ProviderService {
   private readonly BASE_PATH = '/partners/providers';
 
+  constructor() {
+    // ✅ Bind methods
+    this.getProviders = this.getProviders.bind(this);
+    this.getProviderById = this.getProviderById.bind(this);
+    this.createProvider = this.createProvider.bind(this);
+    this.updateProvider = this.updateProvider.bind(this);
+    this.deleteProvider = this.deleteProvider.bind(this);
+    this.updateRating = this.updateRating.bind(this);
+    this.getStatistics = this.getStatistics.bind(this);
+  }
+
   async getProviders(params: TableQueryParams): Promise<PaginatedResponse<Provider>> {
     return apiService.getPaginated<Provider>(this.BASE_PATH, params);
   }
@@ -53,4 +64,3 @@ class ProviderService {
 }
 
 export const providerService = new ProviderService();
-

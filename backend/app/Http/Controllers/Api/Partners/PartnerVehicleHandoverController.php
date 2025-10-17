@@ -25,39 +25,32 @@ class PartnerVehicleHandoverController extends Controller
         $search = $request->get('search');
         $status = $request->get('status');
         $providerId = $request->get('provider_id');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
 
-        $query = PartnerVehicleHandover::with([
-            'order.customer',
-            'vehicle.brand',
-            'vehicle.model',
-            'provider',
-            'deliverer',
-            'receiverTechnician'
-        ]);
+        // ✅ 1 query duy nhất với eager loading tối ưu
+        $query = PartnerVehicleHandover::query()
+            ->with(['order:id,order_number,customer_id', 'order.customer:id,name,phone',
+                   'vehicle:id,license_plate,brand_id,model_id', 'vehicle.brand:id,name', 'vehicle.model:id,name',
+                   'provider:id,name', 'deliverer:id,name', 'receiverTechnician:id,name']);
 
+        // Search
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('handover_number', 'like', "%{$search}%")
-                  ->orWhereHas('vehicle', function($q) use ($search) {
-                      $q->where('license_plate', 'like', "%{$search}%");
-                  });
+                  ->orWhereHas('vehicle', fn($q) => $q->where('license_plate', 'like', "%{$search}%"));
             });
         }
 
-        if ($status) {
-            $query->where('status', $status);
-        }
+        // Filters
+        $query->when($status, fn($q) => $q->where('status', $status))
+              ->when($providerId, fn($q) => $q->where('provider_id', $providerId));
 
-        if ($providerId) {
-            $query->where('provider_id', $providerId);
-        }
+        // Sort
+        $query->orderBy($sortBy, $sortDirection);
 
-        $handovers = $query->latest()->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => $handovers
-        ]);
+        // ✅ Trả về trực tiếp Laravel pagination
+        return $query->paginate($perPage);
     }
 
     public function show($id)
@@ -140,4 +133,3 @@ class PartnerVehicleHandoverController extends Controller
         ]);
     }
 }
-
