@@ -8,6 +8,14 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * HỆ THỐNG PHÂN QUYỀN:
+     * - role_id: Vai trò của user (foreign key đến roles table - xử lý ở Model)
+     * - custom_permissions: Quyền bổ sung riêng ngoài quyền của role
+     *   Format JSON: {"module_name": ["action1", "action2"], ...}
+     *   VD: {"products": ["edit", "delete"], "reports": ["export"]}
+     *
+     * => Quyền cuối cùng = Quyền mặc định của Role + Custom Permissions
      */
     public function up(): void
     {
@@ -28,9 +36,9 @@ return new class extends Migration
             $table->date('hire_date')->nullable(); // Ngày vào làm
             $table->decimal('salary', 15, 2)->nullable(); // Lương
 
-            // Role & Permissions (Role-based + Permission-based)
-            $table->unsignedBigInteger('role_id')->nullable(); // FK to roles table
-            $table->json('custom_permissions')->nullable(); // Override permissions: {"users": ["view", "create"], "orders": ["view"]}
+            // Role & Permissions (Role-based + Custom Permissions)
+            $table->unsignedBigInteger('role_id')->nullable(); // FK to roles table (xử lý ở Model)
+            $table->json('custom_permissions')->nullable(); // Quyền bổ sung ngoài role: {"products": ["edit", "delete"], "reports": ["export"]}
 
             // Status & Security
             $table->boolean('is_active')->default(true); // Trạng thái hoạt động
@@ -41,7 +49,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Indexes for performance
+            // Indexes for performance (không dùng foreign key - xử lý ở Model)
             $table->index('email');
             $table->index('phone');
             $table->index('employee_code');

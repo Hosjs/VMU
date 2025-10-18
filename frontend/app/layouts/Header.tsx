@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router';
 import { useCallback, useState } from 'react';
 import type { AuthUser } from '~/types/auth';
-import { NotificationBell } from '~/components/NotificationBell';
 
 interface HeaderProps {
   onToggleSidebar: () => void;

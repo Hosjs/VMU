@@ -54,18 +54,15 @@ export function Modal({
   return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="min-h-screen px-4 text-center">
-        {/* Backdrop */}
         <div
           className="fixed inset-0 bg-black/50 transition-opacity"
           onClick={onClose}
         />
 
-        {/* Center modal */}
         <span className="inline-block h-screen align-middle" aria-hidden="true">
           &#8203;
         </span>
 
-        {/* Modal content */}
         <div
           className={`
             inline-block w-full ${sizeClasses[size]} my-8 text-left align-middle
@@ -73,7 +70,6 @@ export function Modal({
             relative z-10
           `}
         >
-          {/* Header */}
           {(title || showCloseButton) && (
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               {title && (
@@ -102,7 +98,6 @@ export function Modal({
             </div>
           )}
 
-          {/* Body */}
           <div className="p-6">{children}</div>
         </div>
       </div>
@@ -110,4 +105,3 @@ export function Modal({
     document.body
   );
 }
-

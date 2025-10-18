@@ -1,7 +1,5 @@
 import type { Route } from "./+types/register";
 import { useState } from "react";
-import { CompanyLogo } from "~/components/Logo";
-import { PhoneIcon } from "~/components/Icons";
 import { useNavigateWithTransition, usePageTransition } from "~/components/LoadingSystem";
 import { useAuth } from "~/contexts/AuthContext";
 
@@ -124,8 +122,7 @@ export default function Register() {
                     <div className="mt-12 p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
                         <p className="text-sm text-purple-100 mb-2">Liên hệ tư vấn</p>
                         <div className="flex items-center space-x-2">
-                            <PhoneIcon size={20} color="#ffffff" />
-                            <span className="text-xl font-bold">0123 456 789</span>
+                            <span className="text-xl font-bold">Liên hệ: 0123 456 789</span>
                         </div>
                     </div>
                 </div>
@@ -136,9 +133,6 @@ export default function Register() {
                 <div className="max-w-md w-full space-y-8">
                     {/* Logo and Title */}
                     <div className="text-center">
-                        <div className="flex justify-center mb-6">
-                            <CompanyLogo size="lg" />
-                        </div>
                         <h2 className="text-3xl font-bold text-gray-900">
                             Đăng Ký Tài Khoản
                         </h2>

@@ -1,13 +1,3 @@
-/**
- * ============================================
- * AUTH CONTEXT - UNIFIED AUTHENTICATION & PERMISSIONS
- * ============================================
- * Quản lý authentication state và permission checking
- * ĐÂY LÀ NGUỒN DUY NHẤT CHO AUTH & PERMISSIONS
- *
- * @version 3.0 - Unified (State + Permissions)
- */
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AuthUser, LoginCredentials, RegisterData } from '~/types/auth';
@@ -26,21 +16,17 @@ import {
   type PermissionMap,
 } from '~/utils/permissions';
 
-// Extended AuthContextType with all permission methods
 export interface AuthContextType {
-  // Auth state
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 
-  // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser?: () => Promise<void>;
   updateUser?: (user: AuthUser) => void;
 
-  // Permission checks
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
@@ -55,14 +41,12 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Export AuthContext để có thể dùng trong usePermissions
 export { AuthContext };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize auth state on mount
   useEffect(() => {
     const initAuth = async () => {
       const storedUser = authService.getStoredUser();
@@ -70,11 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (storedUser && token) {
         try {
-          // Verify token is still valid by fetching current user from API
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
         } catch (error) {
-          // Token invalid or expired, clear auth
           console.warn('Token expired or invalid, clearing auth');
           authService.clearAuth();
           setUser(null);
@@ -87,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
-  // Login handler
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
@@ -98,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Register handler
   const register = async (data: RegisterData) => {
     setIsLoading(true);
     try {
@@ -109,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Logout handler
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -120,20 +99,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Refresh user data
   const refreshUser = async () => {
     const currentUser = await authService.getCurrentUser();
     setUser(currentUser);
   };
 
-  // Update user data manually
   const updateUser = (updatedUser: AuthUser) => {
     setUser(updatedUser);
   };
-
-  // ============================================
-  // PERMISSION METHODS - ALL IN ONE PLACE
-  // ============================================
 
   const hasPermission = (permission: string) => checkHasPermission(user, permission);
   const hasAnyPermission = (permissions: string[]) => checkHasAnyPermission(user, permissions);
@@ -149,19 +122,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        // Auth state
         user,
         isLoading,
         isAuthenticated: !!user,
 
-        // Auth actions
         login,
         register,
         logout,
         refreshUser,
         updateUser,
 
-        // Permission methods
         hasPermission,
         hasAnyPermission,
         hasAllPermissions,
@@ -179,10 +149,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Hook để sử dụng Auth & Permissions
- * ĐÂY LÀ HOOK DUY NHẤT NÊN DÙNG
- */
 export function useAuth() {
   const context = useContext(AuthContext);
 

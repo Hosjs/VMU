@@ -3,8 +3,22 @@ export interface Role {
   name: string;
   display_name: string;
   description?: string;
-  permissions?: string[] | Record<string, string[]> | string; // Hỗ trợ nhiều format
+  permissions?: PermissionMap | string; // ✅ Hỗ trợ cả object và string
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string;
+  // Statistics
+  users_count?: number;
+  active_users_count?: number;
+  permission_summary?: {
+    total_modules: number;
+    total_actions: number;
+  };
 }
+
+// ✅ Type cho Permission Map (sync với backend)
+export type PermissionMap = Record<string, string[]>;
 
 export interface AuthUser {
   id: number;
@@ -12,23 +26,40 @@ export interface AuthUser {
   email: string;
   phone?: string;
   address?: string;
-  role?: Role;
+  avatar?: string;
+
+  // Role & Permissions (Hệ thống mới)
   role_id: number;
-  email_verified_at?: string;
-  created_at: string;
-  updated_at: string;
-  // Custom permissions cho từng user (ghi đè permissions của role)
-  custom_permissions?: Record<string, string[]>;
-  // Thông tin nhân viên
+  role?: Role;
+  role_name?: string;
+  role_display_name?: string;
+
+  // ✅ Custom Permissions - Quyền bổ sung riêng (ngoài quyền role)
+  custom_permissions?: PermissionMap;
+
+  // ✅ All Permissions - Tổng hợp (role + custom) từ backend
+  all_permissions?: PermissionMap;
+
+  // Employee Info
   employee_code?: string;
   position?: string;
   department?: string;
   hire_date?: string;
   salary?: number;
   birth_date?: string;
+  age?: number;
+  years_of_service?: number;
   gender?: 'male' | 'female' | 'other';
+
+  // Status
   is_active?: boolean;
   notes?: string;
+  email_verified_at?: string;
+
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
 }
 
 export interface LoginCredentials {

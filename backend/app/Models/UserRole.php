@@ -17,10 +17,21 @@ class UserRole extends Model
         'is_active',
     ];
 
-    protected $casts = [
-        'assigned_at' => 'datetime',
-        'is_active' => 'boolean',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     */
+    protected function casts(): array
+    {
+        return [
+            'assigned_at' => 'datetime',
+            'is_active' => 'boolean',
+            'user_id' => 'integer',
+            'role_id' => 'integer',
+            'assigned_by' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+    }
 
     // =====================
     // RELATIONSHIPS

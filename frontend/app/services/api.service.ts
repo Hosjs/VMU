@@ -1,27 +1,6 @@
-/**
- * ============================================
- * UNIFIED API SERVICE
- * ============================================
- * Gộp utils/api.ts + services/api.service.ts
- * - HTTP Client (GET, POST, PUT, DELETE)
- * - Error Handling
- * - Auto Authentication
- * - Query Builder & Pagination
- *
- * @version 2.0 - Unified & Optimized
- */
-
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
-// ============================================
-// CONFIGURATION
-// ============================================
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
-// ============================================
-// ERROR HANDLING
-// ============================================
 
 export class ApiError extends Error {
   constructor(
@@ -46,19 +25,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
-// ============================================
-// TOKEN MANAGEMENT
-// ============================================
-
 const TOKEN_KEY = 'auth_token';
 
 function getAuthToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
-
-// ============================================
-// LOW-LEVEL HTTP CLIENT
-// ============================================
 
 const httpClient = {
   get: async <T>(endpoint: string, token?: string): Promise<T> => {
@@ -132,14 +103,7 @@ const httpClient = {
   },
 };
 
-// ============================================
-// HIGH-LEVEL API SERVICE (WITH AUTO AUTH)
-// ============================================
-
 class ApiService {
-  /**
-   * Build query string from params object
-   */
   private buildQueryString(params: Record<string, any>): string {
     const query = new URLSearchParams();
 
@@ -156,9 +120,6 @@ class ApiService {
     return query.toString();
   }
 
-  /**
-   * GET request with auto authentication
-   */
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
     const token = getAuthToken();
     const queryString = params ? `?${this.buildQueryString(params)}` : '';
@@ -168,9 +129,6 @@ class ApiService {
     return response.data;
   }
 
-  /**
-   * GET request without auth (for public endpoints)
-   */
   async getPublic<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
     const queryString = params ? `?${this.buildQueryString(params)}` : '';
     const url = `${endpoint}${queryString}`;
@@ -179,10 +137,6 @@ class ApiService {
     return response.data;
   }
 
-  /**
-   * GET request that returns paginated data
-   * Backend trả về trực tiếp Laravel pagination response (không wrap)
-   */
   async getPaginated<T>(
     endpoint: string,
     params: TableQueryParams
@@ -195,7 +149,7 @@ class ApiService {
 
     if (params.search) queryParams.search = params.search;
     if (params.sort_by) queryParams.sort_by = params.sort_by;
-    if (params.sort_direction) queryParams.sort_direction = params.sort_direction; // ✅ ĐÚNG: sort_direction
+    if (params.sort_direction) queryParams.sort_direction = params.sort_direction;
     if (params.filters) {
       Object.entries(params.filters).forEach(([key, value]) => {
         queryParams[key] = value;
@@ -205,59 +159,37 @@ class ApiService {
     const queryString = this.buildQueryString(queryParams);
     const url = `${endpoint}?${queryString}`;
 
-    // Backend trả về trực tiếp pagination response, không wrap trong {success, data}
     const response = await httpClient.get<PaginatedResponse<T>>(url, token || undefined);
     return response;
   }
 
-  /**
-   * POST request with auto authentication
-   */
   async post<T>(endpoint: string, data: any): Promise<T> {
     const token = getAuthToken();
     const response = await httpClient.post<{ success: boolean; data: T; message?: string }>(endpoint, data, token || undefined);
     return response.data;
   }
 
-  /**
-   * POST request without auth (for public endpoints like login/register)
-   */
   async postPublic<T>(endpoint: string, data: any): Promise<T> {
     const response = await httpClient.post<{ success: boolean; data: T; message?: string }>(endpoint, data);
     return response.data;
   }
 
-  /**
-   * PUT request with auto authentication
-   */
   async put<T>(endpoint: string, data: any): Promise<T> {
     const token = getAuthToken();
     const response = await httpClient.put<{ success: boolean; data: T; message?: string }>(endpoint, data, token || undefined);
     return response.data;
   }
 
-  /**
-   * DELETE request with auto authentication
-   */
   async delete<T>(endpoint: string): Promise<T> {
     const token = getAuthToken();
     const response = await httpClient.delete<{ success: boolean; data: T; message?: string }>(endpoint, token || undefined);
     return response.data;
   }
 
-  /**
-   * Direct access to low-level HTTP client (for special cases)
-   */
   get http() {
     return httpClient;
   }
 }
 
-// ============================================
-// EXPORTS
-// ============================================
-
 export const apiService = new ApiService();
-
-// Export for backward compatibility
 export const api = httpClient;

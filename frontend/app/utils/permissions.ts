@@ -16,31 +16,63 @@ export interface Permission {
 export type PermissionMap = Record<string, string[]>;
 
 /**
- * Danh sách tất cả permissions có sẵn trong hệ thống
+ * ✅ Danh sách tất cả 28 MODULES trong hệ thống (sync với backend)
+ * Cập nhật theo PermissionModuleSeeder.php
  */
 export const AVAILABLE_PERMISSIONS: PermissionMap = {
-  dashboard: ['view'],
-  users: ['view', 'create', 'edit', 'delete'],
-  roles: ['view', 'create', 'edit', 'delete'],
-  customers: ['view', 'create', 'edit', 'delete'],
-  vehicles: ['view', 'create', 'edit', 'delete'],
-  products: ['view', 'create', 'edit', 'delete'],
-  services: ['view', 'create', 'edit', 'delete'],
-  categories: ['view', 'create', 'edit', 'delete'],
-  orders: ['view', 'create', 'edit', 'delete', 'approve', 'cancel'],
-  invoices: ['view', 'create', 'edit', 'delete', 'approve'],
-  payments: ['view', 'create', 'edit', 'delete', 'confirm', 'verify'],
-  settlements: ['view', 'create', 'edit', 'delete', 'approve'],
-  warehouses: ['view', 'create', 'edit', 'delete'],
-  stocks: ['view', 'create', 'edit', 'delete', 'transfer'],
-  providers: ['view', 'create', 'edit', 'delete'],
-  reports: ['view', 'export'],
+  // QUẢN TRỊ HỆ THỐNG
+  dashboard: ['view', 'view_statistics'],
+  users: ['view', 'create', 'edit', 'delete', 'view_salary', 'edit_salary'],
+  roles: ['view', 'create', 'edit', 'delete', 'assign_permissions'],
+  permissions: ['view', 'edit', 'assign_user'],
   settings: ['view', 'edit'],
+
+  // KHÁCH HÀNG
+  customers: ['view', 'create', 'edit', 'delete', 'export'],
+
+  // PHƯƠNG TIỆN
+  vehicles: ['view', 'create', 'edit', 'delete', 'view_history'],
+  vehicle_brands: ['view', 'create', 'edit', 'delete'],
+  vehicle_models: ['view', 'create', 'edit', 'delete'],
+  vehicle_inspections: ['view', 'create', 'edit', 'delete'],
+
+  // DỊCH VỤ
+  service_requests: ['view', 'create', 'edit', 'delete', 'assign', 'approve', 'cancel', 'complete'],
+  services: ['view', 'create', 'edit', 'delete'],
+  warranties: ['view', 'create', 'edit', 'delete', 'activate'],
+
+  // ĐỐI TÁC
+  partner_quotes: ['view', 'create', 'edit', 'delete', 'approve'],
+  partner_vehicle_handovers: ['view', 'create', 'edit', 'delete', 'confirm'],
+
+  // BÁN HÀNG
+  orders: ['view', 'create', 'edit', 'delete', 'approve', 'cancel', 'export'],
+  direct_sales: ['view', 'create', 'edit', 'delete'],
+
+  // TÀI CHÍNH
+  invoices: ['view', 'create', 'edit', 'delete', 'approve', 'export', 'send_email'],
+  payments: ['view', 'create', 'edit', 'delete', 'approve', 'refund'],
+  settlements: ['view', 'create', 'edit', 'delete', 'approve'],
+
+  // SẢN PHẨM & KHO
+  products: ['view', 'create', 'edit', 'delete', 'view_cost', 'edit_price'],
+  categories: ['view', 'create', 'edit', 'delete'],
+  warehouses: ['view', 'create', 'edit', 'delete', 'view_stock', 'adjust_stock'],
+  stock_transfers: ['view', 'create', 'edit', 'delete', 'approve', 'receive'],
+  stock_movements: ['view', 'export'],
+  providers: ['view', 'create', 'edit', 'delete'],
+
+  // BÁO CÁO
+  reports: ['view', 'view_revenue', 'view_profit', 'view_inventory', 'export'],
+
+  // THÔNG BÁO
+  notifications: ['view', 'create', 'delete', 'mark_read'],
 };
 
 /**
- * Parse permissions từ role object
- * Backend lưu permissions dưới dạng JSON string hoặc object
+ * Parse permissions từ role hoặc user
+ * Backend trả về permissions dưới dạng JSON object
+ * Format: {"users": ["view", "create"], "orders": ["view"]}
  */
 export function parsePermissions(role: Role | null | undefined): PermissionMap {
   if (!role) return {};
@@ -56,15 +88,19 @@ export function parsePermissions(role: Role | null | undefined): PermissionMap {
 
   // Nếu permissions là object, return trực tiếp
   if (role.permissions && typeof role.permissions === 'object') {
-    return role.permissions as unknown as PermissionMap;
+    // Nếu là array (old format), convert sang object
+    if (Array.isArray(role.permissions)) {
+      return {};
+    }
+    return role.permissions as PermissionMap;
   }
 
   return {};
 }
 
 /**
- * Lấy permissions thực tế của user (kết hợp role permissions và custom permissions)
- * Custom permissions sẽ ghi đè role permissions
+ * ✅ Lấy ALL PERMISSIONS của user (Role + Custom Permissions)
+ * Backend đã xử lý merge logic, frontend chỉ cần lấy từ API
  */
 export function getEffectivePermissions(user: AuthUser | null): PermissionMap {
   if (!user) return {};
@@ -74,43 +110,66 @@ export function getEffectivePermissions(user: AuthUser | null): PermissionMap {
     return AVAILABLE_PERMISSIONS;
   }
 
-  // Lấy permissions từ role
+  // ✅ Nếu user có all_permissions từ API (đã merge sẵn)
+  if (user.all_permissions) {
+    return user.all_permissions;
+  }
+
+  // Fallback: Lấy từ role permissions
   const rolePermissions = parsePermissions(user.role);
 
-  // Nếu user có custom_permissions, merge với role permissions
+  // Merge với custom_permissions nếu có
   if (user.custom_permissions && Object.keys(user.custom_permissions).length > 0) {
-    return {
-      ...rolePermissions,
-      ...user.custom_permissions,
-    };
+    const merged = { ...rolePermissions };
+
+    // Merge custom permissions (thêm vào existing permissions)
+    Object.keys(user.custom_permissions).forEach(module => {
+      const customActions = user.custom_permissions![module];
+      if (merged[module]) {
+        // Merge với existing
+        merged[module] = Array.from(new Set([...merged[module], ...customActions]));
+      } else {
+        // Thêm mới
+        merged[module] = customActions;
+      }
+    });
+
+    return merged;
   }
 
   return rolePermissions;
 }
 
 /**
- * Kiểm tra user có quyền cụ thể hay không
- *
- * @param user - User object
- * @param permission - Permission string dạng "module.action" (vd: "users.create")
- * @returns boolean
+ * ✅ Kiểm tra quyền theo format mới: module.action
+ * VD: hasPermission(user, "users", "create") hoặc hasPermission(user, "users.create")
  */
-export function hasPermission(user: AuthUser | null, permission: string): boolean {
+export function hasPermission(user: AuthUser | null, moduleOrPermission: string, action?: string): boolean {
   if (!user || !user.role) return false;
 
   // Admin có full quyền
   if (user.role.name === 'admin') return true;
 
-  const [module, action] = permission.split('.');
-  if (!module || !action) return false;
+  let module: string;
+  let targetAction: string;
 
-  // Sử dụng effective permissions (đã merge custom_permissions)
+  // Support cả 2 format: hasPermission(user, "users", "create") hoặc hasPermission(user, "users.create")
+  if (action) {
+    module = moduleOrPermission;
+    targetAction = action;
+  } else {
+    const parts = moduleOrPermission.split('.');
+    if (parts.length !== 2) return false;
+    [module, targetAction] = parts;
+  }
+
+  // Sử dụng effective permissions (đã merge)
   const permissions = getEffectivePermissions(user);
   const modulePermissions = permissions[module];
 
   if (!modulePermissions || !Array.isArray(modulePermissions)) return false;
 
-  return modulePermissions.includes(action);
+  return modulePermissions.includes(targetAction);
 }
 
 /**

@@ -1,6 +1,5 @@
 import type { Route } from "./+types/login";
 import { useState } from "react";
-import { CompanyLogo } from "~/components/Logo";
 import { useNavigateWithTransition, usePageTransition } from "~/components/LoadingSystem";
 import { useAuth } from "~/contexts/AuthContext";
 
@@ -52,9 +51,6 @@ export default function Login() {
                 <div className="max-w-md w-full space-y-8">
                     {/* Logo and Title */}
                     <div className="text-center">
-                        <div className="flex justify-center mb-6">
-                            <CompanyLogo size="lg" />
-                        </div>
                         <h2 className="text-3xl font-bold text-gray-900">
                             Đăng Nhập
                         </h2>

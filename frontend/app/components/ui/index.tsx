@@ -1,4 +1,3 @@
-// Export all UI components
 export { Input } from './Input';
 export { Select } from './Select';
 export { Button } from './Button';
@@ -9,8 +8,7 @@ export { Table } from './Table';
 export { Toast } from './Toast';
 export { Pagination } from './Pagination';
 
-// Re-export Loading components from LoadingSystem
-export { 
+export {
   LoadingSpinner, 
   FullScreenLoader,
   GradientLoader,

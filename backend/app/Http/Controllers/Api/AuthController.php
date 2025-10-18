@@ -157,13 +157,14 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Load role và custom_permissions
+        // ✅ Load role để có thể check permissions
         $user->load('role');
 
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $user
+                'user' => $user,
+                'permissions' => $user->getAllPermissions(), // ✅ Thêm permissions
             ]
         ]);
     }
@@ -253,7 +254,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Lấy tất cả permissions của user hiện tại
+     * Lấy tất cả permissions của user hiện tại (cho frontend)
      */
     public function permissions(Request $request)
     {
@@ -266,15 +267,19 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Load role để lấy permissions
+        // ✅ Load role để có thể get permissions
         $user->load('role');
 
         return response()->json([
             'success' => true,
             'data' => [
                 'permissions' => $user->getAllPermissions(),
-                'role' => $user->role ? $user->role->name : null,
-                'role_display_name' => $user->role ? $user->role->display_name : null,
+                'role' => [
+                    'id' => $user->role?->id,
+                    'name' => $user->role?->name,
+                    'display_name' => $user->role?->display_name,
+                ],
+                'has_custom_permissions' => !empty($user->custom_permissions),
             ]
         ]);
     }

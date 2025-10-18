@@ -9,7 +9,6 @@ import {
 
 import { PageTransitionProvider } from "./components/LoadingSystem";
 import { AuthProvider } from "./contexts/AuthContext";
-import { NotificationProvider } from "./contexts/NotificationContext";
 import "./app.css";
 
 export const links = () => [
@@ -45,18 +44,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 backgroundAttachment: 'fixed'
             }}
         >
-        {/* Global Background Overlay */}
         <div
             className="fixed inset-0 bg-white/70 backdrop-blur-sm"
             style={{ zIndex: -1 }}
         ></div>
 
         <AuthProvider>
-            <NotificationProvider>
                 <PageTransitionProvider>
                     {children}
                 </PageTransitionProvider>
-            </NotificationProvider>
         </AuthProvider>
         <ScrollRestoration />
         <Scripts />

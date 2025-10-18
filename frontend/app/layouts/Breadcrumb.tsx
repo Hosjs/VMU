@@ -1,12 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { useMemo } from 'react';
 
-/**
- * Breadcrumb Component
- *
- * Hiển thị đường dẫn navigation hiện tại
- * Ví dụ: Dashboard / Admin / Users
- */
 export function Breadcrumb() {
   const location = useLocation();
 

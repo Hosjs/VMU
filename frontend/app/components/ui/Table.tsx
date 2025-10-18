@@ -35,7 +35,6 @@ export function Table<T>({
     }
   };
 
-  // Đảm bảo data luôn là mảng, không bao giờ undefined
   const safeData = data || [];
 
   return (

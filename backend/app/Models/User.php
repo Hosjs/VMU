@@ -159,65 +159,67 @@ class User extends Authenticatable
     }
 
     // =====================
-    // HELPER METHODS
+    // HELPER METHODS - HỆ THỐNG PHÂN QUYỀN
     // =====================
 
     /**
-     * Kiểm tra user có permission cụ thể không
-     * Hỗ trợ: role permissions, custom permissions, và wildcard
+     * Kiểm tra permission - Hỗ trợ cả 2 cú pháp
      *
-     * @param string $permission Format: "resource.action" (vd: "users.view", "orders.create")
+     * Cách 1: can('orders.view') - Dạng string với dot notation
+     * Cách 2: can('orders', 'view') - Dạng 2 tham số
+     *
+     * @param string $moduleOrPermission Module name hoặc full permission string
+     * @param string|null $action Action name (nếu dùng cú pháp 2 tham số)
      * @return bool
      */
-    public function hasPermission(string $permission): bool
+    public function can($moduleOrPermission, $action = null): bool
     {
+        // Nếu có tham số thứ 2, gọi method hasPermission chuẩn
+        if ($action !== null) {
+            return $this->hasPermission($moduleOrPermission, $action);
+        }
+
+        // Nếu chỉ có 1 tham số, tách string theo dấu chấm
+        if (strpos($moduleOrPermission, '.') !== false) {
+            [$module, $actionPart] = explode('.', $moduleOrPermission, 2);
+            return $this->hasPermission($module, $actionPart);
+        }
+
+        // Nếu không có dấu chấm, kiểm tra module access
+        return $this->hasModuleAccess($moduleOrPermission);
+    }
+
+    /**
+     * Kiểm tra user có permission cụ thể không
+     * Quyền cuối cùng = Quyền của Role + Custom Permissions
+     *
+     * @param string $module Module name (vd: "users", "orders", "products")
+     * @param string $action Action name (vd: "view", "create", "edit", "delete")
+     * @return bool
+     */
+    public function hasPermission(string $module, string $action): bool
+    {
+        // ✅ Eager load role nếu chưa có
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
         // Admin có tất cả quyền
         if ($this->role && $this->role->name === 'admin') {
             return true;
         }
 
-        // 1. Kiểm tra custom_permissions của user (override role)
+        // 1. Kiểm tra custom_permissions của user (quyền bổ sung)
         if ($this->custom_permissions && is_array($this->custom_permissions)) {
-            // Check exact match
-            if (in_array($permission, $this->custom_permissions)) {
+            if (isset($this->custom_permissions[$module]) && is_array($this->custom_permissions[$module]) && in_array($action, $this->custom_permissions[$module])) {
                 return true;
-            }
-
-            // Check wildcard: users.* cho phép users.view, users.create, etc
-            $parts = explode('.', $permission);
-            if (count($parts) === 2) {
-                $wildcardPermission = $parts[0] . '.*';
-                if (in_array($wildcardPermission, $this->custom_permissions)) {
-                    return true;
-                }
-            }
-
-            // Check deny permission (bắt đầu với !)
-            if (in_array('!' . $permission, $this->custom_permissions)) {
-                return false;
             }
         }
 
-        // 2. Kiểm tra permissions từ role
-        if ($this->role && $this->role->permissions) {
-            $rolePermissions = is_string($this->role->permissions)
-                ? json_decode($this->role->permissions, true)
-                : $this->role->permissions;
-
-            if (is_array($rolePermissions)) {
-                // Check exact match
-                if (in_array($permission, $rolePermissions)) {
-                    return true;
-                }
-
-                // Check wildcard
-                $parts = explode('.', $permission);
-                if (count($parts) === 2) {
-                    $wildcardPermission = $parts[0] . '.*';
-                    if (in_array($wildcardPermission, $rolePermissions)) {
-                        return true;
-                    }
-                }
+        // 2. Kiểm tra permissions từ role (quyền mặc định)
+        if ($this->role && $this->role->permissions && is_array($this->role->permissions)) {
+            if (isset($this->role->permissions[$module]) && is_array($this->role->permissions[$module]) && in_array($action, $this->role->permissions[$module])) {
+                return true;
             }
         }
 
@@ -225,12 +227,54 @@ class User extends Authenticatable
     }
 
     /**
+     * Lấy tất cả permissions của user (role + custom)
+     *
+     * @return array Format: {"module_name": ["action1", "action2"], ...}
+     */
+    public function getAllPermissions(): array
+    {
+        // ✅ Eager load role nếu chưa có
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        // Admin có tất cả quyền
+        if ($this->role && $this->role->name === 'admin') {
+            return ['*' => ['*']]; // Wildcard: tất cả module và actions
+        }
+
+        $permissions = [];
+
+        // 1. Lấy quyền từ role
+        if ($this->role && $this->role->permissions && is_array($this->role->permissions)) {
+            $permissions = $this->role->permissions;
+        }
+
+        // 2. Merge với custom_permissions (quyền bổ sung)
+        if ($this->custom_permissions && is_array($this->custom_permissions)) {
+            foreach ($this->custom_permissions as $module => $actions) {
+                if (!isset($permissions[$module])) {
+                    $permissions[$module] = [];
+                }
+                if (is_array($actions)) {
+                    $permissions[$module] = array_unique(array_merge($permissions[$module], $actions));
+                }
+            }
+        }
+
+        return $permissions;
+    }
+
+    /**
      * Kiểm tra user có bất kỳ permission nào trong danh sách
+     *
+     * @param array $permissions Mảng permission dạng ['orders.view', 'orders.edit']
+     * @return bool
      */
     public function hasAnyPermission(array $permissions): bool
     {
         foreach ($permissions as $permission) {
-            if ($this->hasPermission($permission)) {
+            if ($this->can($permission)) {
                 return true;
             }
         }
@@ -239,11 +283,14 @@ class User extends Authenticatable
 
     /**
      * Kiểm tra user có tất cả permissions trong danh sách
+     *
+     * @param array $permissions Mảng permission dạng ['orders.view', 'orders.edit']
+     * @return bool
      */
     public function hasAllPermissions(array $permissions): bool
     {
         foreach ($permissions as $permission) {
-            if (!$this->hasPermission($permission)) {
+            if (!$this->can($permission)) {
                 return false;
             }
         }
@@ -251,44 +298,118 @@ class User extends Authenticatable
     }
 
     /**
-     * Lấy tất cả permissions của user (role + custom)
-     */
-    public function getAllPermissions(): array
-    {
-        $permissions = [];
-
-        // Permissions từ role
-        if ($this->role && $this->role->permissions) {
-            $rolePermissions = is_string($this->role->permissions)
-                ? json_decode($this->role->permissions, true)
-                : $this->role->permissions;
-
-            if (is_array($rolePermissions)) {
-                $permissions = array_merge($permissions, $rolePermissions);
-            }
-        }
-
-        // Custom permissions
-        if ($this->custom_permissions && is_array($this->custom_permissions)) {
-            $permissions = array_merge($permissions, $this->custom_permissions);
-        }
-
-        return array_unique($permissions);
-    }
-
-    /**
-     * Kiểm tra user có role cụ thể
+     * Kiểm tra user có role cụ thể không
+     *
+     * @param string $roleName Tên role (vd: 'admin', 'manager', 'staff')
+     * @return bool
      */
     public function hasRole(string $roleName): bool
     {
+        // Eager load role nếu chưa có
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
         return $this->role && $this->role->name === $roleName;
     }
 
     /**
-     * Kiểm tra user có bất kỳ role nào trong danh sách
+     * Kiểm tra user có phải admin không
+     *
+     * @return bool
      */
-    public function hasAnyRole(array $roleNames): bool
+    public function isAdmin(): bool
     {
-        return $this->role && in_array($this->role->name, $roleNames);
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Kiểm tra user có quyền với bất kỳ action nào trong module
+     *
+     * @param string $module Module name
+     * @return bool
+     */
+    public function hasModuleAccess(string $module): bool
+    {
+        // ✅ Eager load role nếu chưa có
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+
+        // Admin có tất cả quyền
+        if ($this->role && $this->role->name === 'admin') {
+            return true;
+        }
+
+        // Kiểm tra custom_permissions
+        if ($this->custom_permissions && is_array($this->custom_permissions)) {
+            if (isset($this->custom_permissions[$module]) && !empty($this->custom_permissions[$module])) {
+                return true;
+            }
+        }
+
+        // Kiểm tra role permissions
+        if ($this->role && $this->role->permissions && is_array($this->role->permissions)) {
+            if (isset($this->role->permissions[$module]) && !empty($this->role->permissions[$module])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Thêm custom permission cho user
+     *
+     * @param string $module Module name
+     * @param string|array $actions Action(s) to add
+     * @return void
+     */
+    public function addCustomPermission(string $module, $actions): void
+    {
+        $customPermissions = $this->custom_permissions ?? [];
+
+        if (!isset($customPermissions[$module])) {
+            $customPermissions[$module] = [];
+        }
+
+        $actions = is_array($actions) ? $actions : [$actions];
+        $customPermissions[$module] = array_unique(array_merge($customPermissions[$module], $actions));
+
+        $this->custom_permissions = $customPermissions;
+        $this->save();
+    }
+
+    /**
+     * Xóa custom permission của user
+     *
+     * @param string $module Module name
+     * @param string|array|null $actions Action(s) to remove, null = remove all actions in module
+     * @return void
+     */
+    public function removeCustomPermission(string $module, $actions = null): void
+    {
+        $customPermissions = $this->custom_permissions ?? [];
+
+        if (!isset($customPermissions[$module])) {
+            return;
+        }
+
+        if ($actions === null) {
+            // Xóa toàn bộ module
+            unset($customPermissions[$module]);
+        } else {
+            // Xóa các actions cụ thể
+            $actions = is_array($actions) ? $actions : [$actions];
+            $customPermissions[$module] = array_diff($customPermissions[$module], $actions);
+
+            // Nếu không còn action nào, xóa module
+            if (empty($customPermissions[$module])) {
+                unset($customPermissions[$module]);
+            }
+        }
+
+        $this->custom_permissions = $customPermissions;
+        $this->save();
     }
 }
