@@ -27,7 +27,9 @@ return new class extends Migration
             $table->text('description')->nullable(); // Mô tả vai trò
             $table->json('permissions')->nullable(); // Quyền mặc định theo module: {"users": ["view", "create"], "orders": ["view"]}
             $table->boolean('is_active')->default(true); // Trạng thái hoạt động
+            $table->boolean('is_system')->default(false); // System role flag (internal)
             $table->timestamps();
+            $table->softDeletes();
 
             // Indexes
             $table->index('name');

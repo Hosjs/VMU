@@ -230,7 +230,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700/50 bg-gray-900/50">
           <div className="text-center">
             <p className="text-xs text-gray-500">Version 1.0.0</p>
-            <p className="text-xs text-gray-600 mt-1">© 2024 Thắng Trường</p>
+            <p className="text-xs text-gray-600 mt-1">© 2025 Đại học Hàng Hải Việt Nam</p>
           </div>
         </div>
       </aside>

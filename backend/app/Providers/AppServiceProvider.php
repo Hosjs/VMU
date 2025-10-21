@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
-use App\Models\ServiceRequest;
-use App\Observers\ServiceRequestObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
         Passport::personalAccessTokensExpireIn(now()->addDays(config('passport.personal_access_token_expiration', 365)));
 
         // Đăng ký Observer cho ServiceRequest
-        ServiceRequest::observe(ServiceRequestObserver::class);
+        if (class_exists(\App\Models\ServiceRequest::class) && class_exists(\App\Observers\ServiceRequestObserver::class)) {
+            \App\Models\ServiceRequest::observe(\App\Observers\ServiceRequestObserver::class);
+        }
     }
 }

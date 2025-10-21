@@ -79,7 +79,7 @@ export default function MainLayout() {
 
         <footer className="bg-white border-t border-gray-200 py-4 px-6">
           <p className="text-center text-sm text-gray-600">
-            © 2024 AutoCare Pro. All rights reserved.
+            © 2025 Viet Nam Marinetime University. All rights reserved.
           </p>
         </footer>
       </div>

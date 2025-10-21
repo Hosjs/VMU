@@ -77,7 +77,6 @@ export function Header({ onToggleSidebar, sidebarOpen, user }: HeaderProps) {
         {/* Right: User Actions */}
         <div className="flex items-center gap-2 md:gap-4">
           {/* Notifications - Sử dụng NotificationBell component */}
-          <NotificationBell />
 
           {/* User Menu */}
           <div className="relative">

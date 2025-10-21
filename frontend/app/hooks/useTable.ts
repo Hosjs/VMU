@@ -125,7 +125,7 @@ export function useTable<T>({
   const handleSort = useCallback((field: string) => {
     if (sortBy === field) {
       // Toggle direction if same field
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev: SortDirection) => prev === 'asc' ? 'desc' : 'asc');
     } else {
       // New field, default to ascending
       setSortBy(field);

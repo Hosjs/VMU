@@ -160,4 +160,20 @@ abstract class Controller
             'sort_direction' => $request->input('sort_direction', 'desc'),
         ];
     }
+
+    /**
+     * Success response for paginated resource collection
+     * Unwraps meta and links for cleaner response
+     */
+    protected function resourcePaginatedResponse($resourceCollection): JsonResponse
+    {
+        $response = $resourceCollection->response()->getData(true);
+        if (isset($response['meta'])) {
+            $meta = $response['meta'];
+            unset($response['meta']);
+            $response = array_merge($response, $meta);
+        }
+        unset($response['links']);
+        return response()->json($response);
+    }
 }
