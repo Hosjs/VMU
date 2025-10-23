@@ -27,6 +27,10 @@ export function Breadcrumb() {
     'reports': 'Báo cáo',
     'roles': 'Vai trò',
     'settings': 'Cài đặt',
+    'management': 'Quản lý',
+    'financial': 'Tài chính',
+    'sales': 'Bán hàng',
+    'partners': 'Đối tác',
 
     // Manager routes
     'manager': 'Quản lý',
