@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Laravel\Passport\Client;
-use Laravel\Passport\PersonalAccessClient;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PassportClientSeeder extends Seeder
 {
@@ -15,36 +15,40 @@ class PassportClientSeeder extends Seeder
     {
         $this->command->info('🔐 Setting up Passport OAuth clients...');
 
-        // Check if personal access client already exists
-        $existingClient = Client::where('personal_access_client', true)->first();
+        // Check if client already exists
+        $existingClient = DB::table('oauth_clients')->where('name', 'GarageApp Personal Access Client')->first();
 
         if ($existingClient) {
-            $this->command->warn('Personal access client already exists. Skipping...');
+            $this->command->warn('⚠️  Personal access client already exists. Skipping...');
             return;
         }
 
         // Create personal access client
-        $client = Client::create([
+        DB::table('oauth_clients')->insert([
+            'id' => Str::uuid(),
             'name' => 'GarageApp Personal Access Client',
-            'secret' => \Illuminate\Support\Str::random(40),
-            'redirect' => 'http://localhost',
-            'personal_access_client' => true,
-            'password_client' => false,
+            'secret' => Str::random(40),
+            'provider' => null,
+            'redirect_uris' => json_encode(['http://localhost']),
+            'grant_types' => json_encode(['personal_access']),
             'revoked' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // Create personal access client record
-        PersonalAccessClient::create([
-            'client_id' => $client->id,
+        // Create password grant client
+        DB::table('oauth_clients')->insert([
+            'id' => Str::uuid(),
+            'name' => 'GarageApp Password Grant Client',
+            'secret' => Str::random(40),
+            'provider' => 'users',
+            'redirect_uris' => json_encode(['http://localhost']),
+            'grant_types' => json_encode(['password']),
+            'revoked' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        $this->command->info('✅ Personal access client created successfully!');
-        $this->command->table(
-            ['ID', 'Name', 'Type'],
-            [
-                [$client->id, $client->name, 'Personal Access Client'],
-            ]
-        );
+        $this->command->info('✅ Passport OAuth clients created successfully!');
     }
 }
-

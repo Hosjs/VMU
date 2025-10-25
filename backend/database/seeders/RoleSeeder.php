@@ -20,6 +20,14 @@ class RoleSeeder extends Seeder
                 'permissions' => [
                     'users' => ['view', 'create', 'edit', 'delete'],
                     'roles' => ['view', 'create', 'edit', 'delete'],
+                    'dashboard' => ['view'],
+                    'students' => ['view', 'create', 'edit', 'delete', 'export'],
+                    'classes' => ['view', 'create', 'edit', 'delete'],
+                    'teachers' => ['view', 'create', 'edit', 'delete'],
+                    'courses' => ['view', 'create', 'edit', 'delete'],
+                    'training_levels' => ['view', 'create', 'edit', 'delete'],
+                    'majors' => ['view', 'create', 'edit', 'delete'],
+                    'classrooms' => ['view', 'create', 'edit', 'delete'],
                     'vehicles' => ['view', 'create', 'edit', 'delete'],
                     'service_requests' => ['view', 'create', 'edit', 'delete'],
                     'orders' => ['view', 'create', 'edit', 'delete'],
@@ -84,4 +92,3 @@ class RoleSeeder extends Seeder
         }
     }
 }
-

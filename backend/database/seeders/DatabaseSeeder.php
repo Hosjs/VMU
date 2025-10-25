@@ -37,7 +37,26 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 3. ADMIN USER
+        // 3. TRAINING DATA (Categories)
+        // =====================
+        $this->command->info('📚 Creating Training Categories...');
+        $this->call([
+            TrinhDoDaoTaoSeeder::class,
+            NganhHocSeeder::class,
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 4. STUDENT PERMISSIONS
+        // =====================
+        $this->command->info('🎓 Creating Student Permissions...');
+        $this->call([
+            StudentPermissionSeeder::class,
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 5. ADMIN USER
         // =====================
         $this->command->info('👥 Creating Admin User...');
 

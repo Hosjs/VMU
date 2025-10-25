@@ -121,7 +121,7 @@ export default function Dashboard() {
                     Xin chào, {user?.name || 'User'}! 👋
                 </h1>
                 <p className="text-blue-100">
-                    Chào mừng bạn quay trở lại. Đây là tổng quan hệ thống của bạn.
+                    Chào mừng bạn quay trở lại.
                 </p>
             </div>
 

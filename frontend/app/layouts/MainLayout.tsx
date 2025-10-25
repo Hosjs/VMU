@@ -5,6 +5,7 @@ import { FullScreenLoader, ContentLoader } from '~/components/LoadingSystem';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Breadcrumb } from './Breadcrumb';
+import { DebugRouteInfo } from '~/components/DebugRouteInfo';
 
 export default function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -28,7 +29,7 @@ export default function MainLayout() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !hasCheckedAuth.current) {
-      console.log('🔒 Not authenticated, redirecting to login...');
+      // Redirect to login nếu chưa authenticated
       hasCheckedAuth.current = true;
       navigate('/login', { replace: true });
     }
@@ -54,6 +55,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <DebugRouteInfo />
       <Sidebar
         isOpen={sidebarOpen}
         onClose={handleCloseSidebar}

@@ -10,45 +10,42 @@ export function Breadcrumb() {
     'admin': 'Quản trị',
     'dashboard': 'Tổng quan',
     'users': 'Người dùng',
-    'customers': 'Khách hàng',
-    'products': 'Sản phẩm',
-    'services': 'Dịch vụ',
-    'orders': 'Đơn hàng',
-    'invoices': 'Hóa đơn',
-    'payments': 'Thanh toán',
-    'warehouses': 'Kho hàng',
-    'providers': 'Nhà cung cấp',
-    'vehicles': 'Phương tiện',
-    'vehicle-handovers': 'Bàn giao xe',
-    'stocks': 'Tồn kho',
-    'stock-transfers': 'Chuyển kho',
-    'settlements': 'Quyết toán',
-    'service-requests': 'Yêu cầu dịch vụ',
-    'reports': 'Báo cáo',
     'roles': 'Vai trò',
     'settings': 'Cài đặt',
     'management': 'Quản lý',
+    'reports': 'Báo cáo',
+
+    // Categories
+    'categories': 'Danh mục',
+    'training-levels': 'Trình độ đào tạo',
+    'majors': 'Ngành học',
+    'courses': 'Học phần',
+    'classrooms': 'Phòng học',
+
+    // Students
+    'students': 'Học viên',
+    'list': 'Danh sách',
+    'classes': 'Lớp học',
+    'class-assignments': 'Phân lớp',
+
+    // Teachers
+    'teachers': 'Giảng viên',
+    'assignments': 'Phân công giảng dạy',
+    'salaries': 'Lương giảng viên',
+
+    // Training
+    'training': 'Đào tạo',
+    'semesters': 'Học kỳ',
+    'registration-packages': 'Gói đăng ký',
+    'course-registrations': 'Đăng ký học phần',
+    'study-plans': 'Kế hoạch học tập',
+    'schedules': 'Thời khóa biểu',
+
+    // Academic & Financial
+    'academic': 'Học tập',
+    'grades': 'Điểm học tập',
     'financial': 'Tài chính',
-    'sales': 'Bán hàng',
-    'partners': 'Đối tác',
-
-    // Manager routes
-    'manager': 'Quản lý',
-    'inventory': 'Tồn kho',
-
-    // Accountant routes
-    'accountant': 'Kế toán',
-
-    // Mechanic routes
-    'mechanic': 'Thợ sửa chữa',
-    'work-orders': 'Lệnh sửa chữa',
-
-    // Employee routes
-    'employee': 'Nhân viên',
-    'tasks': 'Công việc',
-
-    // Common
-    'profile': 'Thông tin cá nhân',
+    'tuition-fees': 'Học phí',
   };
 
   // Generate breadcrumb items từ pathname

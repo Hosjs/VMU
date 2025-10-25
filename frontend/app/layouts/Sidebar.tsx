@@ -5,21 +5,23 @@ import { useAuth } from '~/contexts/AuthContext';
 import {
   HomeIcon,
   UsersIcon,
-  ShoppingCartIcon,
-  CubeIcon,
-  UserCircleIcon,
-  TruckIcon,
-  ArrowsRightLeftIcon,
-  CurrencyDollarIcon,
+  AcademicCapIcon,
+  BuildingLibraryIcon,
+  BookOpenIcon,
   ClipboardDocumentListIcon,
+  CalendarDaysIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
+  CurrencyDollarIcon,
   ChartBarIcon,
   ShieldCheckIcon,
   Cog6ToothIcon,
-  UserGroupIcon,
-  DocumentTextIcon,
-  CreditCardIcon,
-  BuildingStorefrontIcon,
-  WrenchScrewdriverIcon,
+  ClipboardDocumentCheckIcon,
+  BanknotesIcon,
+  IdentificationIcon,
+  PresentationChartBarIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
 interface MenuItem {
@@ -32,6 +34,13 @@ interface MenuItem {
   requireAll?: boolean;
 }
 
+interface MenuGroup {
+  title: string;
+  icon: React.ReactNode;
+  items: MenuItem[];
+  requiredPermissions?: string[];
+}
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,95 +50,172 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   const location = useLocation();
   const { hasAnyPermission } = useAuth();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['system', 'categories', 'students', 'teachers', 'training', 'academic']);
 
+  const toggleGroup = useCallback((groupTitle: string) => {
+    setExpandedGroups(prev =>
+      prev.includes(groupTitle)
+        ? prev.filter(g => g !== groupTitle)
+        : [...prev, groupTitle]
+    );
+  }, []);
 
-  const allMenuItems: MenuItem[] = useMemo(() => [
+  const menuGroups: (MenuItem | MenuGroup)[] = useMemo(() => [
     {
-      title: 'Dashboard',
+      title: 'Tổng quan',
       path: '/dashboard',
       icon: <HomeIcon className="w-5 h-5" />,
       requiredPermissions: ['dashboard.view'],
     },
     {
-      title: 'Người dùng',
-      path: '/management/users',
-      icon: <UsersIcon className="w-5 h-5" />,
-      requiredPermissions: ['users.view'],
-    },
-    {
-      title: 'Vai trò & Quyền',
-      path: '/management/roles',
+      title: 'Quản trị hệ thống',
       icon: <ShieldCheckIcon className="w-5 h-5" />,
-      requiredPermissions: ['roles.view'],
+      items: [
+        {
+          title: 'Người dùng',
+          path: '/management/users',
+          icon: <UsersIcon className="w-5 h-5" />,
+          requiredPermissions: ['users.view'],
+        },
+        {
+          title: 'Vai trò & Quyền',
+          path: '/management/roles',
+          icon: <ShieldCheckIcon className="w-5 h-5" />,
+          requiredPermissions: ['roles.view'],
+        },
+      ],
     },
     {
-      title: 'Khách hàng',
-      path: '/customers/list',
+      title: 'Danh mục',
+      icon: <BuildingLibraryIcon className="w-5 h-5" />,
+      items: [
+        {
+          title: 'Trình độ đào tạo',
+          path: '/categories/training-levels',
+          icon: <AcademicCapIcon className="w-5 h-5" />,
+          requiredPermissions: ['training_levels.view'],
+        },
+        {
+          title: 'Ngành học',
+          path: '/categories/majors',
+          icon: <BuildingLibraryIcon className="w-5 h-5" />,
+          requiredPermissions: ['majors.view'],
+        },
+        {
+          title: 'Học phần',
+          path: '/categories/courses',
+          icon: <BookOpenIcon className="w-5 h-5" />,
+          requiredPermissions: ['courses.view'],
+        },
+        {
+          title: 'Phòng học',
+          path: '/categories/classrooms',
+          icon: <BuildingLibraryIcon className="w-5 h-5" />,
+          requiredPermissions: ['classrooms.view'],
+        },
+      ],
+    },
+    {
+      title: 'Học viên',
       icon: <UserGroupIcon className="w-5 h-5" />,
-      requiredPermissions: ['customers.view'],
+      items: [
+        {
+          title: 'Danh sách học viên',
+          path: '/students',
+          icon: <UserGroupIcon className="w-5 h-5" />,
+          requiredPermissions: ['students.view'],
+        },
+        {
+          title: 'Lớp học',
+          path: '/students/classes',
+          icon: <IdentificationIcon className="w-5 h-5" />,
+          requiredPermissions: ['classes.view'],
+        },
+        {
+          title: 'Phân lớp',
+          path: '/students/class-assignments',
+          icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
+          requiredPermissions: ['class_assignments.view'],
+        },
+      ],
     },
     {
-      title: 'Phương tiện',
-      path: '/customers/vehicles',
-      icon: <TruckIcon className="w-5 h-5" />,
-      requiredPermissions: ['vehicles.view'],
+      title: 'Giảng viên',
+      icon: <AcademicCapIcon className="w-5 h-5" />,
+      items: [
+        {
+          title: 'Danh sách giảng viên',
+          path: '/teachers/list',
+          icon: <AcademicCapIcon className="w-5 h-5" />,
+          requiredPermissions: ['teachers.view'],
+        },
+        {
+          title: 'Phân công giảng dạy',
+          path: '/teachers/assignments',
+          icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
+          requiredPermissions: ['teaching_assignments.view'],
+        },
+        {
+          title: 'Lương giảng viên',
+          path: '/teachers/salaries',
+          icon: <BanknotesIcon className="w-5 h-5" />,
+          requiredPermissions: ['teacher_salaries.view'],
+        },
+      ],
     },
     {
-      title: 'Đơn hàng',
-      path: '/sales/orders',
-      icon: <ShoppingCartIcon className="w-5 h-5" />,
-      badgeKey: 'orders',
-      requiredPermissions: ['orders.view'],
+      title: 'Đào tạo',
+      icon: <CalendarDaysIcon className="w-5 h-5" />,
+      items: [
+        {
+          title: 'Học kỳ',
+          path: '/training/semesters',
+          icon: <CalendarDaysIcon className="w-5 h-5" />,
+          requiredPermissions: ['semesters.view'],
+        },
+        {
+          title: 'Gói đăng ký',
+          path: '/training/registration-packages',
+          icon: <DocumentTextIcon className="w-5 h-5" />,
+          requiredPermissions: ['registration_packages.view'],
+        },
+        {
+          title: 'Đăng ký học phần',
+          path: '/training/course-registrations',
+          icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
+          requiredPermissions: ['course_registrations.view'],
+        },
+        {
+          title: 'Kế hoạch học tập',
+          path: '/training/study-plans',
+          icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
+          requiredPermissions: ['study_plans.view'],
+        },
+        {
+          title: 'Thời khóa biểu',
+          path: '/training/schedules',
+          icon: <CalendarDaysIcon className="w-5 h-5" />,
+          requiredPermissions: ['schedules.view'],
+        },
+      ],
     },
     {
-      title: 'Yêu cầu dịch vụ',
-      path: '/sales/service-requests',
-      icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
-      badgeKey: 'service_requests',
-      requiredPermissions: ['services.view'],
-    },
-    {
-      title: 'Hóa đơn',
-      path: '/financial/invoices',
-      icon: <DocumentTextIcon className="w-5 h-5" />,
-      badgeKey: 'invoices',
-      requiredPermissions: ['invoices.view'],
-    },
-    {
-      title: 'Thanh toán',
-      path: '/financial/payments',
-      icon: <CreditCardIcon className="w-5 h-5" />,
-      requiredPermissions: ['payments.view'],
-    },
-    {
-      title: 'Quyết toán',
-      path: '/financial/settlements',
-      icon: <CurrencyDollarIcon className="w-5 h-5" />,
-      requiredPermissions: ['settlements.view'],
-    },
-    {
-      title: 'Sản phẩm',
-      path: '/inventory/products',
-      icon: <CubeIcon className="w-5 h-5" />,
-      requiredPermissions: ['products.view'],
-    },
-    {
-      title: 'Kho hàng',
-      path: '/inventory/warehouses',
-      icon: <BuildingStorefrontIcon className="w-5 h-5" />,
-      requiredPermissions: ['warehouses.view'],
-    },
-    {
-      title: 'Tồn kho',
-      path: '/inventory/stocks',
-      icon: <CubeIcon className="w-5 h-5" />,
-      requiredPermissions: ['stocks.view'],
-    },
-    {
-      title: 'Nhà cung cấp',
-      path: '/partners/providers',
-      icon: <UserCircleIcon className="w-5 h-5" />,
-      requiredPermissions: ['providers.view'],
+      title: 'Học tập & Tài chính',
+      icon: <PresentationChartBarIcon className="w-5 h-5" />,
+      items: [
+        {
+          title: 'Điểm học tập',
+          path: '/academic/grades',
+          icon: <PresentationChartBarIcon className="w-5 h-5" />,
+          requiredPermissions: ['grades.view'],
+        },
+        {
+          title: 'Học phí',
+          path: '/financial/tuition-fees',
+          icon: <CurrencyDollarIcon className="w-5 h-5" />,
+          requiredPermissions: ['tuition_fees.view'],
+        },
+      ],
     },
     {
       title: 'Báo cáo',
@@ -143,31 +229,115 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       icon: <Cog6ToothIcon className="w-5 h-5" />,
       requiredPermissions: ['settings.view'],
     },
-    {
-      title: 'Dịch vụ',
-      path: '/admin/services',
-      icon: <WrenchScrewdriverIcon className="w-5 h-5" />,
-      requiredPermissions: ['services.view'],
-    },
   ], []);
 
-  const visibleMenuItems = useMemo(() => {
-    return allMenuItems.filter(item => {
-      if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
-        return true;
-      }
-
-      if (item.requireAll) {
-        return item.requiredPermissions.every(perm => hasAnyPermission([perm]));
+  const visibleMenuGroups = useMemo(() => {
+    return menuGroups.filter(item => {
+      if ('items' in item) {
+        // It's a group
+        const visibleItems = item.items.filter(subItem => {
+          if (!subItem.requiredPermissions || subItem.requiredPermissions.length === 0) {
+            return true;
+          }
+          return hasAnyPermission(subItem.requiredPermissions);
+        });
+        return visibleItems.length > 0;
       } else {
+        // It's a single item
+        if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
+          return true;
+        }
         return hasAnyPermission(item.requiredPermissions);
       }
+    }).map(item => {
+      if ('items' in item) {
+        return {
+          ...item,
+          items: item.items.filter(subItem => {
+            if (!subItem.requiredPermissions || subItem.requiredPermissions.length === 0) {
+              return true;
+            }
+            return hasAnyPermission(subItem.requiredPermissions);
+          }),
+        };
+      }
+      return item;
     });
-  }, [allMenuItems, hasAnyPermission]);
+  }, [menuGroups, hasAnyPermission]);
 
-  const handleMenuClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleMenuClick = useCallback(() => {
     onClose();
   }, [onClose]);
+
+  const renderMenuItem = (item: MenuItem) => {
+    const isActive = location.pathname === item.path;
+
+    const handleClick = () => {
+      // Debug log đã tắt
+      // console.log('🖱️ [SIDEBAR] Menu clicked:', {
+      //   title: item.title,
+      //   path: item.path,
+      //   currentPath: location.pathname,
+      //   hasPermissions: item.requiredPermissions,
+      // });
+      handleMenuClick();
+    };
+
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        onClick={handleClick}
+        className={`
+          flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+          ${isActive 
+            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/50 scale-[1.02]' 
+            : 'text-gray-300 hover:bg-gray-800/70 hover:text-white hover:scale-[1.01]'
+          }
+        `}
+      >
+        <div className="flex items-center gap-3">
+          {item.icon}
+          <span className="font-medium text-sm">{item.title}</span>
+        </div>
+      </Link>
+    );
+  };
+
+  const renderMenuGroup = (group: MenuGroup) => {
+    const isExpanded = expandedGroups.includes(group.title.toLowerCase().replace(/\s+/g, '-'));
+    const hasActiveItem = group.items.some(item => location.pathname === item.path);
+
+    return (
+      <div key={group.title}>
+        <button
+          onClick={() => toggleGroup(group.title.toLowerCase().replace(/\s+/g, '-'))}
+          className={`
+            w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+            ${hasActiveItem
+              ? 'bg-gray-800/70 text-white'
+              : 'text-gray-300 hover:bg-gray-800/70 hover:text-white'
+            }
+          `}
+        >
+          <div className="flex items-center gap-3">
+            {group.icon}
+            <span className="font-medium text-sm">{group.title}</span>
+          </div>
+          {isExpanded ? (
+            <ChevronDownIcon className="w-4 h-4" />
+          ) : (
+            <ChevronRightIcon className="w-4 h-4" />
+          )}
+        </button>
+        {isExpanded && (
+          <div className="ml-4 mt-1 space-y-1">
+            {group.items.map(item => renderMenuItem(item))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -180,10 +350,10 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       >
         <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-700/50">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-bold text-lg shadow-lg">
-            TT
+            VMU
           </div>
           <div>
-            <h1 className="font-bold text-lg">Thắng Trường</h1>
+            <h1 className="font-bold text-lg">VMU Training</h1>
             <p className="text-xs text-gray-400">
               {user?.role?.display_name || 'System'}
             </p>
@@ -203,27 +373,12 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         </div>
 
         <nav className="px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-          {visibleMenuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={handleMenuClick}
-                className={`
-                  flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                  ${isActive 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/50 scale-[1.02]' 
-                    : 'text-gray-300 hover:bg-gray-800/70 hover:text-white hover:scale-[1.01]'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  {item.icon}
-                  <span className="font-medium text-sm">{item.title}</span>
-                </div>
-              </Link>
-            );
+          {visibleMenuGroups.map((item) => {
+            if ('items' in item) {
+              return renderMenuGroup(item);
+            } else {
+              return renderMenuItem(item);
+            }
           })}
         </nav>
 

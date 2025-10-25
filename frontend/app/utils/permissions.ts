@@ -16,8 +16,8 @@ export interface Permission {
 export type PermissionMap = Record<string, string[]>;
 
 /**
- * ✅ Danh sách tất cả 28 MODULES trong hệ thống (sync với backend)
- * Cập nhật theo PermissionModuleSeeder.php
+ * ✅ Danh sách tất cả MODULES trong hệ thống (sync với backend)
+ * Cập nhật theo PermissionModuleSeeder.php và StudentPermissionSeeder.php
  */
 export const AVAILABLE_PERMISSIONS: PermissionMap = {
   // QUẢN TRỊ HỆ THỐNG
@@ -26,6 +26,25 @@ export const AVAILABLE_PERMISSIONS: PermissionMap = {
   roles: ['view', 'create', 'edit', 'delete', 'assign_permissions'],
   permissions: ['view', 'edit', 'assign_user'],
   settings: ['view', 'edit'],
+
+  // QUẢN LÝ ĐÀO TẠO - EDUCATION MANAGEMENT
+  students: ['view', 'create', 'edit', 'delete', 'export'],
+  classes: ['view', 'create', 'edit', 'delete'],
+  class_assignments: ['view', 'create', 'edit', 'delete'],
+  teachers: ['view', 'create', 'edit', 'delete'],
+  teaching_assignments: ['view', 'create', 'edit', 'delete'],
+  teacher_salaries: ['view', 'create', 'edit', 'delete', 'approve'],
+  courses: ['view', 'create', 'edit', 'delete'],
+  training_levels: ['view', 'create', 'edit', 'delete'],
+  majors: ['view', 'create', 'edit', 'delete'],
+  classrooms: ['view', 'create', 'edit', 'delete'],
+  semesters: ['view', 'create', 'edit', 'delete'],
+  registration_packages: ['view', 'create', 'edit', 'delete'],
+  course_registrations: ['view', 'create', 'edit', 'delete', 'approve'],
+  study_plans: ['view', 'create', 'edit', 'delete'],
+  schedules: ['view', 'create', 'edit', 'delete'],
+  grades: ['view', 'create', 'edit', 'delete', 'approve'],
+  tuition_fees: ['view', 'create', 'edit', 'delete', 'approve'],
 
   // KHÁCH HÀNG
   customers: ['view', 'create', 'edit', 'delete', 'export'],
