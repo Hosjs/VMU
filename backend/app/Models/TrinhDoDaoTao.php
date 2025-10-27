@@ -25,19 +25,25 @@ class TrinhDoDaoTao extends Model
 
     protected $casts = [
         'trangThai' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
-     * Relationships
+     * Relationship với User (người tạo)
      */
-    public function hocViens()
+    public function creator()
     {
-        return $this->hasMany(HocVien::class, 'maTrinhDoDaoTao', 'maTrinhDoDaoTao');
+        return $this->belongsTo(User::class, 'createdBy');
     }
 
-    public function createdByUser()
+    /**
+     * Scope để lọc các trình độ đang hoạt động
+     */
+    public function scopeActive($query)
     {
-        return $this->belongsTo(User::class, 'createdBy', 'id');
+        return $query->where('trangThai', true);
     }
 }
 

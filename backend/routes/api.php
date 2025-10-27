@@ -1,11 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
-use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\MajorController;
-use App\Http\Controllers\Api\TrinhDoDaoTaoController;
+use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\EducationLevelController;
+use App\Http\Controllers\Api\RoomController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -18,12 +19,15 @@ Route::prefix('students')->group(function () {
     Route::get('/by-code/{maHV}', [StudentController::class, 'getByCode']);
 });
 
-// ✅ PUBLIC: Ngành Học API (proxy to external API - bypass CORS)
 Route::get('/majors', [MajorController::class, 'index']);
 Route::get('/majors/{maNganh}', [MajorController::class, 'show']);
 
-// ✅ PUBLIC: Filter Options APIs
-Route::get('/trinh-do-dao-tao', [TrinhDoDaoTaoController::class, 'index']);
+Route::get('/rooms', [RoomController::class, 'index']);
+Route::get('/rooms/{id}', [RoomController::class, 'show']);
+
+Route::get('/education-levels', [EducationLevelController::class, 'index']);
+Route::get('/education-levels/simple', [EducationLevelController::class, 'simple']);
+Route::get('/education-levels/{ma}', [EducationLevelController::class, 'show']);
 
 Route::middleware('auth:api')->group(function () {
     // Auth Management

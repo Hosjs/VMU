@@ -11,5 +11,7 @@ export default [
 
     //categories routes
     route("majors", "routes/categories/majors.tsx"),
+    route("rooms", "routes/categories/rooms.tsx"),
+    route("education_levels", "routes/categories/education-level.tsx"),
   ]),
 ] satisfies RouteConfig;

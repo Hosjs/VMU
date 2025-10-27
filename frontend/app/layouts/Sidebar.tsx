@@ -91,7 +91,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       items: [
         {
           title: 'Trình độ đào tạo',
-          path: '/training-levels',
+          path: '/education_levels',
           icon: <AcademicCapIcon className="w-5 h-5" />,
           requiredPermissions: ['training_levels.view'],
         },
@@ -109,7 +109,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         },
         {
           title: 'Phòng học',
-          path: '/classrooms',
+          path: '/rooms',
           icon: <BuildingLibraryIcon className="w-5 h-5" />,
           requiredPermissions: ['classrooms.view'],
         },
