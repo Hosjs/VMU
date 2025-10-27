@@ -3,6 +3,8 @@
  * Centralized configuration for student-related dropdowns and filters
  */
 
+import type { SelectOption } from '~/types/common';
+
 // ============================================
 // STATUS CONFIGURATION
 // ============================================
@@ -48,27 +50,27 @@ export const STATUS_CONFIG: Record<string, {
  * Trình độ đào tạo options
  * Thêm/sửa trực tiếp trong array này khi có thay đổi
  */
-export const TRINH_DO_OPTIONS = [
+export const TRINH_DO_OPTIONS: SelectOption[] = [
   { value: '', label: 'Tất cả' },
   { value: 'ThacSi', label: 'Thạc sỹ' },
   { value: 'TienSi', label: 'Tiến sỹ' },
   { value: 'DaiHoc', label: 'Đại học' },
   { value: 'CaoDang', label: 'Cao đẳng' },
-] as const;
+];
 
 /**
  * Giới tính options
  */
-export const GIOI_TINH_OPTIONS = [
+export const GIOI_TINH_OPTIONS: SelectOption[] = [
   { value: '', label: 'Tất cả' },
   { value: 'Nam', label: 'Nam' },
   { value: 'Nữ', label: 'Nữ' },
-] as const;
+];
 
 /**
  * Pagination per page options
  */
-export const PER_PAGE_OPTIONS = [10, 25, 50, 100] as const;
+export const PER_PAGE_OPTIONS: readonly [10, 25, 50, 100] = [10, 25, 50, 100];
 
 // ============================================
 // HELPER FUNCTIONS

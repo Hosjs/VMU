@@ -71,14 +71,11 @@ export default function Students() {
 
   const loadFilterOptions = async () => {
     try {
-      // Load ngành học từ database
-      const nganhData = await studentService.getNganhHocList();
+      // Load ngành học từ API majors
+      const majorsData = await studentService.getMajorsList();
       setNganhOptions([
         { value: '', label: 'Tất cả' },
-        ...nganhData.map(n => ({
-          value: n.maNganh,
-          label: `${n.tenNganh} (${n.maNganh})`,
-        })),
+        ...majorsData,
       ]);
 
       // Load trình độ từ database

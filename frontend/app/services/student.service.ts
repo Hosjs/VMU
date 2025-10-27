@@ -199,11 +199,11 @@ export const studentService = {
   },
 
   /**
-   * Lấy danh sách ngành học từ database
+   * Lấy danh sách ngành học từ API majors
    */
-  async getNganhHocList(): Promise<Array<{ maNganh: string; tenNganh: string }>> {
+  async getMajorsList(): Promise<Array<{ value: string; label: string }>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/nganh-hoc`, {
+      const response = await fetch(`${API_BASE_URL}/majors`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -212,13 +212,24 @@ export const studentService = {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch nganh hoc list');
+        throw new Error('Failed to fetch majors list');
       }
 
       const result = await response.json();
-      return result.data || [];
+
+      // API trả về { success: true, data: { data: [...] } }
+      let majors = [];
+      if (result.success && result.data) {
+        majors = result.data.data || result.data;
+      }
+
+      // Convert to SelectOption format
+      return majors.map((major: any) => ({
+        value: major.ma || '',
+        label: major.tenNganhHoc || ''
+      }));
     } catch (error) {
-      console.error('Error fetching nganh hoc:', error);
+      console.error('Error fetching majors:', error);
       return [];
     }
   },
