@@ -60,11 +60,6 @@ export function useTable<T>({
       };
 
       const response = await fetchDataRef.current(params);
-
-      console.log('🔍 useTable response:', response); // Debug log
-
-      // ✅ Xử lý response đúng với Laravel pagination format
-      // Response có dạng: { data: [...], current_page: 1, last_page: 5, ... }
       if (response && typeof response === 'object') {
         // Đảm bảo data luôn là mảng
         const dataArray = Array.isArray(response.data) ? response.data : [];

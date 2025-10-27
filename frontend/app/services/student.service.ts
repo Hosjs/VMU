@@ -1,5 +1,6 @@
 import { apiService } from './api.service';
 import type { Student, StudentFilters, StudentListResponse } from '~/types/student';
+import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -113,5 +114,137 @@ export const studentService = {
 
   async delete(maHV: string): Promise<void> {
     await apiService.delete(`/students/${maHV}`);
+  },
+
+  /**
+   * ✅ NEW: Lấy danh sách học viên với pagination (tương thích useTable hook)
+   * Hàm này wrap API external và format về Laravel pagination format
+   */
+  async getStudentsPaginated(params: TableQueryParams): Promise<PaginatedResponse<Student>> {
+    try {
+      const { page = 1, per_page = 20, search, filters } = params;
+
+      // Lấy filters
+      const namVao = filters?.namVao || new Date().getFullYear();
+      const maNganh = filters?.maNganh || '8310110';
+
+      // Gọi API
+      const response = await fetch(
+        `${API_BASE_URL}/students/thac-sy?namVao=${namVao}&maNganh=${maNganh}`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch student list');
+      }
+
+      const result = await response.json();
+      let students: Student[] = result.data || [];
+
+      // Client-side filtering
+      if (search) {
+        const searchLower = search.toLowerCase();
+        students = students.filter(s =>
+          s.maHV?.toLowerCase().includes(searchLower) ||
+          `${s.hoDem} ${s.ten}`.toLowerCase().includes(searchLower) ||
+          s.email?.toLowerCase().includes(searchLower) ||
+          s.dienThoai?.includes(search)
+        );
+      }
+
+      // Filter by gender
+      if (filters?.gioiTinh) {
+        students = students.filter(s => s.gioiTinh === filters.gioiTinh);
+      }
+
+      // Filter by trình độ
+      if (filters?.trinhDo) {
+        students = students.filter(s =>
+          s.maTrinhDoDaoTao === filters.trinhDo ||
+          s.trinhDoDaoTao?.maTrinhDoDaoTao === filters.trinhDo
+        );
+      }
+
+      // Pagination
+      const total = students.length;
+      const startIndex = (page - 1) * per_page;
+      const endIndex = startIndex + per_page;
+      const paginatedData = students.slice(startIndex, endIndex);
+
+      // Return Laravel pagination format
+      return {
+        current_page: page,
+        data: paginatedData,
+        first_page_url: `?page=1`,
+        from: startIndex + 1,
+        last_page: Math.ceil(total / per_page),
+        last_page_url: `?page=${Math.ceil(total / per_page)}`,
+        next_page_url: page < Math.ceil(total / per_page) ? `?page=${page + 1}` : null,
+        path: '/api/students',
+        per_page,
+        prev_page_url: page > 1 ? `?page=${page - 1}` : null,
+        to: Math.min(endIndex, total),
+        total,
+      };
+    } catch (error) {
+      console.error('Error fetching students paginated:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Lấy danh sách ngành học từ database
+   */
+  async getNganhHocList(): Promise<Array<{ maNganh: string; tenNganh: string }>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/nganh-hoc`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch nganh hoc list');
+      }
+
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error('Error fetching nganh hoc:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Lấy danh sách trình độ đào tạo từ database
+   */
+  async getTrinhDoList(): Promise<Array<{ maTrinhDoDaoTao: string; tenTrinhDo: string }>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/trinh-do-dao-tao`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch trinh do list');
+      }
+
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error('Error fetching trinh do:', error);
+      return [];
+    }
   },
 };

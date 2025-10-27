@@ -4,7 +4,7 @@ interface TableColumn<T> {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (item: T) => React.ReactNode;
+  render?: (item: T, index: number) => React.ReactNode;
   width?: string;
 }
 
@@ -16,7 +16,7 @@ interface TableProps<T> {
   onSort?: (key: string) => void;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
-  keyExtractor?: (item: T) => string | number;
+  keyExtractor?: (item: T, index: number) => string | number;
 }
 
 export function Table<T>({
@@ -27,7 +27,7 @@ export function Table<T>({
   onSort,
   sortBy,
   sortDirection,
-  keyExtractor = (item: any) => item.id,
+  keyExtractor = (item: any, index: number) => item.id || `row-${index}`,
 }: TableProps<T>) {
   const handleSort = (key: string) => {
     if (onSort) {
@@ -81,11 +81,11 @@ export function Table<T>({
               </td>
             </tr>
           ) : (
-            safeData.map((item) => (
-              <tr key={keyExtractor(item)} className="hover:bg-gray-50">
+            safeData.map((item, index) => (
+              <tr key={keyExtractor(item, index)} className="hover:bg-gray-50">
                 {columns.map((column) => (
                   <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {column.render ? column.render(item) : (item as any)[column.key]}
+                    {column.render ? column.render(item, index) : (item as any)[column.key]}
                   </td>
                 ))}
               </tr>

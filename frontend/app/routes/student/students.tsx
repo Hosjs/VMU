@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { studentService } from '~/services/student.service';
+import { useTable } from '~/hooks/useTable';
 import type { Student } from '~/types/student';
+import type { SelectOption } from '~/types/common';
 import { UserGroupIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
@@ -8,6 +10,12 @@ import { Select } from '~/components/ui/Select';
 import { Table } from '~/components/ui/Table';
 import { Badge } from '~/components/ui/Badge';
 import { Card } from '~/components/ui/Card';
+import { Pagination } from '~/components/ui/Pagination';
+import {
+  STATUS_CONFIG,
+  TRINH_DO_OPTIONS,
+  GIOI_TINH_OPTIONS,
+} from '~/constants/student.constants';
 
 export function meta() {
   return [
@@ -17,74 +25,124 @@ export function meta() {
 }
 
 export default function Students() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // ============================================
+  // DYNAMIC OPTIONS từ API
+  // ============================================
+  const [nganhOptions, setNganhOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
+  const [trinhDoOptions, setTrinhDoOptions] = useState<SelectOption[]>(TRINH_DO_OPTIONS);
+  const [namVaoOptions, setNamVaoOptions] = useState<SelectOption[]>([]);
 
-  // Filters - Người dùng tự lọc, không hardcode
+  // Local filters (sẽ merge vào useTable filters)
   const [namVao, setNamVao] = useState<number>(new Date().getFullYear());
   const [maNganh, setMaNganh] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [gioiTinhFilter, setGioiTinhFilter] = useState<string>('');
-  const [trinhDoFilter, setTrinhDoFilter] = useState<string>(''); // Thêm filter trình độ
 
+  // ✅ SỬ DỤNG useTable HOOK
+  const {
+    data: students,
+    isLoading,
+    error,
+    meta,
+    page,
+    perPage,
+    search,
+    filters,
+    handlePageChange,
+    handlePerPageChange,
+    handleSearch,
+    handleFilter,
+    handleClearFilters,
+    refresh,
+  } = useTable<Student>({
+    fetchData: studentService.getStudentsPaginated,
+    initialPage: 1,
+    initialPerPage: 20,
+    initialFilters: {
+      namVao: new Date().getFullYear(),
+      maNganh: '',
+    },
+  });
+
+  // ============================================
+  // LOAD DYNAMIC OPTIONS
+  // ============================================
   useEffect(() => {
-    loadStudents();
-  }, [namVao, maNganh]);
+    loadFilterOptions();
+  }, []);
 
-  const loadStudents = async () => {
+  const loadFilterOptions = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      // Load ngành học từ database
+      const nganhData = await studentService.getNganhHocList();
+      setNganhOptions([
+        { value: '', label: 'Tất cả' },
+        ...nganhData.map(n => ({
+          value: n.maNganh,
+          label: `${n.tenNganh} (${n.maNganh})`,
+        })),
+      ]);
 
-      // Gọi API lấy TẤT CẢ học viên từ external API
-      // Người dùng sẽ tự filter theo trình độ nếu muốn
-      const data = await studentService.getThacSyList(namVao, maNganh || '8310110');
-      setStudents(data);
+      // Load trình độ từ database
+      const trinhDoData = await studentService.getTrinhDoList();
+      setTrinhDoOptions([
+        { value: '', label: 'Tất cả' },
+        ...trinhDoData.map(t => ({
+          value: t.maTrinhDoDaoTao,
+          label: t.tenTrinhDo,
+        })),
+      ]);
     } catch (err) {
-      setError('Không thể tải danh sách học viên. Vui lòng thử lại.');
-      console.error('Error loading students:', err);
-    } finally {
-      setLoading(false);
+      console.error('Error loading filter options:', err);
     }
   };
 
-  // Filter students - Bao gồm filter theo trình độ
-  const filteredStudents = students.filter(student => {
-    const matchSearch = searchTerm === '' ||
-      student.maHV.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${student.hoDem} ${student.ten}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.dienThoai?.includes(searchTerm);
+  // Generate year options dynamically
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    const years: SelectOption[] = [{ value: '', label: 'Tất cả' }];
 
-    const matchGender = gioiTinhFilter === '' || student.gioiTinh === gioiTinhFilter;
+    for (let year = currentYear + 2; year >= currentYear - 10; year--) {
+      years.push({ value: year.toString(), label: year.toString() });
+    }
 
-    // Filter theo trình độ đào tạo nếu người dùng chọn
-    const matchTrinhDo = trinhDoFilter === '' ||
-      student.maTrinhDoDaoTao === trinhDoFilter ||
-      student.trinhDoDaoTao?.maTrinhDoDaoTao === trinhDoFilter;
+    setNamVaoOptions(years);
+  }, []);
 
-    return matchSearch && matchGender && matchTrinhDo;
-  });
+  // ============================================
+  // FILTER HANDLERS
+  // ============================================
+  const handleNamVaoChange = (value: string) => {
+    const year = value ? Number(value) : new Date().getFullYear();
+    setNamVao(year);
+    handleFilter('namVao', year);
+  };
 
+  const handleMaNganhChange = (value: string) => {
+    setMaNganh(value);
+    handleFilter('maNganh', value);
+  };
+
+  const handleGioiTinhChange = (value: string) => {
+    handleFilter('gioiTinh', value);
+  };
+
+  const handleTrinhDoChange = (value: string) => {
+    handleFilter('trinhDo', value);
+  };
+
+  // ============================================
+  // TABLE CONFIGURATION
+  // ============================================
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' }> = {
-      'DangHoc': { label: 'Đang học', variant: 'success' },
-      'BaoLuu': { label: 'Bảo lưu', variant: 'warning' },
-      'DaTotNghiep': { label: 'Đã tốt nghiệp', variant: 'info' },
-      'ThoiHoc': { label: 'Thôi học', variant: 'danger' },
-    };
-
-    const config = statusMap[status] || { label: status, variant: 'info' as const };
+    const config = STATUS_CONFIG[status] || { label: status, variant: 'default' as const };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: 'maHV',
       label: 'Mã học viên',
       render: (student: Student) => (
-        <span className="font-semibold text-blue-600">{student.maHV}</span>
+        <span className="font-semibold text-blue-600">{student.maHV || 'Chưa cấp'}</span>
       ),
     },
     {
@@ -122,22 +180,23 @@ export default function Students() {
     {
       key: 'namVaoTruong',
       label: 'Năm vào',
-      render: (student: Student) => (
-        // Hiển thị namVaotruong từ external API hoặc namVaoTruong từ internal API
-        student.namVaotruong || student.namVaoTruong
-      ),
+      render: (student: Student) => student.namVaotruong || student.namVaoTruong,
     },
     {
       key: 'trangThai',
       label: 'Trạng thái',
-      render: (student: Student) => (
-        // Hiển thị trangThaiHoc từ external API hoặc trangThai từ internal API
-        getStatusBadge(student.trangThaiHoc || student.trangThai)
-      ),
+      render: (student: Student) => getStatusBadge(student.trangThaiHoc || student.trangThai),
     },
-  ];
+  ], []);
 
-  if (loading) {
+  const getStudentKey = (student: Student, index: number): string => {
+    return student.maHV || `student-${index}-${student.email || student.dienThoai || Math.random()}`;
+  };
+
+  // ============================================
+  // RENDER
+  // ============================================
+  if (isLoading && students.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -186,113 +245,107 @@ export default function Students() {
                 <Input
                   type="text"
                   placeholder="Tìm theo mã, tên, email, SĐT..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={search}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
 
-            {/* Năm vào */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Năm vào trường
-              </label>
-              <Select
-                value={namVao.toString()}
-                onChange={(e) => setNamVao(Number(e.target.value))}
-              >
-                <option value="2020">2020</option>
-                <option value="2021">2021</option>
-                <option value="2022">2022</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-              </Select>
-            </div>
-
-            {/* Trình độ đào tạo - QUAN TRỌNG: Người dùng tự lọc */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Trình độ đào tạo
-              </label>
-              <Select
-                value={trinhDoFilter}
-                onChange={(e) => setTrinhDoFilter(e.target.value)}
-              >
-                <option value="">Tất cả</option>
-                <option value="ThacSi">Thạc sỹ</option>
-                <option value="TienSi">Tiến sỹ</option>
-                <option value="DaiHoc">Đại học</option>
-              </Select>
-            </div>
-
-            {/* Giới tính */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giới tính
-              </label>
-              <Select
-                value={gioiTinhFilter}
-                onChange={(e) => setGioiTinhFilter(e.target.value)}
-              >
-                <option value="">Tất cả</option>
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-              </Select>
-            </div>
-          </div>
-
-          {/* Mã ngành - có thể thay đổi */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Mã ngành:</label>
-            <Input
-              type="text"
-              value={maNganh}
-              onChange={(e) => setMaNganh(e.target.value)}
-              placeholder="Nhập mã ngành (vd: 8310110)"
-              className="w-64"
+            {/* Năm vào - Dynamic từ API */}
+            <Select
+              label="Năm vào trường"
+              value={namVao.toString()}
+              onChange={(e) => handleNamVaoChange(e.target.value)}
+              options={namVaoOptions}
             />
-            <span className="text-xs text-gray-500">Để trống = tất cả</span>
+
+            {/* Trình độ - Dynamic từ API */}
+            <Select
+              label="Trình độ đào tạo"
+              value={filters.trinhDo || ''}
+              onChange={(e) => handleTrinhDoChange(e.target.value)}
+              options={trinhDoOptions}
+            />
+
+            {/* Giới tính - Static */}
+            <Select
+              label="Giới tính"
+              value={filters.gioiTinh || ''}
+              onChange={(e) => handleGioiTinhChange(e.target.value)}
+              options={GIOI_TINH_OPTIONS}
+            />
           </div>
+
+          {/* Ngành học - Dynamic từ database */}
+          <Select
+            label="Ngành học"
+            value={maNganh}
+            onChange={(e) => handleMaNganhChange(e.target.value)}
+            options={nganhOptions}
+          />
+
+          {/* Clear filters button */}
+          {(search || filters.gioiTinh || filters.trinhDo) && (
+            <div className="flex justify-end">
+              <Button
+                variant="secondary"
+                onClick={handleClearFilters}
+                className="text-sm"
+              >
+                🔄 Xóa bộ lọc
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          {error}
+          ⚠️ {error.message}
         </div>
       )}
 
-      {/* Table */}
+      {/* Table Card */}
       <Card>
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Tổng số: <span className="text-blue-600">{filteredStudents.length}</span> học viên
-              {trinhDoFilter && (
-                <span className="text-sm text-gray-500 ml-2">
-                  (Lọc: {trinhDoFilter === 'ThacSi' ? 'Thạc sỹ' : trinhDoFilter})
-                </span>
-              )}
+              Tổng số: <span className="text-blue-600">{meta.total}</span> học viên
+              <span className="text-sm text-gray-500 ml-2">
+                (Hiển thị {meta.from}-{meta.to})
+              </span>
             </h2>
+            <Button
+              variant="secondary"
+              onClick={refresh}
+              className="text-sm"
+            >
+              🔄 Làm mới
+            </Button>
           </div>
 
           <Table
-            data={filteredStudents}
+            data={students}
             columns={columns}
-            keyExtractor={(student) => student.maHV}
+            keyExtractor={getStudentKey}
+            isLoading={isLoading}
+            emptyMessage="Không tìm thấy học viên nào"
           />
-
-          {filteredStudents.length === 0 && !loading && (
-            <div className="text-center py-12 text-gray-500">
-              <UserGroupIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-medium">Không tìm thấy học viên</p>
-              <p className="text-sm">Thử thay đổi bộ lọc hoặc tìm kiếm</p>
-            </div>
-          )}
         </div>
+
+        {/* Pagination */}
+        {meta.total > 0 && (
+          <Pagination
+            currentPage={page}
+            totalPages={meta.last_page}
+            onPageChange={handlePageChange}
+            perPage={perPage}
+            onPerPageChange={handlePerPageChange}
+            total={meta.total}
+          />
+        )}
       </Card>
     </div>
   );

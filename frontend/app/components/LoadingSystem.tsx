@@ -21,7 +21,7 @@ interface UseImagePreloaderOptions {
 // ============================================
 
 /**
- * Logo Component - Hiển thị logo AutoCare Pro
+ * Logo Component
  */
 const Logo = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
     const sizes = {
@@ -34,8 +34,8 @@ const Logo = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
     return (
         <div className={`${container} bg-white rounded-full flex items-center justify-center shadow-xl`}>
             <img
-                src="/images/logo.png"
-                alt="AutoCare Pro"
+                src="https://upload.wikimedia.org/wikipedia/vi/1/11/Bi%E1%BB%83u_tr%C6%B0ng_Tr%C6%B0%E1%BB%9Dng_%C4%91%E1%BA%A1i_h%E1%BB%8Dc_H%C3%A0ng_h%E1%BA%A3i_Vi%E1%BB%87t_Nam.svg"
+                alt="VMU"
                 className={`${image} object-contain`}
                 onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';

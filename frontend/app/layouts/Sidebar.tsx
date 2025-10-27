@@ -91,25 +91,25 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       items: [
         {
           title: 'Trình độ đào tạo',
-          path: '/categories/training-levels',
+          path: '/training-levels',
           icon: <AcademicCapIcon className="w-5 h-5" />,
           requiredPermissions: ['training_levels.view'],
         },
         {
           title: 'Ngành học',
-          path: '/categories/majors',
+          path: '/majors',
           icon: <BuildingLibraryIcon className="w-5 h-5" />,
           requiredPermissions: ['majors.view'],
         },
         {
           title: 'Học phần',
-          path: '/categories/courses',
+          path: '/courses',
           icon: <BookOpenIcon className="w-5 h-5" />,
           requiredPermissions: ['courses.view'],
         },
         {
           title: 'Phòng học',
-          path: '/categories/classrooms',
+          path: '/classrooms',
           icon: <BuildingLibraryIcon className="w-5 h-5" />,
           requiredPermissions: ['classrooms.view'],
         },

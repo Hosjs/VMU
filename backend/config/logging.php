@@ -27,7 +27,7 @@ return [
     |
     | This option controls the log channel that should be used to log warnings
     | regarding deprecated PHP and library features. This allows you to get
-    | your application ready for upcoming major versions of dependencies.
+    | your application ready for upcoming categories versions of dependencies.
     |
     */
 

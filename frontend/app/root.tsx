@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <body
             className="min-h-screen relative"
             style={{
-                backgroundImage: 'url("/images/background-app.png")',
+                backgroundImage: 'url("")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',

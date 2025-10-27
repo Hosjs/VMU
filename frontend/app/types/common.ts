@@ -1,4 +1,3 @@
-// Common types used across the application
 
 export interface PaginatedResponse<T> {
   current_page: number;
@@ -47,3 +46,4 @@ export interface BadgeCount {
   color?: 'blue' | 'green' | 'yellow' | 'red' | 'gray';
 }
 
+export type SortDirection = 'asc' | 'desc';
