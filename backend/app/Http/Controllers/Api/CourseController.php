@@ -7,49 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class RoomController extends Controller
+class CourseController extends Controller
 {
     private $externalApiUrl = 'http://203.162.246.113:8088';
-
-    /**
-     * Lấy danh sách lớp học Thạc Sỹ theo năm vào
-     * GET /api/rooms/thac-sy?namVao=2024
-     */
-    public function getThacSy(Request $request)
-    {
-        try {
-            $namVao = $request->get('namVao', date('Y'));
-
-            $response = Http::timeout(15)->get("{$this->externalApiUrl}/LopHoc/ThacSy", [
-                'NamVao' => $namVao
-            ]);
-
-            if (!$response->successful()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể kết nối đến API nguồn',
-                    'error' => $response->body()
-                ], $response->status());
-            }
-
-            $data = $response->json();
-
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-                'message' => 'Lấy danh sách lớp học thành công'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Room ThacSy API Error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Đã xảy ra lỗi khi lấy danh sách lớp học',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
 
     /**
      * Lấy danh sách phòng học/lớp học

@@ -107,12 +107,6 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           icon: <BookOpenIcon className="w-5 h-5" />,
           requiredPermissions: ['courses.view'],
         },
-        {
-          title: 'Phòng học',
-          path: '/rooms',
-          icon: <BuildingLibraryIcon className="w-5 h-5" />,
-          requiredPermissions: ['classrooms.view'],
-        },
       ],
     },
     {
@@ -125,15 +119,15 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           icon: <UserGroupIcon className="w-5 h-5" />,
           requiredPermissions: ['students.view'],
         },
-        {
-          title: 'Lớp học',
-          path: '/students/classes',
-          icon: <IdentificationIcon className="w-5 h-5" />,
-          requiredPermissions: ['classes.view'],
-        },
+         {
+           title: 'Phòng học',
+           path: '/rooms',
+           icon: <BuildingLibraryIcon className="w-5 h-5" />,
+           requiredPermissions: ['classrooms.view'],
+         },
         {
           title: 'Phân lớp',
-          path: '/students/class-assignments',
+          path: '/class-assignments',
           icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
           requiredPermissions: ['class_assignments.view'],
         },

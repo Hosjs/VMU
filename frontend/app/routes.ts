@@ -8,10 +8,13 @@ export default [
     route("profile", "layouts/profile/profile.tsx"),
     //student routes
     route("students", "routes/student/students.tsx"),
+    route("rooms", "routes/student/rooms.tsx"),
+    route("class-assignments", "routes/student/class-assignments.tsx"),
 
-    //categories routes
+
+      //categories routes
     route("majors", "routes/categories/majors.tsx"),
-    route("rooms", "routes/categories/rooms.tsx"),
     route("education_levels", "routes/categories/education-level.tsx"),
+    route("courses", "routes/categories/course.tsx"),
   ]),
 ] satisfies RouteConfig;
