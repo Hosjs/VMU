@@ -29,7 +29,7 @@ export function meta() {
 export default function ClassAssignments() {
   const [lopOptions, setLopOptions] = useState<SelectOption[]>([]);
   const [selectedLopId, setSelectedLopId] = useState<number | null>(null);
-  const [namVao, setNamVao] = useState<number>(new Date().getFullYear());
+  const [namVao, setNamVao] = useState<number | null>(new Date().getFullYear());
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
 
   const {
@@ -56,10 +56,14 @@ export default function ClassAssignments() {
   });
 
   useEffect(() => {
-    loadRoomOptions();
+    if (namVao) {
+      loadRoomOptions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [namVao]);
 
   const loadRoomOptions = async () => {
+    if (!namVao) return;
     try {
       setIsLoadingRooms(true);
       const rooms = await roomService.getLopHocThacSy(namVao);
@@ -95,9 +99,16 @@ export default function ClassAssignments() {
   };
 
   const handleNamVaoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const year = parseInt(e.target.value, 10);
-    setNamVao(isNaN(year) ? new Date().getFullYear() : year);
+    const value = e.target.value;
+    if (value) {
+      const year = parseInt(value, 10);
+      setNamVao(year);
+    } else {
+      setNamVao(null);
+      setLopOptions([]);
+    }
     setSelectedLopId(null); // Reset lớp đã chọn khi đổi năm
+    handleFilter('lopId', null);
   };
 
   const handleGioiTinhChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -113,7 +124,7 @@ export default function ClassAssignments() {
   // ============================================
   const namVaoOptions: SelectOption[] = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    const years: SelectOption[] = [];
+    const years: SelectOption[] = [{ value: '', label: '-- Chọn năm --' }];
 
     for (let year = currentYear + 2; year >= currentYear - 10; year--) {
       years.push({ value: year.toString(), label: year.toString() });
@@ -154,13 +165,13 @@ export default function ClassAssignments() {
       ),
     },
     {
-      key: 'maHV',
+      key: 'mahv',
       label: 'Mã học viên',
       sortable: true,
       width: '130px',
       render: (item: ClassAssignment) => (
         <span className="font-semibold text-blue-600">
-          {item.maHV || 'Chưa cấp'}
+          {item.mahv || 'Chưa cấp'}
         </span>
       ),
     },
@@ -171,58 +182,49 @@ export default function ClassAssignments() {
       render: (item: ClassAssignment) => (
         <div>
           <div className="font-medium text-gray-900">
-            {`${item.hoDem} ${item.ten}`.trim()}
+            {`${item.hodem} ${item.ten}`.trim()}
           </div>
           <div className="text-xs text-gray-500">{item.email}</div>
         </div>
       ),
     },
     {
-      key: 'ngaySinh',
+      key: 'ngaysinh',
       label: 'Ngày sinh',
       sortable: true,
       width: '110px',
       render: (item: ClassAssignment) => (
         <span className="text-sm text-gray-700">
-          {item.ngaySinh ? new Date(item.ngaySinh).toLocaleDateString('vi-VN') : '-'}
+          {item.ngaysinh ? new Date(item.ngaysinh).toLocaleDateString('vi-VN') : '-'}
         </span>
       ),
     },
     {
-      key: 'gioiTinh',
+      key: 'gioitinh',
       label: 'Giới tính',
       width: '90px',
       render: (item: ClassAssignment) => (
-        <Badge variant={item.gioiTinh === 'Nam' ? 'info' : 'secondary'}>
-          {item.gioiTinh}
+        <Badge variant={item.gioitinh === 'Nam' ? 'info' : 'secondary'}>
+          {item.gioitinh}
         </Badge>
       ),
     },
     {
-      key: 'dienThoai',
+      key: 'dienthoai',
       label: 'Điện thoại',
       width: '120px',
       render: (item: ClassAssignment) => (
         <span className="text-sm text-gray-700">
-          {item.dienThoai || '-'}
+          {item.dienthoai || '-'}
         </span>
       ),
     },
     {
-      key: 'nganhHoc',
-      label: 'Ngành học',
-      render: (item: ClassAssignment) => (
-        <span className="text-sm text-gray-600">
-          {item.nganhHoc || item.maNganh || '-'}
-        </span>
-      ),
-    },
-    {
-      key: 'trangThaiHoc',
+      key: 'trangthaihoc',
       label: 'Trạng thái',
       width: '140px',
       render: (item: ClassAssignment) => (
-        item.trangThaiHoc ? getStatusBadge(item.trangThaiHoc) : <Badge variant="default">-</Badge>
+        item.trangthaihoc ? getStatusBadge(item.trangthaihoc) : <Badge variant="default">-</Badge>
       ),
     },
   ], [meta.current_page, meta.per_page]);
@@ -265,8 +267,8 @@ export default function ClassAssignments() {
             {/* Năm vào */}
             <Select
               label="Năm vào"
-              value={namVao.toString()}
-              onChange={(e) => handleNamVaoChange(e as any)}
+              value={namVao?.toString() || ''}
+              onChange={handleNamVaoChange}
               options={namVaoOptions}
               disabled={isLoadingRooms}
             />
@@ -275,7 +277,7 @@ export default function ClassAssignments() {
             <Select
               label="Lớp học"
               value={selectedLopId?.toString() || ''}
-              onChange={(e) => handleLopChange(e as any)}
+              onChange={handleLopChange}
               options={lopOptions}
               disabled={isLoadingRooms || lopOptions.length === 0}
               required
@@ -285,7 +287,7 @@ export default function ClassAssignments() {
             <Select
               label="Giới tính"
               value={filters.gioiTinh || ''}
-              onChange={(e) => handleGioiTinhChange(e as any)}
+              onChange={handleGioiTinhChange}
               options={GIOI_TINH_OPTIONS}
             />
 
@@ -293,7 +295,7 @@ export default function ClassAssignments() {
             <Select
               label="Trạng thái"
               value={filters.trangThaiHoc || ''}
-              onChange={(e) => handleTrangThaiChange(e as any)}
+              onChange={handleTrangThaiChange}
               options={trangThaiOptions}
             />
           </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\EducationLevelController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\ClassAssignmentController;
+use App\Http\Controllers\Api\GradeController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -37,6 +38,10 @@ Route::get("/courses/{id}",[CourseController::class, 'show']);
 Route::get('/trinh-do-dao-tao', [EducationLevelController::class, 'simple']);
 Route::get('/education-levels', [EducationLevelController::class, 'index']);
 Route::get('/education-levels/{id}', [EducationLevelController::class, 'show']);
+
+Route::prefix('grades')->group(function () {
+    Route::get('/', [GradeController::class, 'getGradesByMaHV']);
+});
 
 // Consolidated Class Assignments Routes
 Route::prefix('class-assignments')->group(function () {

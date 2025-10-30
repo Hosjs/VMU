@@ -3,18 +3,17 @@
 export interface ClassAssignment {
   id: number;
   idLop: number;
-  maHV: string;
-  hoDem: string;
+  mahv: string;
+  hodem: string;
   ten: string;
-  ngaySinh: string;
-  gioiTinh: string;
-  dienThoai?: string;
+  ngaysinh: string;
+  gioitinh: string;
+  dienthoai?: string;
   email: string;
-  nganhHoc?: string;
-  trangThaiHoc?: string;
-  namVaotruong?: number;
-  maTrinhDoDaoTao?: string;
-  maNganh?: string;
+  trangthaihoc?: string;
+  namvaotruong?: number;
+  matrinhdodaotao?: string;
+  manganh?: string;
 
   // Computed fields
   hoTen?: string;
@@ -43,4 +42,3 @@ export interface ClassAssignmentListResponse {
   data: ClassAssignment[];
   message?: string;
 }
-

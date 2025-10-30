@@ -16,5 +16,8 @@ export default [
     route("majors", "routes/categories/majors.tsx"),
     route("education_levels", "routes/categories/education-level.tsx"),
     route("courses", "routes/categories/course.tsx"),
+
+    //academic routes
+    route("academic/grades", "routes/academic/grades.tsx"),
   ]),
 ] satisfies RouteConfig;
