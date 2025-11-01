@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\ClassAssignmentController;
 use App\Http\Controllers\Api\GradeController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -69,6 +71,22 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 
+    // User Profile
+    Route::prefix('users')->group(function () {
+        Route::get('/profile/{id}', [UserController::class, 'profile'])->middleware('permission:users.view');
+
+        // Roles Management
+        Route::prefix('roles')->group(function () {
+            Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.view');
+            Route::get('/permissions', [RoleController::class, 'getPermissions'])->middleware('permission:roles.view');
+            Route::get('/{id}', [RoleController::class, 'show'])->middleware('permission:roles.view');
+            Route::post('/', [RoleController::class, 'store'])->middleware('permission:roles.create');
+            Route::put('/{id}', [RoleController::class, 'update'])->middleware('permission:roles.edit');
+            Route::delete('/{id}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete');
+            Route::post('/{id}/permissions', [RoleController::class, 'updatePermissions'])->middleware('permission:roles.edit');
+            Route::post('/assign', [RoleController::class, 'assignRole'])->middleware('permission:roles.edit');
+        });
+    });
     // Dashboard
     Route::prefix('dashboard')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->middleware('permission:dashboard.view');

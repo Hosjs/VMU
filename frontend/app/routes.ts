@@ -5,7 +5,11 @@ export default [
   route("register", "routes/register.tsx"),
   layout("layouts/MainLayout.tsx", [
     route("dashboard", "layouts/dashboard/Dashboard.tsx"),
-    route("profile", "layouts/profile/profile.tsx"),
+
+    //system route
+    route("users/profile", "routes/users/profiles.tsx"),
+    route("users/roles", "routes/users/role-management.tsx"),
+
     //student routes
     route("students", "routes/student/students.tsx"),
     route("rooms", "routes/student/rooms.tsx"),

@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { gradeService } from '~/services/grade.service';
 import { studentService } from '~/services/student.service';
 import { adaptGradeApi } from '~/types/grade';
-import type { Student } from '~/types/student';
 import type { Grade } from '~/types/grade';
+import { useAsync } from '~/hooks/useAsync';
 import {
   AcademicCapIcon,
   MagnifyingGlassIcon,
@@ -27,39 +27,33 @@ export function meta() {
 export default function GradesPage() {
   const [maHV, setMaHV] = useState('');
   const [searchedMaHV, setSearchedMaHV] = useState('');
-  const [student, setStudent] = useState<Student | null>(null);
-  const [grades, setGrades] = useState<Grade[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    if (!maHV) {
+      throw new Error('Vui lòng nhập mã học viên.');
+    }
+    const [studentData, gradesData] = await Promise.all([
+      studentService.getStudentByCode(maHV),
+      gradeService.getGrades(maHV),
+    ]);
+
+    const grades = Array.isArray(gradesData) ? gradesData.map(adaptGradeApi) : [];
+    return { student: studentData, grades };
+  }, [maHV]);
+
+  const { data, error, isLoading, execute } = useAsync(fetchData, {
+    immediate: false,
+    onError: (err) => {
+      console.error('Error fetching data:', err);
+    }
+  });
+
+  const student = data?.student;
+  const grades = data?.grades || [];
 
   const handleSearch = async () => {
-    if (!maHV) {
-      setError('Vui lòng nhập mã học viên.');
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    setStudent(null);
-    setGrades([]);
     setSearchedMaHV(maHV);
-
-    try {
-      const [studentData, gradesData] = await Promise.all([
-        studentService.getStudentByCode(maHV),
-        gradeService.getGrades(maHV),
-      ]);
-
-      setStudent(studentData);
-      setGrades(Array.isArray(gradesData) ? gradesData.map(adaptGradeApi) : []);
-
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(`Không tìm thấy thông tin cho mã học viên "${maHV}". Vui lòng kiểm tra lại.`);
-      setStudent(null);
-      setGrades([]);
-    } finally {
-      setIsLoading(false);
-    }
+    execute();
   };
 
   const columns = useMemo(() => [
@@ -99,14 +93,6 @@ export default function GradesPage() {
         <Badge variant={item.diem >= 5 ? 'success' : 'danger'}>
           {typeof item.diem === 'number' && !isNaN(item.diem) ? item.diem.toFixed(2) : '0.00'}
         </Badge>
-      ),
-    },
-    {
-      key: 'DiemHe4',
-      label: 'Điểm hệ 4',
-      width: '120px',
-      render: (item: Grade) => (
-         <span className="font-medium">{typeof item.DiemHe4 === 'number' && !isNaN(item.DiemHe4) ? item.DiemHe4.toFixed(2) : '0.00'}</span>
       ),
     },
     {
@@ -183,16 +169,16 @@ export default function GradesPage() {
 
       {/* Result Area */}
       {error && (
-        <Card>
-          <div className="text-center py-12">
-            <ExclamationTriangleIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-red-900 mb-2">
-              Đã xảy ra lỗi
-            </h3>
-            <p className="text-gray-600">{error}</p>
-          </div>
-        </Card>
-      )}
+<Card>
+  <div className="text-center py-12">
+    <ExclamationTriangleIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
+    <h3 className="text-lg font-medium text-red-900 mb-2">
+      Đã xảy ra lỗi
+    </h3>
+    <p className="text-gray-600">{error.message.includes('Failed to fetch') ? `Không tìm thấy thông tin cho mã học viên "${searchedMaHV}". Vui lòng kiểm tra lại.` : error.message}</p>
+  </div>
+</Card>
+)}
 
       {!error && student && (
         <>

@@ -28,6 +28,7 @@ return new class extends Migration
             $table->string('name')->unique(); // users, orders, invoices, products, warehouses, etc.
             $table->string('display_name'); // Người dùng, Đơn hàng, Hóa đơn
             $table->text('description')->nullable(); // Mô tả chi tiết module
+            $table->string('icon')->nullable(); // Icon name (HomeIcon, UsersIcon, etc.)
             $table->integer('sort_order')->default(0); // Thứ tự hiển thị
             $table->boolean('is_active')->default(true); // Kích hoạt/Vô hiệu
             $table->timestamps();

@@ -71,15 +71,15 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       title: 'Quản trị hệ thống',
       icon: <ShieldCheckIcon className="w-5 h-5" />,
       items: [
-        {
-          title: 'Người dùng',
-          path: '/management/users',
-          icon: <UsersIcon className="w-5 h-5" />,
-          requiredPermissions: ['users.view'],
-        },
+          {
+            title: 'Người dùng',
+            path: '/users/list',
+            icon: <UsersIcon className="w-5 h-5" />,
+            requiredPermissions: ['users.view'],
+          },
         {
           title: 'Vai trò & Quyền',
-          path: '/management/roles',
+          path: '/users/roles',
           icon: <ShieldCheckIcon className="w-5 h-5" />,
           requiredPermissions: ['roles.view'],
         },
