@@ -24,8 +24,27 @@ Route::prefix('students')->group(function () {
     Route::get('/by-code/{maHV}', [StudentController::class, 'getByCode']);
 });
 
+// Public Majors Routes
 Route::get('/majors', [MajorController::class, 'index']);
-Route::get('/majors/{maNganh}', [MajorController::class, 'show']);
+Route::get('/majors/{id}', [MajorController::class, 'show']);
+
+// Test route để debug
+Route::get('/test-majors', function() {
+    try {
+        $majors = \App\Models\Major::limit(5)->get();
+        return response()->json([
+            'success' => true,
+            'count' => $majors->count(),
+            'data' => $majors
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
 
 // Rooms - Route cụ thể phải đứng TRƯỚC route với parameter
 Route::get('/rooms/thac-sy', [RoomController::class, 'getThacSy']);
@@ -75,7 +94,6 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/profile/{id}', [UserController::class, 'profile'])->middleware('permission:users.view');
 
-        // Roles Management
         Route::prefix('roles')->group(function () {
             Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.view');
             Route::get('/permissions', [RoleController::class, 'getPermissions'])->middleware('permission:roles.view');
@@ -91,6 +109,13 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('dashboard')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->middleware('permission:dashboard.view');
         Route::get('/user', [DashboardController::class, 'getUserDashboard']);
+    });
+
+    // Major Management (Protected)
+    Route::prefix('majors')->group(function () {
+        Route::post('/', [MajorController::class, 'store'])->middleware('permission:majors.create');
+        Route::put('/{id}', [MajorController::class, 'update'])->middleware('permission:majors.edit');
+        Route::delete('/{id}', [MajorController::class, 'destroy'])->middleware('permission:majors.delete');
     });
 
     // Student Management

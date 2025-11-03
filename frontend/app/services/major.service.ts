@@ -1,104 +1,59 @@
 // filepath: /Applications/XAMPP/xamppfiles/VMU/frontend/app/services/major.service.ts
 
+import { apiService } from './api.service';
 import type { Major } from '~/types/major';
+import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
 /**
  * Service để quản lý ngành học (majors)
- * Gọi qua Laravel backend (proxy) để bypass CORS issue
+ * Sử dụng apiService chuẩn để gọi API từ database
  */
-export class MajorService {
-  private apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
+class MajorService {
   /**
-   * Lấy danh sách tất cả ngành học qua Laravel backend proxy
+   * Lấy danh sách ngành học với pagination
    */
-  async getDanhSach(): Promise<Major[]> {
-    try {
-      const response = await fetch(`${this.apiUrl}/majors`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      // API trả về { success: true, data: { data: [...] } }
-      if (result.success && result.data) {
-        if (result.data.data && Array.isArray(result.data.data)) {
-          return result.data.data;
-        }
-        if (Array.isArray(result.data)) {
-          return result.data;
-        }
-      }
-
-      return [];
-    } catch (error) {
-      console.error('Error fetching majors:', error);
-      throw new Error('Không thể tải danh sách ngành học. Vui lòng thử lại sau.');
-    }
+  async getMajors(params: TableQueryParams): Promise<PaginatedResponse<Major>> {
+    return apiService.getPaginated<Major>('/majors', params);
   }
 
   /**
-   * Lấy chi tiết một ngành học theo mã
+   * Lấy chi tiết một ngành học theo ID
    */
-  async getChiTiet(maNganh: string): Promise<Major | null> {
-    try {
-      const response = await fetch(`${this.apiUrl}/majors/${maNganh}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        return result.data;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error fetching major detail:', error);
-      throw error;
-    }
+  async getMajor(id: number): Promise<Major> {
+    return apiService.get<Major>(`/majors/${id}`);
   }
 
   /**
-   * Tìm kiếm ngành học theo từ khóa (client-side filtering)
+   * Tạo ngành học mới
    */
-  async timKiem(keyword: string): Promise<Major[]> {
-    try {
-      const danhSach = await this.getDanhSach();
+  async createMajor(data: Partial<Major>): Promise<Major> {
+    return apiService.post<Major>('/majors', data);
+  }
 
-      if (!keyword || keyword.trim() === '') {
-        return danhSach;
-      }
+  /**
+   * Cập nhật ngành học
+   */
+  async updateMajor(id: number, data: Partial<Major>): Promise<Major> {
+    return apiService.put<Major>(`/majors/${id}`, data);
+  }
 
-      const searchTerm = keyword.toLowerCase().trim();
+  /**
+   * Xóa ngành học
+   */
+  async deleteMajor(id: number): Promise<void> {
+    return apiService.delete(`/majors/${id}`);
+  }
 
-      return danhSach.filter(major =>
-        major.ma?.toLowerCase().includes(searchTerm) ||
-        major.tenNganhHoc?.toLowerCase().includes(searchTerm)
-      );
-    } catch (error) {
-      console.error('Error searching majors:', error);
-      throw error;
-    }
+  /**
+   * Lấy danh sách tất cả (dùng cho dropdown/select)
+   */
+  async getAllMajors(): Promise<Major[]> {
+    const response = await apiService.getPaginated<Major>('/majors', {
+      page: 1,
+      per_page: 1000, // Lấy tất cả
+    });
+    return response.data;
   }
 }
 
-// Export singleton instance
 export const majorService = new MajorService();

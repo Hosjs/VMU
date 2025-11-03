@@ -36,10 +36,8 @@ export function useTable<T>({
     total: 0,
   });
 
-  // ✅ Flag để tránh gọi API 2 lần do React Strict Mode
   const isInitialLoadRef = useRef(false);
 
-  // Store fetchData in ref to avoid recreating loadData on every render
   const fetchDataRef = useRef(fetchData);
   useEffect(() => {
     fetchDataRef.current = fetchData;
@@ -60,8 +58,8 @@ export function useTable<T>({
       };
 
       const response = await fetchDataRef.current(params);
+
       if (response && typeof response === 'object') {
-        // Đảm bảo data luôn là mảng
         const dataArray = Array.isArray(response.data) ? response.data : [];
         setData(dataArray);
 
@@ -88,10 +86,7 @@ export function useTable<T>({
     }
   }, [page, perPage, sortBy, sortDirection, search, filters]);
 
-  // ✅ Sửa useEffect để tránh gọi 2 lần do React Strict Mode
   useEffect(() => {
-    // Trong development với Strict Mode, React mount 2 lần
-    // Chỉ gọi API khi thực sự cần thiết
     let cancelled = false;
 
     const fetchData = async () => {
@@ -102,7 +97,6 @@ export function useTable<T>({
 
     fetchData();
 
-    // Cleanup: prevent calling API if component unmounts
     return () => {
       cancelled = true;
     };
@@ -119,10 +113,8 @@ export function useTable<T>({
 
   const handleSort = useCallback((field: string) => {
     if (sortBy === field) {
-      // Toggle direction if same field
       setSortDirection((prev: SortDirection) => prev === 'asc' ? 'desc' : 'asc');
     } else {
-      // New field, default to ascending
       setSortBy(field);
       setSortDirection('asc');
     }
