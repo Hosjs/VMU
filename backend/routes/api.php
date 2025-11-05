@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\MajorController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\LecturerController;
 use App\Http\Controllers\Api\EducationLevelController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\CourseController;
@@ -28,6 +29,10 @@ Route::prefix('students')->group(function () {
 Route::get('/majors', [MajorController::class, 'index']);
 Route::get('/majors/{id}', [MajorController::class, 'show']);
 
+// Public Lecturers Routes (for testing)
+Route::get('/lecturers', [LecturerController::class, 'index']);
+Route::get('/lecturers/{id}', [LecturerController::class, 'show']);
+
 // Test route để debug
 Route::get('/test-majors', function() {
     try {
@@ -36,6 +41,24 @@ Route::get('/test-majors', function() {
             'success' => true,
             'count' => $majors->count(),
             'data' => $majors
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Test lecturers
+Route::get('/test-lecturers', function() {
+    try {
+        $lecturers = \App\Models\Lecturer::with('major')->limit(5)->get();
+        return response()->json([
+            'success' => true,
+            'count' => $lecturers->count(),
+            'data' => $lecturers
         ]);
     } catch (\Exception $e) {
         return response()->json([
@@ -126,6 +149,15 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{maHV}', [StudentController::class, 'update'])->middleware('permission:students.edit');
         Route::delete('/{maHV}', [StudentController::class, 'destroy'])->middleware('permission:students.delete');
     });
+    // Lecturer Management
+    Route::prefix('lecturers')->group(function () {
+        Route::get('/', [LecturerController::class, 'index'])->middleware('permission:lecturers.view');
+        Route::post('/', [LecturerController::class, 'store'])->middleware('permission:lecturers.create');
+        Route::get('/{id}', [LecturerController::class, 'show'])->middleware('permission:lecturers.view');
+        Route::put('/{id}', [LecturerController::class, 'update'])->middleware('permission:lecturers.edit');
+        Route::delete('/{id}', [LecturerController::class, 'destroy'])->middleware('permission:lecturers.delete');
+    });
+
 
     Route::prefix('education-levels')->group(function () {
         Route::post('/', [EducationLevelController::class, 'store'])->middleware('permission:education_levels.create');

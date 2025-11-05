@@ -49,7 +49,7 @@ class MajorController extends Controller
         $sortDirection = $request->get('sort_direction', 'desc');
         $query->orderBy($sortBy, $sortDirection);
 
-        // Trả về pagination trực tiếp (không wrap trong success/data)
+        // ✅ Trả về pagination trực tiếp (như api.service.ts đang expect)
         $result = $query->paginate($request->per_page ?? 20);
 
         return response()->json($result);

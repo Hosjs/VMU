@@ -32,6 +32,7 @@ class Major extends Model
         'ma',
         'tenNganhHoc',
         'mo_ta',
+        'thoiGianDaoTao',
         'daoTaoThacSy',
         'daoTaoTienSy',
         'is_active',
@@ -55,8 +56,11 @@ class Major extends Model
         return $this->ghiChu;
     }
 
-    // ✅ KHÔNG cần accessor cho thoiGianDaoTao vì đã có thoi_gian_dao_tao trong database
-    // Frontend sẽ dùng trực tiếp thoi_gian_dao_tao
+    public function getThoiGianDaoTaoAttribute()
+    {
+        $value = $this->getAttributes()['thoi_gian_dao_tao'] ?? null;
+        return $value ? (float) $value : null;
+    }
 
     // Phân biệt Thạc sỹ và Tiến sỹ dựa trên mã ngành
     public function getDaoTaoThacSyAttribute()

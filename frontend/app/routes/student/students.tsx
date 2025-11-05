@@ -4,13 +4,7 @@ import { useTable } from '~/hooks/useTable';
 import type { Student } from '~/types/student';
 import type { SelectOption } from '~/types/common';
 import { UserGroupIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { Button } from '~/components/ui/Button';
-import { Input } from '~/components/ui/Input';
-import { Select } from '~/components/ui/Select';
-import { Table } from '~/components/ui/Table';
-import { Badge } from '~/components/ui/Badge';
-import { Card } from '~/components/ui/Card';
-import { Pagination } from '~/components/ui/Pagination';
+import { Button, Input, Select, Table, Badge, Card, Pagination } from '~/components/ui';
 import {
   STATUS_CONFIG,
   TRINH_DO_OPTIONS,

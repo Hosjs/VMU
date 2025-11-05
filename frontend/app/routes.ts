@@ -15,8 +15,10 @@ export default [
     route("rooms", "routes/student/rooms.tsx"),
     route("class-assignments", "routes/student/class-assignments.tsx"),
 
+    //lecturer routes
+    route("lecturers", "routes/lecturer/lecturers.tsx"),
 
-      //categories routes
+    //categories routes
     route("majors", "routes/categories/majors.tsx"),
     route("education_levels", "routes/categories/education-level.tsx"),
     route("courses", "routes/categories/course.tsx"),

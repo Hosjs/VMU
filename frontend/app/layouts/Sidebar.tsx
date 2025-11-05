@@ -139,9 +139,15 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       items: [
         {
           title: 'Danh sách giảng viên',
-          path: '/teachers/list',
+          path: '/lecturers',
           icon: <AcademicCapIcon className="w-5 h-5" />,
           requiredPermissions: ['teachers.view'],
+        },
+        {
+          title: 'Hợp đồng giảng dạy',
+          path: '/teachers/contracts',
+          icon: <IdentificationIcon className="w-5 h-5" />,
+          requiredPermissions: ['teaching_contracts.view'],
         },
         {
           title: 'Phân công giảng dạy',

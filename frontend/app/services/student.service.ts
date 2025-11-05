@@ -203,7 +203,9 @@ export const studentService = {
    */
   async getMajorsList(): Promise<Array<{ value: string; label: string }>> {
     try {
-      const response = await fetch(`${API_BASE_URL}/majors`, {
+      console.log('🔍 [getMajorsList] Fetching majors from:', `${API_BASE_URL}/majors`);
+
+      const response = await fetch(`${API_BASE_URL}/majors?per_page=1000`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -211,25 +213,48 @@ export const studentService = {
         },
       });
 
+      console.log('📡 [getMajorsList] Response status:', response.status, response.statusText);
+
       if (!response.ok) {
+        console.error('❌ [getMajorsList] Response not ok:', response.status);
         throw new Error('Failed to fetch majors list');
       }
 
       const result = await response.json();
+      console.log('📦 [getMajorsList] Raw result structure:', {
+        hasSuccess: 'success' in result,
+        hasData: 'data' in result,
+        hasCurrent_page: 'current_page' in result,
+        topLevelKeys: Object.keys(result).slice(0, 10)
+      });
 
-      // API trả về { success: true, data: { data: [...] } }
+      // ✅ API trả về pagination trực tiếp: {current_page, data: [...], total, ...}
       let majors = [];
-      if (result.success && result.data) {
-        majors = result.data.data || result.data;
+      if (result.data && Array.isArray(result.data)) {
+        majors = result.data;
+        console.log('✅ [getMajorsList] Found majors in result.data, length:', majors.length);
+      } else {
+        console.warn('⚠️ [getMajorsList] result.data is not an array:', typeof result.data);
       }
 
-      // Convert to SelectOption format
-      return majors.map((major: any) => ({
-        value: major.ma || '',
-        label: major.tenNganhHoc || ''
+      if (majors.length > 0) {
+        console.log('📋 [getMajorsList] First major:', majors[0]);
+      }
+
+      // Convert to SelectOption format với đúng fields: maNganh, tenNganh
+      const options = majors.map((major: any) => ({
+        value: major.maNganh || '',
+        label: major.tenNganh || ''
       }));
+
+      console.log('🎯 [getMajorsList] Final options:', options.length, 'items');
+      if (options.length > 0) {
+        console.log('🎯 [getMajorsList] First option:', options[0]);
+      }
+
+      return options;
     } catch (error) {
-      console.error('Error fetching majors:', error);
+      console.error('❌ [getMajorsList] Error fetching majors:', error);
       return [];
     }
   },

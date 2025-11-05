@@ -163,27 +163,14 @@ export default function MajorsPage() {
       render: (item: Major) => (
         <div className="text-center">
           {item.daoTaoThacSy && (
-            <Badge variant="success" className="mr-1">Thạc sỹ</Badge>
+            <Badge variant="success">Thạc sỹ</Badge>
           )}
+          {item.daoTaoThacSy && item.daoTaoTienSy && <span className="mx-1"></span>}
           {item.daoTaoTienSy && (
             <Badge variant="warning">Tiến sỹ</Badge>
           )}
           {!item.daoTaoThacSy && !item.daoTaoTienSy && (
             <Badge variant="default">Khác</Badge>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'children_count',
-      label: 'Chương trình con',
-      width: '120px',
-      render: (item: Major) => (
-        <div className="text-center">
-          {item.children && item.children.length > 0 ? (
-            <Badge variant="primary">{item.children.length}</Badge>
-          ) : (
-            <span className="text-gray-400">-</span>
           )}
         </div>
       ),
@@ -221,13 +208,11 @@ export default function MajorsPage() {
 
   const handleEdit = (major: Major) => {
     setSelectedMajor(major);
-    form.reset({
-      ma_nganh: major.ma,
-      ten_nganh: major.tenNganhHoc,
-      mo_ta: major.mo_ta || '',
-      thoi_gian_dao_tao: major.thoiGianDaoTao,
-      parent_id: major.parent_id || null,
-    });
+    form.setFieldValue('ma_nganh', major.ma);
+    form.setFieldValue('ten_nganh', major.tenNganhHoc);
+    form.setFieldValue('mo_ta', major.mo_ta || '');
+    form.setFieldValue('thoi_gian_dao_tao', major.thoiGianDaoTao);
+    form.setFieldValue('parent_id', major.parent_id || null);
     editModal.open();
   };
 
