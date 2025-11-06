@@ -183,7 +183,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           title: 'Đăng ký học phần',
           path: '/training/course-registrations',
           icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
-          requiredPermissions: ['course_registrations.view'],
+          requiredPermissions: ['training.view'],
         },
         {
           title: 'Kế hoạch học tập',

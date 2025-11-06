@@ -18,6 +18,10 @@ export default [
     //lecturer routes
     route("lecturers", "routes/lecturer/lecturers.tsx"),
 
+    //training routes
+    route("training/course-registrations", "routes/training/course-registrations.tsx"),
+    route("training/study-plans", "routes/training/study-plans.tsx"),
+
     //categories routes
     route("majors", "routes/categories/majors.tsx"),
     route("education_levels", "routes/categories/education-level.tsx"),

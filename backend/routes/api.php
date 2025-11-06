@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ClassAssignmentController;
 use App\Http\Controllers\Api\GradeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\TrainingController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -158,6 +159,18 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/{id}', [LecturerController::class, 'destroy'])->middleware('permission:lecturers.delete');
     });
 
+
+    // Training Management
+    Route::prefix('training')->group(function () {
+        Route::get('/course-registrations', [TrainingController::class, 'getCourseRegistrations'])
+            ->middleware('permission:training.view');
+        Route::get('/study-plans', [TrainingController::class, 'getStudyPlans'])
+            ->middleware('permission:training.view');
+        Route::get('/education-types', [TrainingController::class, 'getEducationTypes'])
+            ->middleware('permission:training.view');
+        Route::get('/available-years', [TrainingController::class, 'getAvailableYears'])
+            ->middleware('permission:training.view');
+    });
 
     Route::prefix('education-levels')->group(function () {
         Route::post('/', [EducationLevelController::class, 'store'])->middleware('permission:education_levels.create');
