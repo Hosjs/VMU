@@ -16,15 +16,23 @@ export interface TrainingPlanResponse {
 }
 
 export interface TrainingCourse {
+  // Fields từ API bên ngoài
   id?: number;
   khoaHoc?: number;
   maTrinhDoDaoTao?: string;
   maNganh?: string;
   hocPhanSo?: number;
   hocPhanChu?: string;
-  tenHocPhan?: string;
-  tenMon?: string; // Alternative field name
+  tenMon?: string;
   soTinChi?: number;
+  baiTapLon?: boolean;
+  loaiHocPhan?: string;
+  luaChon?: boolean;
+
+  tenHocPhan?: string;
+  tenMonHoc?: string;
+  maHocPhan?: string;
+  maMonHoc?: string;
   soTinChiLyThuyet?: number;
   soTinChiThucHanh?: number;
   hocKy?: number;
@@ -34,12 +42,9 @@ export interface TrainingCourse {
   batBuoc?: boolean;
   tuChon?: boolean;
   ghiChu?: string;
-  // API có thể trả về các tên trường khác nhau
-  maHocPhan?: string;
-  maMonHoc?: string;
-  tenMonHoc?: string;
   tinChi?: number;
-  [key: string]: any; // Allow for additional fields from API
+
+  [key: string]: any;
 }
 
 export interface EducationType {

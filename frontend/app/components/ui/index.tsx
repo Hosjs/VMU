@@ -1,12 +1,14 @@
-export { Input } from './Input';
-export { Select } from './Select';
-export { Button } from './Button';
+export { Autocomplete } from './Autocomplete';
 export { Badge } from './Badge';
+export { Button } from './Button';
 export { Card } from './Card';
+export { Input } from './Input';
 export { Modal } from './Modal';
+export { Pagination } from './Pagination';
+export { Select } from './Select';
 export { Table } from './Table';
 export { Toast } from './Toast';
-export { Pagination } from './Pagination';
+export type { AutocompleteOption } from './Autocomplete';
 
 export {
   LoadingSpinner, 

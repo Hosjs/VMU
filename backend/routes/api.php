@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\GradeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TrainingController;
+use App\Http\Controllers\Api\TeachingAssignmentController;
+use App\Http\Controllers\Api\LopController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -83,6 +85,12 @@ Route::get("/courses/{id}",[CourseController::class, 'show']);
 Route::get('/trinh-do-dao-tao', [EducationLevelController::class, 'simple']);
 Route::get('/education-levels', [EducationLevelController::class, 'index']);
 Route::get('/education-levels/{id}', [EducationLevelController::class, 'show']);
+
+// Public Classes (Lop) Routes
+Route::get('/classes', [LopController::class, 'index']);
+Route::get('/classes/simple', [LopController::class, 'simple']);
+Route::get('/classes/{id}', [LopController::class, 'show']);
+Route::get('/classes/{id}/students', [LopController::class, 'getStudents']);
 
 Route::prefix('grades')->group(function () {
     Route::get('/', [GradeController::class, 'getGradesByMaHV']);
@@ -170,6 +178,17 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:training.view');
         Route::get('/available-years', [TrainingController::class, 'getAvailableYears'])
             ->middleware('permission:training.view');
+    });
+
+    // Teaching Assignments Management
+    Route::prefix('teaching-assignments')->group(function () {
+        Route::get('/', [TeachingAssignmentController::class, 'index']);
+        Route::get('/{id}', [TeachingAssignmentController::class, 'show']);
+        Route::post('/', [TeachingAssignmentController::class, 'store']);
+        Route::put('/{id}', [TeachingAssignmentController::class, 'update']);
+        Route::delete('/{id}', [TeachingAssignmentController::class, 'destroy']);
+        Route::get('/lecturer/{lecturerId}/schedule', [TeachingAssignmentController::class, 'lecturerSchedule']);
+        Route::post('/check-conflict', [TeachingAssignmentController::class, 'checkConflict']);
     });
 
     Route::prefix('education-levels')->group(function () {

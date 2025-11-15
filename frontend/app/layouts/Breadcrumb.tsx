@@ -27,6 +27,7 @@ export function Breadcrumb() {
     'list': 'Danh sách',
     'classes': 'Lớp học',
     'class-assignments': 'Phân lớp',
+    'class-student': 'Học viên theo lớp',
 
     // Teachers
     'teachers': 'Giảng viên',

@@ -68,6 +68,34 @@ export const formatters = {
     });
   },
 
+  // Format time from HH:MM:SS or datetime string to HH:MM
+  formatTime: (value: string): string => {
+    if (!value) return '';
+
+    // If it's a full datetime string, parse it
+    if (value.includes('T') || value.includes(' ')) {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+    }
+
+    return value.substring(0, 5);
+  },
+
+  // Format date from various formats
+  formatDate: (value: string | Date): string => {
+    if (!value) return '';
+
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(date.getTime())) return '';
+
+    return date.toLocaleDateString('vi-VN');
+  },
+
   // Format date for HTML input (YYYY-MM-DD)
   dateForInput: (value?: string | Date): string => {
     if (!value) return '';
@@ -97,7 +125,6 @@ export const formatters = {
     }
   },
 
-  // Format license plate
   licensePlate: (value: string): string => {
     if (!value) return '';
     return value.toUpperCase();

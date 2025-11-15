@@ -102,7 +102,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['majors.view'],
         },
         {
-          title: 'Học phần',
+          title: 'Khoá học',
           path: '/courses',
           icon: <BookOpenIcon className="w-5 h-5" />,
           requiredPermissions: ['courses.view'],
@@ -151,7 +151,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         },
         {
           title: 'Phân công giảng dạy',
-          path: '/teachers/assignments',
+          path: 'lecturer/assignments',
           icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
           requiredPermissions: ['teaching_assignments.view'],
         },

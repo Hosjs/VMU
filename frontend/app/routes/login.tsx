@@ -5,8 +5,8 @@ import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
     return [
-        { title: "Đăng Nhập - AutoCare Pro" },
-        { name: "description", content: "Đăng nhập vào hệ thống quản lý AutoCare Pro" },
+        { title: "Đăng Nhập - Viện Sau Đại học VMU" },
+        { name: "description", content: "Đăng nhập vào hệ thống quản lý Viện Sau Đại học - Trường Đại học Hàng hải Việt Nam" },
     ];
 }
 
@@ -26,20 +26,17 @@ export default function Login() {
         setError("");
 
         try {
-            // Gọi API login thật
             await login({
                 email: formData.email,
                 password: formData.password,
                 remember: formData.remember
             });
 
-            // Login thành công, redirect sẽ được xử lý bởi dashboard/_layout.tsx
             navigateWithTransition("/dashboard", {
                 transitionType: 'preloader',
                 animationType: 'fade'
             });
         } catch (err: any) {
-            // Hiển thị lỗi từ API
             setError(err.message || "Email hoặc mật khẩu không đúng");
         }
     };
@@ -52,10 +49,10 @@ export default function Login() {
                     {/* Logo and Title */}
                     <div className="text-center">
                         <h2 className="text-3xl font-bold text-gray-900">
-                            Đăng Nhập
+                            Đăng Nhập Hệ Thống
                         </h2>
                         <p className="mt-2 text-sm text-gray-600">
-                            Chào mừng bạn quay trở lại!
+                            Viện Sau Đại học - Trường Đại học Hàng hải Việt Nam
                         </p>
                     </div>
 
@@ -128,7 +125,6 @@ export default function Login() {
                                     type="button"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        // TODO: Implement forgot password logic
                                         console.log('Forgot password clicked');
                                     }}
                                     className="font-medium text-blue-600 hover:text-blue-500"
@@ -142,7 +138,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={isTransitioning}
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                         >
                             {isTransitioning ? "Đang đăng nhập..." : "Đăng Nhập"}
                         </button>
@@ -184,45 +180,50 @@ export default function Login() {
                 </div>
             </div>
 
-            {/* Right Side - Image/Branding */}
+            {/* Right Side - Branding for VMU */}
             <div className="hidden lg:block lg:flex-1 relative">
                 <div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700"
+                    className="absolute inset-0 bg-gradient-to-br from-blue-800 via-indigo-700 to-blue-900"
                     style={{
-                        backgroundImage: 'url("/images/1.png")',
+                        backgroundImage: 'url("/images/vmu-bg.jpg")',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-indigo-600/90 to-purple-700/90" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-indigo-900/85 to-blue-800/90" />
                 </div>
 
                 <div className="relative h-full flex items-center justify-center p-12">
                     <div className="text-center text-white max-w-md">
-                        <h1 className="text-4xl font-bold mb-6">
-                            Chào mừng đến với AutoCare Pro
+                        <img
+                            src="/images/vmu-logo.png"
+                            alt="VMU Logo"
+                            className="w-20 h-20 mx-auto mb-6 rounded-full shadow-lg bg-white/10 p-2"
+                        />
+                        <h1 className="text-4xl font-bold mb-4">
+                            Hệ thống Quản lý Viện Sau Đại học
                         </h1>
-                        <p className="text-xl text-blue-100 mb-8">
-                            Hệ thống quản lý garage hiện đại và chuyên nghiệp
+                        <p className="text-lg text-blue-100 mb-8">
+                            Trường Đại học Hàng hải Việt Nam (Vietnam Maritime University)
                         </p>
-                        <div className="space-y-4">
+                        <div className="space-y-4 text-left text-blue-100">
                             <div className="flex items-center gap-3">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Quản lý đơn hàng dễ dàng</span>
+                                <span>Quản lý học viên cao học và nghiên cứu sinh</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Theo dõi khách hàng hiệu quả</span>
+                                <span>Theo dõi quá trình đào tạo và kết quả học tập</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Báo cáo thống kê chi tiết</span>
+                                <span>Tự động hóa quy trình quản lý và báo cáo</span>
                             </div>
                         </div>
                     </div>
