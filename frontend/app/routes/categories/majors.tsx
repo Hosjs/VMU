@@ -4,6 +4,7 @@ import { useTable } from '~/hooks/useTable';
 import { useModal } from '~/hooks/useModal';
 import { useForm } from '~/hooks/useForm';
 import type { Major, MajorFormData } from '~/types/major';
+import type { Subject } from '~/types/subject';
 import type { TableQueryParams } from '~/types/common';
 import {
   AcademicCapIcon,
@@ -11,7 +12,8 @@ import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
@@ -31,9 +33,12 @@ export function meta() {
 export default function MajorsPage() {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [allMajors, setAllMajors] = useState<Major[]>([]);
+  const [majorSubjects, setMajorSubjects] = useState<Subject[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const createModal = useModal();
   const editModal = useModal();
   const deleteModal = useModal();
+  const subjectsModal = useModal();
 
   const sortFieldMap: Record<string, string> = {
     'ma': 'maNganh',
@@ -103,6 +108,63 @@ export default function MajorsPage() {
     },
   });
 
+  // ============================================
+  // HANDLERS - Định nghĩa trước columns
+  // ============================================
+  const handleCreate = () => {
+    setSelectedMajor(null);
+    form.reset();
+    createModal.open();
+  };
+
+  const handleEdit = (major: Major) => {
+    setSelectedMajor(major);
+    form.setFieldValue('ma_nganh', major.ma);
+    form.setFieldValue('ten_nganh', major.tenNganhHoc);
+    form.setFieldValue('mo_ta', major.mo_ta || '');
+    form.setFieldValue('thoi_gian_dao_tao', major.thoiGianDaoTao);
+    form.setFieldValue('parent_id', major.parent_id || null);
+    editModal.open();
+  };
+
+  const handleDeleteClick = (major: Major) => {
+    setSelectedMajor(major);
+    deleteModal.open();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedMajor) return;
+
+    try {
+      await majorService.deleteMajor(selectedMajor.id);
+      deleteModal.close();
+      table.refresh();
+    } catch (error: any) {
+      console.error('Error deleting major:', error);
+      alert(error.message || 'Có lỗi xảy ra khi xóa');
+    }
+  };
+
+  const handleViewSubjects = async (major: Major) => {
+    setSelectedMajor(major);
+    setLoadingSubjects(true);
+    subjectsModal.open();
+
+    try {
+      const result = await majorService.getMajorSubjects(major.id);
+      setMajorSubjects(result.subjects);
+    } catch (error: any) {
+      console.error('Error loading subjects:', error);
+      alert(error.message || 'Có lỗi xảy ra khi tải danh sách môn học');
+      setMajorSubjects([]);
+    } finally {
+      setLoadingSubjects(false);
+    }
+  };
+
+  // ============================================
+  // COLUMNS - Sử dụng các handlers đã định nghĩa
+  // ============================================
   const columns = useMemo(() => [
     {
       key: 'stt',
@@ -178,9 +240,17 @@ export default function MajorsPage() {
     {
       key: 'actions',
       label: 'Thao tác',
-      width: '120px',
+      width: '160px',
       render: (item: Major) => (
         <div className="flex gap-2 justify-center">
+          <Button
+            size="sm"
+            variant="success"
+            onClick={() => handleViewSubjects(item)}
+            title="Xem môn học"
+          >
+            <BookOpenIcon className="w-4 h-4" />
+          </Button>
           <Button
             size="sm"
             variant="primary"
@@ -199,40 +269,6 @@ export default function MajorsPage() {
       ),
     },
   ], [table.meta.current_page, table.meta.per_page]);
-
-  const handleCreate = () => {
-    setSelectedMajor(null);
-    form.reset();
-    createModal.open();
-  };
-
-  const handleEdit = (major: Major) => {
-    setSelectedMajor(major);
-    form.setFieldValue('ma_nganh', major.ma);
-    form.setFieldValue('ten_nganh', major.tenNganhHoc);
-    form.setFieldValue('mo_ta', major.mo_ta || '');
-    form.setFieldValue('thoi_gian_dao_tao', major.thoiGianDaoTao);
-    form.setFieldValue('parent_id', major.parent_id || null);
-    editModal.open();
-  };
-
-  const handleDeleteClick = (major: Major) => {
-    setSelectedMajor(major);
-    deleteModal.open();
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedMajor) return;
-
-    try {
-      await majorService.deleteMajor(selectedMajor.id);
-      deleteModal.close();
-      table.refresh();
-    } catch (error: any) {
-      console.error('Error deleting major:', error);
-      alert(error.message || 'Có lỗi xảy ra khi xóa');
-    }
-  };
 
   // Get parent majors (no parent_id)
   const parentMajors = allMajors.filter(m => !m.parent_id);
@@ -462,6 +498,78 @@ export default function MajorsPage() {
               disabled={selectedMajor?.children && selectedMajor.children.length > 0}
             >
               Xóa
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Subjects Modal */}
+      <Modal
+        isOpen={subjectsModal.isOpen}
+        onClose={subjectsModal.close}
+        title={`Danh sách môn học - ${selectedMajor?.tenNganhHoc || ''}`}
+        size="lg"
+      >
+        <div className="space-y-4">
+          {loadingSubjects ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-2 text-gray-600">Đang tải danh sách môn học...</p>
+            </div>
+          ) : majorSubjects && majorSubjects.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      STT
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mã môn
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tên môn học
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Số tín chỉ
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {majorSubjects.map((subject, index) => (
+                    <tr key={subject.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-blue-600">
+                        {subject.maMon}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {subject.tenMon}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center">
+                        <Badge variant="info">{subject.soTinChi}</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  <strong>Tổng số môn học:</strong> {majorSubjects.length} môn
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <BookOpenIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">Ngành học này chưa có môn học nào</p>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4 border-t">
+            <Button variant="secondary" onClick={subjectsModal.close}>
+              Đóng
             </Button>
           </div>
         </div>

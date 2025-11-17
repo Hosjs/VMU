@@ -95,4 +95,12 @@ class Major extends Model
     {
         return $this->hasMany(HocVien::class, 'maNganh', 'maNganh');
     }
+
+    /**
+     * Các môn học trong ngành
+     */
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'major_subjects', 'major_id', 'subject_id');
+    }
 }

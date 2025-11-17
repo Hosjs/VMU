@@ -44,8 +44,10 @@ export default function ClassStudentsPage() {
 
         if (response.success) {
           setStudents(response.data);
-          // Get class name from first student if available
-          if (response.data.length > 0 && response.data[0].tenLop) {
+          // Get class name from response.lop or first student
+          if (response.lop?.tenLop) {
+            setClassName(response.lop.tenLop);
+          } else if (response.data.length > 0 && response.data[0].tenLop) {
             setClassName(response.data[0].tenLop);
           }
         } else {

@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
-use App\Http\Controllers\Api\LopController;
+use App\Http\Controllers\Api\ClassController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -45,10 +45,10 @@ Route::get('/education-levels', [EducationLevelController::class, 'index']);
 Route::get('/education-levels/{id}', [EducationLevelController::class, 'show']);
 
 // Public Classes (Lop) Routes
-Route::get('/classes', [LopController::class, 'index']);
-Route::get('/classes/simple', [LopController::class, 'simple']);
-Route::get('/classes/{id}', [LopController::class, 'show']);
-Route::get('/classes/{id}/students', [LopController::class, 'getStudents']);
+Route::get('/classes', [ClassController::class, 'index']);
+Route::get('/classes/simple', [ClassController::class, 'simple']);
+Route::get('/classes/{id}', [ClassController::class, 'show']);
+Route::get('/classes/{id}/students', [ClassController::class, 'getStudents']);
 
 Route::prefix('grades')->group(function () {
     Route::get('/', [GradeController::class, 'getGradesByMaHV']);
@@ -106,6 +106,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/', [MajorController::class, 'store'])->middleware('permission:majors.create');
         Route::put('/{id}', [MajorController::class, 'update'])->middleware('permission:majors.edit');
         Route::delete('/{id}', [MajorController::class, 'destroy'])->middleware('permission:majors.delete');
+        Route::get('/{id}/subjects', [MajorController::class, 'getSubjects'])->middleware('permission:majors.view');
     });
 
     // Student Management

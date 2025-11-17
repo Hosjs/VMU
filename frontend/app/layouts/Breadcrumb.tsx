@@ -19,8 +19,10 @@ export function Breadcrumb() {
     'categories': 'Danh mục',
     'training-levels': 'Trình độ đào tạo',
     'majors': 'Ngành học',
+    'subjects': 'Môn học',
     'courses': 'Học phần',
     'classrooms': 'Phòng học',
+    'rooms': 'Phòng học',
 
     // Students
     'students': 'Học viên',
@@ -29,9 +31,11 @@ export function Breadcrumb() {
     'class-assignments': 'Phân lớp',
     'class-student': 'Học viên theo lớp',
 
-    // Teachers
+    // Teachers/Lecturers
     'teachers': 'Giảng viên',
+    'lecturers': 'Giảng viên',
     'assignments': 'Phân công giảng dạy',
+    'teaching-assignments': 'Phân công giảng dạy',
     'salaries': 'Lương giảng viên',
 
     // Training
@@ -41,12 +45,19 @@ export function Breadcrumb() {
     'course-registrations': 'Đăng ký học phần',
     'study-plans': 'Kế hoạch học tập',
     'schedules': 'Thời khóa biểu',
+    'education-levels': 'Trình độ đào tạo',
 
     // Academic & Financial
     'academic': 'Học tập',
     'grades': 'Điểm học tập',
     'financial': 'Tài chính',
     'tuition-fees': 'Học phí',
+
+    // Common actions
+    'create': 'Tạo mới',
+    'edit': 'Chỉnh sửa',
+    'view': 'Xem chi tiết',
+    'detail': 'Chi tiết',
   };
 
   // Generate breadcrumb items từ pathname
@@ -59,11 +70,22 @@ export function Breadcrumb() {
 
     const items = paths.map((path, index) => {
       const fullPath = '/' + paths.slice(0, index + 1).join('/');
-      const name = pathNameMap[path] || path.charAt(0).toUpperCase() + path.slice(1);
+
+      // Kiểm tra nếu là số (ID) thì bỏ qua hoặc thay bằng "Chi tiết"
+      if (/^\d+$/.test(path)) {
+        return {
+          name: 'Chi tiết',
+          path: fullPath,
+          isNumeric: true,
+        };
+      }
+
+      const name = pathNameMap[path] || path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
 
       return {
         name,
         path: fullPath,
+        isNumeric: false,
       };
     });
 
@@ -75,19 +97,12 @@ export function Breadcrumb() {
     return null;
   }
 
-  // Handler để log navigation
-  const handleBreadcrumbClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    console.log('🔍 Breadcrumb clicked:', path);
-    // React Router Link sẽ tự xử lý, không cần preventDefault
-  };
-
   return (
     <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3">
-      <nav className="flex items-center space-x-2 text-sm">
+      <nav className="flex items-center space-x-2 text-sm" aria-label="Breadcrumb">
         {/* Home icon */}
         <Link
           to="/"
-          onClick={(e) => handleBreadcrumbClick(e, '/')}
           className="text-gray-500 hover:text-blue-600 transition-colors"
           aria-label="Trang chủ"
         >
@@ -113,7 +128,6 @@ export function Breadcrumb() {
               ) : (
                 <Link
                   to={item.path}
-                  onClick={(e) => handleBreadcrumbClick(e, item.path)}
                   className="text-gray-600 hover:text-blue-600 transition-colors"
                 >
                   {item.name}

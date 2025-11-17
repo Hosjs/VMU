@@ -46,11 +46,24 @@ class ClassAssignmentController extends Controller
                 ], $response->status());
             }
 
-            $data = $response->json();
+            $rawData = $response->json();
+
+            $normalizedData = [];
+            if (is_array($rawData)) {
+                foreach ($rawData as $item) {
+                    $normalizedItem = [];
+                    foreach ($item as $key => $value) {
+                        // Chuyển key sang lowercase
+                        $normalizedKey = strtolower($key);
+                        $normalizedItem[$normalizedKey] = $value;
+                    }
+                    $normalizedData[] = $normalizedItem;
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'data' => is_array($data) ? $data : [],
+                'data' => $normalizedData,
                 'message' => 'Lấy danh sách học viên trong lớp thành công'
             ]);
 
@@ -347,4 +360,3 @@ class ClassAssignmentController extends Controller
         }
     }
 }
-

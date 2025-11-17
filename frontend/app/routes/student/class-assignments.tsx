@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { classAssignmentService } from '~/services/class-assignment.service';
 import { roomService } from '~/services/room.service';
 import { useTable } from '~/hooks/useTable';
@@ -8,7 +9,8 @@ import {
   UserGroupIcon,
   FunnelIcon,
   ArrowPathIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
@@ -27,6 +29,7 @@ export function meta() {
 }
 
 export default function ClassAssignments() {
+  const navigate = useNavigate();
   const [lopOptions, setLopOptions] = useState<SelectOption[]>([]);
   const [selectedLopId, setSelectedLopId] = useState<number | null>(null);
   const [namVao, setNamVao] = useState<number | null>(new Date().getFullYear());
@@ -117,6 +120,12 @@ export default function ClassAssignments() {
 
   const handleTrangThaiChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     handleFilter('trangThaiHoc', e.target.value);
+  };
+
+  const handleViewClassStudents = () => {
+    if (selectedLopId) {
+      navigate(`/lecturer/class-students/${selectedLopId}`);
+    }
   };
 
   // ============================================
@@ -227,6 +236,22 @@ export default function ClassAssignments() {
         item.trangthaihoc ? getStatusBadge(item.trangthaihoc) : <Badge variant="default">-</Badge>
       ),
     },
+    {
+      key: 'actions',
+      label: 'Hành động',
+      width: '100px',
+      render: (item: ClassAssignment) => (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="link"
+            size="icon"
+            onClick={() => navigate(`/class-assignments/${item.id}`)}
+          >
+            <EyeIcon className="w-5 h-5 text-gray-500" />
+          </Button>
+        </div>
+      ),
+    },
   ], [meta.current_page, meta.per_page]);
 
   // ============================================
@@ -328,15 +353,27 @@ export default function ClassAssignments() {
           <div className="flex items-center gap-3">
             <AcademicCapIcon className="w-6 h-6 text-blue-600" />
             <div>
-              <div className="text-sm text-gray-600">Tổng số học viên</div>
+              <div className="text-sm text-gray-600">Tổng số học viên (từ API)</div>
               <div className="text-2xl font-bold text-gray-900">{meta.total}</div>
             </div>
           </div>
-          {selectedLopId && (
-            <div className="text-sm text-gray-600">
-              Hiển thị: {meta.from} - {meta.to} / {meta.total}
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {selectedLopId && (
+              <>
+                <div className="text-sm text-gray-600">
+                  Hiển thị: {meta.from} - {meta.to} / {meta.total}
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={handleViewClassStudents}
+                  className="flex items-center gap-2"
+                >
+                  <UserGroupIcon className="w-5 h-5" />
+                  Xem DS từ Database
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </Card>
 

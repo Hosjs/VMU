@@ -149,4 +149,26 @@ class MajorController extends Controller
             'message' => 'Xóa ngành học thành công'
         ]);
     }
+
+    /**
+     * Get subjects of a major
+     */
+    public function getSubjects($id): JsonResponse
+    {
+        $major = Major::findOrFail($id);
+
+        $subjects = $major->subjects()
+            ->orderBy('maMon', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $subjects,
+            'major' => [
+                'id' => $major->id,
+                'ma' => $major->maNganh,
+                'tenNganhHoc' => $major->tenNganh,
+            ]
+        ]);
+    }
 }

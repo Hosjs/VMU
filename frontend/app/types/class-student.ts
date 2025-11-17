@@ -8,14 +8,22 @@ export interface ClassStudent {
   email?: string;
   noisinh?: string;
   socmnd?: string;
+  trangthaihoc?: string;
+  tenLop?: string;
+  // Optional fields
   diemX?: number;
   diemY?: number;
-  tenLop?: string;
   trangThai?: string;
 }
 
 export interface ClassStudentsResponse {
   success: boolean;
   data: ClassStudent[];
+  lop?: {
+    id: number;
+    tenLop: string;
+    khoaHoc: string;
+    maNganhHoc: string;
+  };
   message?: string;
 }

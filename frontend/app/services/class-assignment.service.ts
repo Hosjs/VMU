@@ -61,29 +61,28 @@ export class ClassAssignmentService {
       // Client-side filtering
       let filteredData = allData;
 
-      // Search
+      // Search - sử dụng lowercase field names
       if (params.search) {
         const searchTerm = params.search.toLowerCase().trim();
         filteredData = filteredData.filter(item =>
-          item.maHV?.toLowerCase().includes(searchTerm) ||
-          item.hoDem?.toLowerCase().includes(searchTerm) ||
+          item.mahv?.toLowerCase().includes(searchTerm) ||
+          item.hodem?.toLowerCase().includes(searchTerm) ||
           item.ten?.toLowerCase().includes(searchTerm) ||
           item.email?.toLowerCase().includes(searchTerm) ||
-          item.dienThoai?.toLowerCase().includes(searchTerm)
+          item.dienthoai?.toLowerCase().includes(searchTerm)
         );
       }
 
-      // Filter by giới tính
       if (params.filters?.gioiTinh) {
         filteredData = filteredData.filter(
-          item => item.gioiTinh === params.filters?.gioiTinh
+          item => item.gioitinh === params.filters?.gioiTinh
         );
       }
 
-      // Filter by trạng thái học
+      // Filter by trạng thái học - sử dụng lowercase
       if (params.filters?.trangThaiHoc) {
         filteredData = filteredData.filter(
-          item => item.trangThaiHoc === params.filters?.trangThaiHoc
+          item => item.trangthaihoc === params.filters?.trangThaiHoc
         );
       }
 

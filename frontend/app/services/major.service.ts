@@ -2,6 +2,7 @@
 
 import { apiService } from './api.service';
 import type { Major } from '~/types/major';
+import type { Subject } from '~/types/subject';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
 /**
@@ -53,6 +54,28 @@ class MajorService {
       per_page: 1000, // Lấy tất cả
     });
     return response.data;
+  }
+
+  /**
+   * Lấy danh sách môn học của một ngành
+   */
+  async getMajorSubjects(majorId: number): Promise<{ subjects: Subject[], major: { id: number, ma: string, tenNganhHoc: string } }> {
+    const response = await apiService.get<any>(`/majors/${majorId}/subjects`);
+
+    // API trả về: { success: true, data: [...], major: {...} }
+    // Kiểm tra xem response đã có cấu trúc đúng chưa
+    if (response.success && response.data) {
+      return {
+        subjects: response.data,
+        major: response.major
+      };
+    }
+
+    // Fallback nếu response không đúng format
+    return {
+      subjects: Array.isArray(response) ? response : [],
+      major: { id: majorId, ma: '', tenNganhHoc: '' }
+    };
   }
 }
 
