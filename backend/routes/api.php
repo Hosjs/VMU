@@ -22,62 +22,20 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// External API Proxy
 Route::prefix('students')->group(function () {
     Route::get('/thac-sy', [StudentController::class, 'getThacSy']);
     Route::get('/by-code/{maHV}', [StudentController::class, 'getByCode']);
 });
 
-// Public Majors Routes
 Route::get('/majors', [MajorController::class, 'index']);
 Route::get('/majors/{id}', [MajorController::class, 'show']);
 
-// Public Lecturers Routes (for testing)
 Route::get('/lecturers', [LecturerController::class, 'index']);
 Route::get('/lecturers/{id}', [LecturerController::class, 'show']);
 
-// Test route để debug
-Route::get('/test-majors', function() {
-    try {
-        $majors = \App\Models\Major::limit(5)->get();
-        return response()->json([
-            'success' => true,
-            'count' => $majors->count(),
-            'data' => $majors
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
-
-// Test lecturers
-Route::get('/test-lecturers', function() {
-    try {
-        $lecturers = \App\Models\Lecturer::with('major')->limit(5)->get();
-        return response()->json([
-            'success' => true,
-            'count' => $lecturers->count(),
-            'data' => $lecturers
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
-
-// Rooms - Route cụ thể phải đứng TRƯỚC route với parameter
 Route::get('/rooms/thac-sy', [RoomController::class, 'getThacSy']);
 Route::get('/rooms', [RoomController::class, 'index']);
 Route::get('/rooms/{id}', [RoomController::class, 'show']);
-
-// Class Assignments (Phân lớp học viên) - Routes have been moved and consolidated below
 
 Route::get("/courses",[CourseController::class, 'index']);
 Route::get("/courses/{id}",[CourseController::class, 'show']);
