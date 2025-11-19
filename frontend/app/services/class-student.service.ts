@@ -9,19 +9,28 @@ class ClassStudentService {
   async getStudentsByClassId(classId: number | string): Promise<ClassStudentsResponse> {
     try {
       // Call Laravel backend API to get students from database
-      const response = await apiService.get<any>(`/classes/${classId}/students`);
+      // Use apiService.http.get to get the full response instead of just data
+      const response = await apiService.http.get<{
+        success: boolean;
+        data: ClassStudent[];
+        lop?: any;
+        message?: string;
+      }>(`/classes/${classId}/students`);
 
-      if (response.success && response.data) {
+      console.log('Raw API response:', response); // Debug log
+
+      // API trả về: { success: true, data: [...], lop: {...} }
+      if (response && response.success && Array.isArray(response.data)) {
         return {
           success: true,
           data: response.data,
           lop: response.lop,
-          message: response.data.length > 0
-            ? `Tìm thấy ${response.data.length} học viên`
-            : 'Không có học viên nào'
+          message: response.message || `Tìm thấy ${response.data.length} học viên`
         };
       }
 
+      // Nếu response không đúng format
+      console.warn('Invalid response format:', response);
       return {
         success: false,
         data: [],

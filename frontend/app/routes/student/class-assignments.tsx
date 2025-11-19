@@ -243,8 +243,8 @@ export default function ClassAssignments() {
       render: (item: ClassAssignment) => (
         <div className="flex justify-center gap-2">
           <Button
-            variant="link"
-            size="icon"
+            variant="ghost"
+            size="sm"
             onClick={() => navigate(`/class-assignments/${item.id}`)}
           >
             <EyeIcon className="w-5 h-5 text-gray-500" />
@@ -359,19 +359,9 @@ export default function ClassAssignments() {
           </div>
           <div className="flex items-center gap-4">
             {selectedLopId && (
-              <>
-                <div className="text-sm text-gray-600">
-                  Hiển thị: {meta.from} - {meta.to} / {meta.total}
-                </div>
-                <Button
-                  variant="primary"
-                  onClick={handleViewClassStudents}
-                  className="flex items-center gap-2"
-                >
-                  <UserGroupIcon className="w-5 h-5" />
-                  Xem DS từ Database
-                </Button>
-              </>
+              <div className="text-sm text-gray-600">
+                Hiển thị: {meta.from} - {meta.to} / {meta.total}
+              </div>
             )}
           </div>
         </div>

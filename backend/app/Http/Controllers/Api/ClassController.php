@@ -136,51 +136,206 @@ class ClassController extends Controller
     /**
      * Get students in a class
      * GET /api/classes/{id}/students
+     * Accepts either class ID or course_code (e.g., "531 ITBT")
      */
     public function getStudents($id): JsonResponse
     {
         try {
-            // Tìm lớp học từ bảng classes
-            $class = DB::table('classes')->where('id', $id)->first();
+            \Log::info("ClassController@getStudents called with ID: {$id}");
 
-            if (!$class) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không tìm thấy lớp học',
-                    'data' => [],
-                ], 404);
+            $class = null;
+            $students = collect();
+
+            // Kiểm tra xem $id có phải là course_code hay không (chứa space và chữ)
+            if (preg_match('/^\d+\s+[A-Z]+/', $id)) {
+                // Đây là course_code dạng "531 ITBT"
+                // Parse để lấy mã môn (phần cuối cùng sau khoảng trắng)
+                $parts = explode(' ', trim($id));
+                $maMon = end($parts); // Lấy phần cuối cùng, ví dụ: "ITBT"
+
+                \Log::info("Parsed course_code: {$id} -> maMon: {$maMon}");
+
+                // Tìm subject_id từ mã môn
+                $subject = DB::table('subjects')->where('maMon', $maMon)->first();
+
+                if (!$subject) {
+                    \Log::warning("Subject not found for maMon: {$maMon}");
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Không tìm thấy môn học với mã: {$maMon}",
+                        'data' => [],
+                    ], 404);
+                }
+
+                \Log::info("Found subject: {$subject->tenMon} (ID: {$subject->id})");
+
+                // CÁCH 1 (ƯU TIÊN): Lấy học viên từ bảng subject_students
+                // Đây là cách chính xác nhất vì nó lưu trữ việc đăng ký môn học
+                $studentIds = DB::table('subject_students')
+                    ->where('subject_id', $subject->id)
+                    ->pluck('student_id');
+
+                if ($studentIds->isNotEmpty()) {
+                    \Log::info("Found {$studentIds->count()} students enrolled in subject from subject_students");
+
+                    $students = DB::table('students')
+                        ->whereIn('maHV', $studentIds)
+                        ->whereNull('deleted_at')
+                        ->orderBy('maHV', 'asc')
+                        ->get();
+
+                    // Tìm lớp từ teaching_assignments hoặc major
+                    $teachingAssignment = DB::table('teaching_assignments')
+                        ->where('course_code', $id)
+                        ->whereNull('deleted_at')
+                        ->first();
+
+                    if ($teachingAssignment && $teachingAssignment->class_id) {
+                        $class = DB::table('classes')->where('id', $teachingAssignment->class_id)->first();
+                    } else {
+                        // Tìm lớp từ major của môn học
+                        $majorIds = DB::table('major_subjects')
+                            ->where('subject_id', $subject->id)
+                            ->pluck('major_id');
+
+                        if ($majorIds->isNotEmpty()) {
+                            $class = DB::table('classes')
+                                ->whereIn('major_id', $majorIds)
+                                ->orderBy('id', 'desc')
+                                ->first();
+                        }
+                    }
+                } else {
+                    // CÁCH 2 (FALLBACK): Nếu chưa có dữ liệu trong subject_students
+                    \Log::info("No students in subject_students, trying class_students and teaching_assignments");
+
+                    // Tìm lớp học từ teaching_assignments dựa trên course_code
+                    $teachingAssignment = DB::table('teaching_assignments')
+                        ->where('course_code', $id)
+                        ->whereNull('deleted_at')
+                        ->first();
+
+                    if ($teachingAssignment && $teachingAssignment->class_id) {
+                        $class = DB::table('classes')->where('id', $teachingAssignment->class_id)->first();
+
+                        if ($class) {
+                            \Log::info("Found class from teaching_assignment: {$class->class_name} (ID: {$class->id})");
+
+                            // Lấy học viên từ bảng class_students
+                            $studentIds = DB::table('class_students')
+                                ->where('class_id', $class->id)
+                                ->whereNull('deleted_at')
+                                ->pluck('student_id');
+
+                            if ($studentIds->isNotEmpty()) {
+                                $students = DB::table('students')
+                                    ->whereIn('maHV', $studentIds)
+                                    ->whereNull('deleted_at')
+                                    ->orderBy('maHV', 'asc')
+                                    ->get();
+                            }
+                        }
+                    }
+                }
+
+                // CÁCH 3 (FALLBACK CUỐI): Nếu vẫn không có học viên
+                if ($students->isEmpty()) {
+                    \Log::info("Still no students, trying major_subjects fallback");
+
+                    $majorIds = DB::table('major_subjects')
+                        ->where('subject_id', $subject->id)
+                        ->pluck('major_id');
+
+                    if ($majorIds->isNotEmpty()) {
+                        $class = DB::table('classes')
+                            ->whereIn('major_id', $majorIds)
+                            ->orderBy('id', 'desc')
+                            ->first();
+
+                        if ($class) {
+                            \Log::info("Found class from major: {$class->class_name} (ID: {$class->id})");
+
+                            // Lấy từ idLop (fallback cuối cùng)
+                            $students = DB::table('students')
+                                ->where('idLop', $class->id)
+                                ->whereNull('deleted_at')
+                                ->orderBy('maHV', 'asc')
+                                ->get();
+                        }
+                    }
+                }
+
+                // Nếu vẫn không có lớp, lấy lớp đầu tiên
+                if (!$class) {
+                    $class = DB::table('classes')->first();
+                    \Log::warning("Using first available class as fallback");
+                }
+
+
+            } else {
+                // Đây là class ID thông thường
+                \Log::info("Using class ID directly: {$id}");
+
+                $class = DB::table('classes')->where('id', $id)->first();
+
+                if (!$class) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Không tìm thấy lớp học',
+                        'data' => [],
+                    ], 404);
+                }
+
+                // Lấy học viên từ bảng class_students trước
+                $studentIds = DB::table('class_students')
+                    ->where('class_id', $id)
+                    ->whereNull('deleted_at')
+                    ->pluck('student_id');
+
+                if ($studentIds->isNotEmpty()) {
+                    $students = DB::table('students')
+                        ->whereIn('maHV', $studentIds)
+                        ->whereNull('deleted_at')
+                        ->orderBy('maHV', 'asc')
+                        ->get();
+                } else {
+                    // Fallback: Lấy từ idLop nếu chưa có dữ liệu trong class_students
+                    \Log::info("No data in class_students, falling back to idLop");
+                    $students = DB::table('students')
+                        ->where('idLop', $id)
+                        ->whereNull('deleted_at')
+                        ->orderBy('maHV', 'asc')
+                        ->get();
+                }
             }
 
-            // Lấy danh sách học viên từ bảng students với idLop
-            $students = DB::table('students')
-                ->where('idLop', $id)
-                ->whereNull('deleted_at')
-                ->orderBy('maHV', 'asc')
-                ->get()
-                ->map(function($student) use ($class) {
-                    return [
-                        'mahv' => $student->maHV,
-                        'hodem' => $student->hoDem,
-                        'ten' => $student->ten,
-                        'ngaysinh' => $student->ngaySinh ?? null,
-                        'gioitinh' => $student->gioiTinh,
-                        'dienthoai' => $student->dienThoai,
-                        'email' => $student->email,
-                        'noisinh' => $student->quocTich ?? $student->noiSinh ?? null,
-                        'socmnd' => $student->soGiayToTuyThan ?? $student->soCMND ?? null,
-                        'trangthaihoc' => $student->trangThai,
-                        'tenLop' => $class->tenLop,
-                    ];
-                });
+            // Map student data
+            $studentsData = $students->map(function($student) use ($class) {
+                return [
+                    'mahv' => $student->maHV ?? null,
+                    'hodem' => $student->hoDem ?? null,
+                    'ten' => $student->ten ?? null,
+                    'ngaysinh' => $student->ngaySinh ?? null,
+                    'gioitinh' => $student->gioiTinh ?? null,
+                    'dienthoai' => $student->dienThoai ?? null,
+                    'email' => $student->email ?? null,
+                    'noisinh' => $student->quocTich ?? $student->noiSinh ?? null,
+                    'socmnd' => $student->soGiayToTuyThan ?? $student->soCMND ?? null,
+                    'trangthaihoc' => $student->trangThai ?? null,
+                    'tenLop' => $class->class_name ?? null,
+                ];
+            });
+
+            \Log::info("Found {$studentsData->count()} students");
 
             return response()->json([
                 'success' => true,
-                'data' => $students,
+                'data' => $studentsData,
                 'lop' => [
-                    'id' => $class->id,
-                    'tenLop' => $class->tenLop,
-                    'khoaHoc' => $class->khoaHoc ?? null,
-                    'maNganhHoc' => $class->maNganhHoc ?? null,
+                    'id' => $class->id ?? null,
+                    'tenLop' => $class->class_name ?? null,
+                    'khoaHoc' => $class->khoaHoc_id ?? null,
+                    'maNganhHoc' => $class->major_id ?? null,
                 ],
                 'message' => 'Lấy danh sách học viên thành công'
             ]);

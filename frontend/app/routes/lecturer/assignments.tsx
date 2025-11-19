@@ -444,7 +444,7 @@ export default function TeachingAssignmentsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleViewClassStudents(item.class_id || item.id)}
+            onClick={() => handleViewClassStudents(item.course_code || item.class_id || item.id)}
             title="Xem danh sách học viên"
           >
             <UserGroupIcon className="w-4 h-4 text-green-600" />
