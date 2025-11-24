@@ -17,9 +17,7 @@ class ClassStudentService {
         message?: string;
       }>(`/classes/${classId}/students`);
 
-      console.log('Raw API response:', response); // Debug log
 
-      // API trả về: { success: true, data: [...], lop: {...} }
       if (response && response.success && Array.isArray(response.data)) {
         return {
           success: true,

@@ -5,10 +5,54 @@ import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
 /**
  * Service để quản lý phòng học/lớp học
- * Fetch data từ external API qua Laravel backend proxy
+ * Fetch data từ Laravel backend API
  */
 export class RoomService {
   private apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+  /**
+   * Lấy danh sách lớp học từ bảng classes
+   * Sử dụng cột khoaHoc_id thay vì khoaHoc
+   */
+  getClasses = async (params?: {
+    khoaHoc_id?: number;
+    major_id?: string;
+    maTrinhDoDaoTao?: string;
+    search?: string;
+  }): Promise<Room[]> => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.khoaHoc_id) queryParams.append('khoaHoc_id', params.khoaHoc_id.toString());
+      if (params?.major_id) queryParams.append('major_id', params.major_id);
+      if (params?.maTrinhDoDaoTao) queryParams.append('maTrinhDoDaoTao', params.maTrinhDoDaoTao);
+      if (params?.search) queryParams.append('search', params.search);
+
+      const url = `${this.apiUrl}/classes${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      // API trả về { data: [...], current_page, ... }
+      if (result.data) {
+        return Array.isArray(result.data) ? result.data : [];
+      }
+
+      return Array.isArray(result) ? result : [];
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      throw new Error('Không thể tải danh sách lớp học. Vui lòng thử lại sau.');
+    }
+  }
 
   /**
    * Lấy danh sách lớp học Thạc Sỹ theo năm vào
@@ -52,49 +96,54 @@ export class RoomService {
    */
   getList = async (params: TableQueryParams): Promise<PaginatedResponse<Room>> => {
     try {
-      // Lấy toàn bộ data từ API
-      const namVao = params.filters?.namVao || new Date().getFullYear();
-      const allData = await this.getLopHocThacSy(namVao);
+      // Lấy toàn bộ data từ API classes thay vì external API
+      const allData = await this.getClasses({
+        khoaHoc_id: params.filters?.khoaHoc || params.filters?.khoaHoc_id,
+        major_id: params.filters?.maNganhHoc || params.filters?.major_id,
+        maTrinhDoDaoTao: params.filters?.maTrinhDoDaoTao,
+        search: params.search,
+      });
 
       // Client-side filtering
       let filteredData = allData;
 
-      // Search
-      if (params.search) {
+      // Search (nếu chưa được filter bởi API)
+      if (params.search && !params.filters) {
         const searchTerm = params.search.toLowerCase().trim();
         filteredData = filteredData.filter(room =>
           room.tenLop?.toLowerCase().includes(searchTerm) ||
+          room.class_name?.toLowerCase().includes(searchTerm) ||
           room.giaoVienChuNhiem?.toLowerCase().includes(searchTerm) ||
-          room.maNganhHoc?.toLowerCase().includes(searchTerm)
+          room.maNganhHoc?.toLowerCase().includes(searchTerm) ||
+          room.major_id?.toLowerCase().includes(searchTerm)
         );
       }
 
-      // Filter by trình độ
-      if (params.filters?.maTrinhDoDaoTao) {
+      // Filter by khóa học (sử dụng khoaHoc_id)
+      if (params.filters?.khoaHoc || params.filters?.khoaHoc_id) {
+        const khoaHocFilter = params.filters?.khoaHoc || params.filters?.khoaHoc_id;
         filteredData = filteredData.filter(
-          room => room.maTrinhDoDaoTao === params.filters?.maTrinhDoDaoTao
-        );
-      }
-
-      // Filter by ngành học
-      if (params.filters?.maNganhHoc) {
-        filteredData = filteredData.filter(
-          room => room.maNganhHoc === params.filters?.maNganhHoc
-        );
-      }
-
-      // Filter by khóa học
-      if (params.filters?.khoaHoc) {
-        filteredData = filteredData.filter(
-          room => room.khoaHoc === Number(params.filters?.khoaHoc)
+          room => room.khoaHoc === Number(khoaHocFilter) || room.khoaHoc_id === Number(khoaHocFilter)
         );
       }
 
       // Sorting
       if (params.sort_by) {
         filteredData.sort((a, b) => {
-          const aValue = a[params.sort_by as keyof Room];
-          const bValue = b[params.sort_by as keyof Room];
+          let aValue = a[params.sort_by as keyof Room];
+          let bValue = b[params.sort_by as keyof Room];
+
+          // Map old column names to new ones
+          if (params.sort_by === 'khoaHoc') {
+            aValue = a.khoaHoc_id || a.khoaHoc;
+            bValue = b.khoaHoc_id || b.khoaHoc;
+          } else if (params.sort_by === 'tenLop') {
+            aValue = a.class_name || a.tenLop;
+            bValue = b.class_name || b.tenLop;
+          } else if (params.sort_by === 'maNganhHoc') {
+            aValue = a.major_id || a.maNganhHoc;
+            bValue = b.major_id || b.maNganhHoc;
+          }
 
           if (aValue == null) return 1;
           if (bValue == null) return -1;
@@ -135,11 +184,18 @@ export class RoomService {
   }
 
   /**
-   * Lấy danh sách tất cả phòng học/lớp học qua Laravel backend proxy
-   * @deprecated Use getLopHocThacSy instead
+   * Lấy danh sách tất cả phòng học/lớp học
+   * Ưu tiên sử dụng dữ liệu từ bảng classes
    */
   getDanhSach = async (): Promise<Room[]> => {
-    return this.getLopHocThacSy();
+    try {
+      // Thử lấy từ bảng classes trước
+      return await this.getClasses();
+    } catch (error) {
+      console.warn('Failed to fetch from classes table, falling back to external API:', error);
+      // Fallback về external API
+      return this.getLopHocThacSy();
+    }
   }
 
   /**

@@ -25,13 +25,16 @@ class SubjectStudent extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $appends = ['diem', 'diem_he4', 'diem_chu'];
+
     /**
      * Get the student that owns the enrollment
      */
     public function student(): BelongsTo
     {
         // Using students table with maHV as foreign key
-        return $this->belongsTo(\stdClass::class, 'student_id', 'maHV');
+        return $this->belongsTo(\stdClass::class, 'student_id', 'maHV')
+            ->from('students');
     }
 
     /**
@@ -39,8 +42,53 @@ class SubjectStudent extends Model
      */
     public function subject(): BelongsTo
     {
-        // Using subjects table
-        return $this->belongsTo(\stdClass::class, 'subject_id');
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
+    }
+
+    /**
+     * Calculate final grade (điểm hệ 10)
+     * Formula: (x * 0.1) + (y * 0.2) + (z * 0.7)
+     */
+    public function getDiemAttribute(): float
+    {
+        if (is_null($this->x) || is_null($this->y) || is_null($this->z)) {
+            return 0;
+        }
+        return round(($this->x * 0.1) + ($this->y * 0.2) + ($this->z * 0.7), 2);
+    }
+
+    /**
+     * Convert grade to 4-point scale
+     */
+    public function getDiemHe4Attribute(): float
+    {
+        $diem = $this->diem;
+
+        if ($diem >= 8.5) return 4.0;
+        if ($diem >= 8.0) return 3.5;
+        if ($diem >= 7.0) return 3.0;
+        if ($diem >= 6.5) return 2.5;
+        if ($diem >= 5.5) return 2.0;
+        if ($diem >= 5.0) return 1.5;
+        if ($diem >= 4.0) return 1.0;
+        return 0;
+    }
+
+    /**
+     * Convert grade to letter grade
+     */
+    public function getDiemChuAttribute(): string
+    {
+        $diem = $this->diem;
+
+        if ($diem >= 8.5) return 'A';
+        if ($diem >= 8.0) return 'B+';
+        if ($diem >= 7.0) return 'B';
+        if ($diem >= 6.5) return 'C+';
+        if ($diem >= 5.5) return 'C';
+        if ($diem >= 5.0) return 'D+';
+        if ($diem >= 4.0) return 'D';
+        return 'F';
     }
 
     /**
@@ -98,5 +146,31 @@ class SubjectStudent extends Model
             ->where('subject_id', $subjectId)
             ->exists();
     }
-}
 
+    /**
+     * Get grades for a specific student with subject details
+     */
+    public static function getGradesByStudent($studentId)
+    {
+        return self::where('student_id', $studentId)
+            ->with(['subject.majors'])
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'student_id' => $item->student_id,
+                    'subject_id' => $item->subject_id,
+                    'maMon' => $item->subject->maMon ?? '',
+                    'tenMon' => $item->subject->tenMon ?? '',
+                    'soTinChi' => $item->subject->soTinChi ?? 0,
+                    'x' => $item->x,
+                    'y' => $item->y,
+                    'z' => $item->z,
+                    'diem' => $item->diem,
+                    'diem_he4' => $item->diem_he4,
+                    'diem_chu' => $item->diem_chu,
+                    'majors' => $item->subject->majors ?? [],
+                ];
+            });
+    }
+}

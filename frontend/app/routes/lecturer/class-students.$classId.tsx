@@ -41,13 +41,7 @@ export default function ClassStudentsPage() {
 
       try {
         const response = await classStudentService.getStudentsByClassId(classId);
-
-        console.log('Service response:', response); // Debug log
-        console.log('Response success:', response.success);
-        console.log('Response data length:', response.data?.length);
-
         if (response.success) {
-          console.log('Setting students:', response.data);
           setStudents(response.data);
           // Get class name from response.lop or first student
           if (response.lop?.tenLop) {
@@ -56,11 +50,9 @@ export default function ClassStudentsPage() {
             setClassName(response.data[0].tenLop);
           }
         } else {
-          console.error('Response success is false:', response.message);
           setError(response.message || 'Không thể tải danh sách học viên');
         }
       } catch (err) {
-        console.error('Error loading students:', err);
         setError('Có lỗi xảy ra khi tải danh sách học viên');
       } finally {
         setIsLoading(false);

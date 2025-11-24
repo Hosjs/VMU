@@ -279,33 +279,36 @@ class StudentController extends Controller
     }
 
     /**
-     * Get student by code from external API (with CORS proxy)
+     * Get student by code from database (removed external API dependency)
      */
     public function getByCode(Request $request, $maHV)
     {
         try {
-            $response = Http::timeout(10)->get('http://203.162.246.113:8088/HoSoHocVien/TheoMaHV', [
-                'MaHV' => $maHV,
-            ]);
+            // Try to get from students table first (new structure)
+            $student = DB::table('students')
+                ->where('maHV', $maHV)
+                ->first();
 
-            if ($response->successful()) {
+            if ($student) {
                 return response()->json([
                     'success' => true,
-                    'data' => $response->json(),
+                    'data' => $student,
                 ]);
             }
 
+            // If not found, return 404
             return response()->json([
                 'success' => false,
-                'message' => 'Student not found',
-            ], $response->status());
+                'message' => 'Không tìm thấy học viên với mã: ' . $maHV,
+            ], 404);
         } catch (\Exception $e) {
+            \Log::error('Error fetching student by code: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error connecting to external API',
-                'error' => $e->getMessage(),
+                'message' => 'Lỗi khi lấy thông tin học viên từ database',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
             ], 500);
         }
     }
 }
-

@@ -22,8 +22,9 @@ class ClassController extends Controller
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
-                    $q->where('tenLop', 'like', "%{$search}%")
-                      ->orWhere('khoaHoc', 'like', "%{$search}%");
+                    $q->where('class_name', 'like', "%{$search}%")
+                      ->orWhere('khoaHoc_id', 'like', "%{$search}%")
+                      ->orWhere('major_id', 'like', "%{$search}%");
                 });
             }
 
@@ -33,19 +34,30 @@ class ClassController extends Controller
             }
 
             // Filter by ngành học
-            if ($request->has('maNganhHoc')) {
-                $query->where('maNganhHoc', $request->maNganhHoc);
+            if ($request->has('maNganhHoc') || $request->has('major_id')) {
+                $majorId = $request->maNganhHoc ?? $request->major_id;
+                $query->where('major_id', $majorId);
             }
 
             // Filter by khóa học
-            if ($request->has('khoaHoc')) {
-                $query->where('khoaHoc', $request->khoaHoc);
+            if ($request->has('khoaHoc') || $request->has('khoaHoc_id')) {
+                $khoaHoc = $request->khoaHoc ?? $request->khoaHoc_id;
+                $query->where('khoaHoc_id', $khoaHoc);
             }
 
-            // Sorting
+            // Sorting - đảm bảo sort đúng với tên cột trong database
             $sortBy = $request->get('sort_by', 'id');
             $sortDirection = $request->get('sort_direction', 'desc');
-            $query->orderBy($sortBy, $sortDirection);
+
+            // Map tên cột cũ sang tên cột mới
+            $columnMapping = [
+                'tenLop' => 'class_name',
+                'maNganhHoc' => 'major_id',
+                'khoaHoc' => 'khoaHoc_id',
+            ];
+
+            $sortColumn = $columnMapping[$sortBy] ?? $sortBy;
+            $query->orderBy($sortColumn, $sortDirection);
 
             // Pagination
             $perPage = $request->per_page ?? 20;
@@ -57,6 +69,27 @@ class ClassController extends Controller
                 ->skip(($page - 1) * $perPage)
                 ->take($perPage)
                 ->get();
+
+            // Transform data để thêm các alias cho backward compatibility
+            $data = $data->map(function($item) {
+                return (object)[
+                    'id' => $item->id,
+                    'class_name' => $item->class_name,
+                    'tenLop' => $item->class_name, // alias
+                    'maTrinhDoDaoTao' => $item->maTrinhDoDaoTao,
+                    'major_id' => $item->major_id,
+                    'maNganhHoc' => $item->major_id, // alias
+                    'khoaHoc_id' => $item->khoaHoc_id,
+                    'khoaHoc' => $item->khoaHoc_id, // alias
+                    'lecurer_id' => $item->lecurer_id,
+                    'idGiaoVienChuNhiem' => $item->lecurer_id, // alias
+                    'trangThai' => $item->trangThai,
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                    'deleted_at' => $item->deleted_at,
+                    'createdBy' => $item->createdBy,
+                ];
+            });
 
             return response()->json([
                 'data' => $data,

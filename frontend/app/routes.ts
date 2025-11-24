@@ -30,6 +30,6 @@ export default [
     route("courses", "routes/categories/course.tsx"),
 
     //academic routes
-    route("academic/grades", "routes/academic/grades.tsx"),
+    route("academic/grades", "routes/academic/grade-management.tsx"),
   ]),
 ] satisfies RouteConfig;

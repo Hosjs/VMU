@@ -21,18 +21,22 @@ export function Breadcrumb() {
     'majors': 'Ngành học',
     'subjects': 'Môn học',
     'courses': 'Học phần',
+    'course': 'Học phần',
     'classrooms': 'Phòng học',
     'rooms': 'Phòng học',
 
     // Students
     'students': 'Học viên',
+    'student': 'Học viên',
     'list': 'Danh sách',
     'classes': 'Lớp học',
     'class-assignments': 'Phân lớp',
     'class-student': 'Học viên theo lớp',
+    'class-students': 'Danh sách học viên',
 
     // Teachers/Lecturers
     'teachers': 'Giảng viên',
+    'lecturer': 'Giảng viên',
     'lecturers': 'Giảng viên',
     'assignments': 'Phân công giảng dạy',
     'teaching-assignments': 'Phân công giảng dạy',
@@ -50,6 +54,7 @@ export function Breadcrumb() {
     // Academic & Financial
     'academic': 'Học tập',
     'grades': 'Điểm học tập',
+    'grade-management': 'Quản lý điểm',
     'financial': 'Tài chính',
     'tuition-fees': 'Học phí',
 

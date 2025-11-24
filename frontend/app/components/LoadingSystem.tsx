@@ -89,8 +89,8 @@ const CompanyBranding = ({ theme = 'dark' }: { theme?: 'dark' | 'light' }) => {
 
     return (
         <>
-            <h2 className={`text-2xl font-bold ${textColor} mb-2`}>AutoCare Pro</h2>
-            <p className={`${subColor} text-sm mb-4`}>Dịch vụ khác biệt, trải nghiệm đỉnh cao</p>
+            <h2 className={`text-2xl font-bold ${textColor} mb-2`}>VMU</h2>
+            <p className={`${subColor} text-sm mb-4`}></p>
         </>
     );
 };

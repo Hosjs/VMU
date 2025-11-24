@@ -50,8 +50,8 @@ export interface Student {
   namVaotruong?: number;        // Năm vào từ API external (lưu ý: chữ 't' thường)
 }
 
-export interface Major {
-  maNganh: string;
+// Đổi tên thành StudentMajor để tránh xung đột với Major từ major.ts
+export interface StudentMajor {
   tenNganh: string;
   moTa: string;
   trangThai: boolean;

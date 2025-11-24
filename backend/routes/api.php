@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\MajorController;
+use App\Http\Controllers\Api\MajorSubjectController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\LecturerController;
 use App\Http\Controllers\Api\EducationLevelController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\ClassController;
+use App\Http\Controllers\Api\GradeManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -33,11 +35,11 @@ Route::get('/majors/{id}', [MajorController::class, 'show']);
 Route::get('/lecturers', [LecturerController::class, 'index']);
 Route::get('/lecturers/{id}', [LecturerController::class, 'show']);
 
-Route::get('/rooms/thac-sy', [RoomController::class, 'getThacSy']);
-Route::get('/rooms', [RoomController::class, 'index']);
-Route::get('/rooms/{id}', [RoomController::class, 'show']);
+// Major-Subjects Routes (Public)
+Route::get('/major-subjects', [MajorSubjectController::class, 'index']);
+Route::get('/major-subjects/{id}', [MajorSubjectController::class, 'show']);
+Route::get('/major-subjects/available-subjects/{majorId}', [MajorSubjectController::class, 'getAvailableSubjects']);
 
-Route::get("/courses",[CourseController::class, 'index']);
 Route::get("/courses/{id}",[CourseController::class, 'show']);
 
 Route::get('/trinh-do-dao-tao', [EducationLevelController::class, 'simple']);
@@ -52,6 +54,20 @@ Route::get('/classes/{id}/students', [ClassController::class, 'getStudents']);
 
 Route::prefix('grades')->group(function () {
     Route::get('/', [GradeController::class, 'getGradesByMaHV']);
+    Route::get('/grouped', [GradeController::class, 'getGradesGrouped']);
+});
+
+// Grade Management Routes (for teachers/admin)
+Route::prefix('grade-management')->group(function () {
+    Route::get('/majors', [GradeManagementController::class, 'getMajorsWithYears']);
+    Route::get('/classes', [GradeManagementController::class, 'getClassesByMajorAndYear']);
+    Route::get('/classes/{classId}/students', [GradeManagementController::class, 'getStudentsWithGrades']);
+
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/grades', [GradeManagementController::class, 'updateGrade'])->middleware('permission:grades.create');
+        Route::post('/grades/bulk', [GradeManagementController::class, 'bulkUpdateGrades'])->middleware('permission:grades.create');
+        Route::delete('/grades/{gradeId}', [GradeManagementController::class, 'deleteGrade'])->middleware('permission:grades.delete');
+    });
 });
 
 // Consolidated Class Assignments Routes

@@ -5,8 +5,8 @@ import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
     return [
-        { title: "Đăng Ký - AutoCare Pro" },
-        { name: "description", content: "Đăng ký tài khoản AutoCare Pro" },
+        { title: "Đăng Ký" },
+        { name: "description", content: "Đăng ký tài khoản" },
     ];
 }
 
@@ -78,7 +78,7 @@ export default function Register() {
 
                 <div className="relative h-full flex flex-col justify-center px-12 text-white">
                     <h2 className="text-4xl font-bold mb-6">
-                        Tham gia cùng AutoCare Pro
+                        Tham gia cùng VMU
                     </h2>
                     <p className="text-xl mb-8 leading-relaxed">
                         Đăng ký ngay để trải nghiệm dịch vụ quản lý gara chuyên nghiệp:
