@@ -35,6 +35,10 @@ Route::get('/majors/{id}', [MajorController::class, 'show']);
 Route::get('/lecturers', [LecturerController::class, 'index']);
 Route::get('/lecturers/{id}', [LecturerController::class, 'show']);
 
+// Rooms/Classes Routes (Public)
+Route::get('/rooms/thac-sy', [RoomController::class, 'getThacSy']);
+Route::get('/rooms', [RoomController::class, 'index']);
+
 // Major-Subjects Routes (Public)
 Route::get('/major-subjects', [MajorSubjectController::class, 'index']);
 Route::get('/major-subjects/{id}', [MajorSubjectController::class, 'show']);
@@ -60,6 +64,7 @@ Route::prefix('grades')->group(function () {
 // Grade Management Routes (for teachers/admin)
 Route::prefix('grade-management')->group(function () {
     Route::get('/majors', [GradeManagementController::class, 'getMajorsWithYears']);
+    Route::get('/all-classes', [GradeManagementController::class, 'getAllClassesWithInfo']);
     Route::get('/classes', [GradeManagementController::class, 'getClassesByMajorAndYear']);
     Route::get('/classes/{classId}/students', [GradeManagementController::class, 'getStudentsWithGrades']);
 

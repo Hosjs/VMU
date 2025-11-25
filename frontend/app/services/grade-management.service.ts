@@ -82,6 +82,13 @@ export const gradeManagementService = {
     },
 
     /**
+     * Lấy tất cả các lớp với thông tin đầy đủ (ngành, số học sinh)
+     */
+    async getAllClassesWithInfo(): Promise<ClassInfo[]> {
+        return await apiService.get<ClassInfo[]>('/grade-management/all-classes');
+    },
+
+    /**
      * Lấy danh sách lớp theo ngành và khóa học
      */
     async getClassesByMajorAndYear(maNganh: string, khoaHoc: string): Promise<ClassInfo[]> {

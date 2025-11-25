@@ -71,17 +71,17 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       title: 'Quản trị hệ thống',
       icon: <ShieldCheckIcon className="w-5 h-5" />,
       items: [
-          {
-            title: 'Người dùng',
-            path: '/users/list',
-            icon: <UsersIcon className="w-5 h-5" />,
-            requiredPermissions: ['users.view'],
-          },
+        {
+          title: 'Người dùng',
+          path: '/users/list',
+          icon: <UsersIcon className="w-5 h-5" />,
+          requiredPermissions: ['users.view'], // ❌ Manager không có
+        },
         {
           title: 'Vai trò & Quyền',
           path: '/users/roles',
           icon: <ShieldCheckIcon className="w-5 h-5" />,
-          requiredPermissions: ['roles.view'],
+          requiredPermissions: ['roles.view'], // ❌ Manager không có
         },
       ],
     },
@@ -93,7 +93,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           title: 'Trình độ đào tạo',
           path: '/education_levels',
           icon: <AcademicCapIcon className="w-5 h-5" />,
-          requiredPermissions: ['training_levels.view'],
+          requiredPermissions: ['education_levels.view'],
         },
         {
           title: 'Ngành học',
@@ -117,19 +117,19 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           title: 'Danh sách học viên',
           path: '/students',
           icon: <UserGroupIcon className="w-5 h-5" />,
-          requiredPermissions: ['students.view'],
+          requiredPermissions: ['students.view'], // ✅ Manager có
         },
-         {
-           title: 'Phòng học',
-           path: '/rooms',
-           icon: <BuildingLibraryIcon className="w-5 h-5" />,
-           requiredPermissions: ['classrooms.view'],
-         },
+        {
+          title: 'Phòng học',
+          path: '/rooms',
+          icon: <BuildingLibraryIcon className="w-5 h-5" />,
+          requiredPermissions: ['classrooms.view'], // ✅ Manager có
+        },
         {
           title: 'Phân lớp',
           path: '/class-assignments',
           icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
-          requiredPermissions: ['class_assignments.view'],
+          requiredPermissions: ['class_assignments.view'], // ✅ Manager có
         },
       ],
     },
@@ -141,25 +141,25 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           title: 'Danh sách giảng viên',
           path: '/lecturers',
           icon: <AcademicCapIcon className="w-5 h-5" />,
-          requiredPermissions: ['teachers.view'],
+          requiredPermissions: ['teachers.view'], // ✅ Manager có
         },
         {
           title: 'Hợp đồng giảng dạy',
           path: '/teachers/contracts',
           icon: <IdentificationIcon className="w-5 h-5" />,
-          requiredPermissions: ['teaching_contracts.view'],
+          requiredPermissions: ['teaching_contracts.view'], // ❌ Manager không có
         },
         {
           title: 'Phân công giảng dạy',
-          path: 'lecturer/assignments',
+          path: '/lecturer/assignments',
           icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
-          requiredPermissions: ['teaching_assignments.view'],
+          requiredPermissions: ['teaching_assignments.view'], // ✅ Manager có
         },
         {
           title: 'Lương giảng viên',
           path: '/teachers/salaries',
           icon: <BanknotesIcon className="w-5 h-5" />,
-          requiredPermissions: ['teacher_salaries.view'],
+          requiredPermissions: ['teacher_salaries.view'], // ❌ Manager không có
         },
       ],
     },
@@ -171,31 +171,31 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           title: 'Học kỳ',
           path: '/training/semesters',
           icon: <CalendarDaysIcon className="w-5 h-5" />,
-          requiredPermissions: ['semesters.view'],
+          requiredPermissions: ['semesters.view'], // ❌ Manager không có
         },
         {
           title: 'Gói đăng ký',
           path: '/training/registration-packages',
           icon: <DocumentTextIcon className="w-5 h-5" />,
-          requiredPermissions: ['registration_packages.view'],
+          requiredPermissions: ['registration_packages.view'], // ❌ Manager không có
         },
         {
           title: 'Đăng ký học phần',
           path: '/training/course-registrations',
           icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
-          requiredPermissions: ['training.view'],
+          requiredPermissions: ['course_registrations.view'], // ❌ Manager không có
         },
         {
           title: 'Kế hoạch học tập',
           path: '/training/study-plans',
           icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
-          requiredPermissions: ['study_plans.view'],
+          requiredPermissions: ['study_plans.view'], // ❌ Manager không có
         },
         {
           title: 'Thời khóa biểu',
           path: '/training/schedules',
           icon: <CalendarDaysIcon className="w-5 h-5" />,
-          requiredPermissions: ['schedules.view'],
+          requiredPermissions: ['schedules.view'], // ✅ Manager có
         },
       ],
     },
@@ -207,13 +207,13 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           title: 'Điểm học tập',
           path: '/academic/grades',
           icon: <PresentationChartBarIcon className="w-5 h-5" />,
-          requiredPermissions: ['grades.view'],
+          requiredPermissions: ['grades.view'], // ✅ Manager có (chỉ xem)
         },
         {
           title: 'Học phí',
           path: '/financial/tuition-fees',
           icon: <CurrencyDollarIcon className="w-5 h-5" />,
-          requiredPermissions: ['tuition_fees.view'],
+          requiredPermissions: ['tuition_fees.view'], // ❌ Manager không có
         },
       ],
     },
@@ -221,13 +221,13 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       title: 'Báo cáo',
       path: '/reports/dashboard',
       icon: <ChartBarIcon className="w-5 h-5" />,
-      requiredPermissions: ['reports.view'],
+      requiredPermissions: ['reports.view'], // ✅ Manager có
     },
     {
       title: 'Cài đặt',
       path: '/admin/settings',
       icon: <Cog6ToothIcon className="w-5 h-5" />,
-      requiredPermissions: ['settings.view'],
+      requiredPermissions: ['settings.view'], // ❌ Manager không có
     },
   ], []);
 

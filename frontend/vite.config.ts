@@ -5,4 +5,12 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+    server: {
+        host: true,
+        port: 5173,
+        strictPort: true,
+        allowedHosts: [
+            'volvo-toronto-reducing-analyses.trycloudflare.com'
+        ]
+    }
 });

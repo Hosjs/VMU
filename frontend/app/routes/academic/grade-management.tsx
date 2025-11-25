@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { gradeManagementService } from '~/services/grade-management.service';
-import { majorService } from '~/services/major.service';
 import {
   AcademicCapIcon,
   UsersIcon,
@@ -11,6 +10,7 @@ import {
   BookOpenIcon,
   XMarkIcon,
   ArrowLeftIcon,
+  BuildingLibraryIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Card } from '~/components/ui/Card';
@@ -29,16 +29,18 @@ interface Major {
   id: string | number;
   maNganh: string;
   tenNganh: string;
-  years: number[];
+  classCount?: number;
+  studentCount?: number;
 }
 
 interface Class {
   id: number;
   tenLop: string;
-  khoaHoc: string;
-  khoaHoc_id?: number; // Thêm để hỗ trợ cột mới
+  khoaHoc: string | number;
+  khoaHoc_id?: number;
   trangThai: string;
   tenNganh: string;
+  maNganh: string;
   studentCount: number;
 }
 
@@ -71,34 +73,52 @@ interface Subject {
 }
 
 export default function GradeManagementPage() {
-  const [step, setStep] = useState<'select-major' | 'view-subjects' | 'select-class' | 'manage-grades'>('select-major');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Parse URL paths manually since we're using splat route
+  const pathParts = location.pathname.replace('/academic/grades', '').split('/').filter(Boolean);
+
+  // Extract params from path
+  const params = {
+    majorId: pathParts[0] || undefined,
+    classId: pathParts[1] || undefined,
+    subjectId: pathParts[2] || undefined,
+  };
+
+  // Determine current step from URL params
+  const step = useMemo(() => {
+    if (params.subjectId) return 'manage-grades';
+    if (params.classId) return 'select-subject';
+    if (params.majorId) return 'select-class';
+    return 'select-major';
+  }, [params.majorId, params.classId, params.subjectId]);
 
   // Filters
-  const [searchTerm, setSearchTerm] = useState('');
+  const [majorSearchTerm, setMajorSearchTerm] = useState('');
+  const [classSearchTerm, setClassSearchTerm] = useState('');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   // Step 1: Select major
-  const [majors, setMajors] = useState<Major[]>([]);
+  const [allMajors, setAllMajors] = useState<Major[]>([]);
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [loadingMajors, setLoadingMajors] = useState(false);
 
-  // Step 2: View subjects of major
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
-
-  // Step 3: Select class
-  const [classes, setClasses] = useState<Class[]>([]);
+  // Step 2: Select class
+  const [majorClasses, setMajorClasses] = useState<Class[]>([]);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [loadingClasses, setLoadingClasses] = useState(false);
 
+  // Step 3: Select subject
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+
   // Step 4: Manage grades
   const [students, setStudents] = useState<Student[]>([]);
-  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [editingGrade, setEditingGrade] = useState<{ studentId: string; subjectId: number } | null>(null);
-  const [gradeForm, setGradeForm] = useState({ x: '', y: '', z: '' });
+  const [gradeForm, setGradeForm] = useState({ x: '', y: '' });
   const [saving, setSaving] = useState(false);
 
   // Load majors on mount
@@ -106,123 +126,177 @@ export default function GradeManagementPage() {
     loadMajors();
   }, []);
 
+  // Load data based on URL params
+  useEffect(() => {
+    if (params.majorId && !selectedMajor) {
+      loadMajorById(params.majorId);
+    }
+    if (params.classId && !selectedClass) {
+      loadClassById(Number(params.classId));
+    }
+    if (params.subjectId && !selectedSubject) {
+      loadSubjectById(Number(params.subjectId));
+    }
+  }, [params]);
+
+  // Update breadcrumb context when data changes
+  useEffect(() => {
+    const event = new CustomEvent('grade-context-update', {
+      detail: {
+        major: selectedMajor,
+        class: selectedClass,
+        subject: selectedSubject,
+      },
+    });
+    window.dispatchEvent(event);
+  }, [selectedMajor, selectedClass, selectedSubject]);
+
   const loadMajors = async () => {
     setLoadingMajors(true);
     try {
-      const data = await gradeManagementService.getMajorsWithYears();
-      console.log('✅ Majors data received:', data);
-      setMajors(Array.isArray(data) ? data : []);
+      const allClasses = await gradeManagementService.getAllClassesWithInfo();
+
+      const majorMap = new Map<string, { classes: Class[], students: number }>();
+
+      if (Array.isArray(allClasses)) {
+        allClasses.forEach((cls: Class) => {
+          if (cls.maNganh && cls.tenNganh) {
+            const key = cls.maNganh;
+            if (!majorMap.has(key)) {
+              majorMap.set(key, { classes: [], students: 0 });
+            }
+            const majorData = majorMap.get(key)!;
+            majorData.classes.push(cls);
+            majorData.students += cls.studentCount || 0;
+          }
+        });
+      }
+
+      const majors: Major[] = Array.from(majorMap.entries()).map(([maNganh, data]) => {
+        const firstClass = data.classes[0];
+        return {
+          id: maNganh,
+          maNganh: maNganh,
+          tenNganh: firstClass.tenNganh,
+          classCount: data.classes.length,
+          studentCount: data.students,
+        };
+      });
+
+      console.log('✅ Majors loaded:', majors);
+      setAllMajors(majors);
     } catch (error) {
       console.error('❌ Error loading majors:', error);
-      setMajors([]);
+      setAllMajors([]);
       alert('Lỗi khi tải danh sách ngành');
     } finally {
       setLoadingMajors(false);
     }
   };
 
-  // Get all unique years from majors
-  const allYears = useMemo(() => {
-    const years = new Set<number>();
-    majors.forEach(major => {
-      major.years.forEach(year => years.add(year));
-    });
-    return Array.from(years).sort((a, b) => b - a); // Sort descending
-  }, [majors]);
+  const loadMajorById = async (majorId: string) => {
+    const allClasses = await gradeManagementService.getAllClassesWithInfo();
+    const filteredByMajor = allClasses.filter((cls: Class) => cls.maNganh === majorId);
 
-  // Filter majors by search term and year
+    if (filteredByMajor.length > 0) {
+      const firstClass = filteredByMajor[0];
+      const major: Major = {
+        id: majorId,
+        maNganh: majorId,
+        tenNganh: firstClass.tenNganh,
+        classCount: filteredByMajor.length,
+        studentCount: filteredByMajor.reduce((sum, cls) => sum + (cls.studentCount || 0), 0),
+      };
+      setSelectedMajor(major);
+      setMajorClasses(filteredByMajor);
+    }
+  };
+
+  const loadClassById = async (classId: number) => {
+    try {
+      const data = await gradeManagementService.getStudentsWithGrades(classId);
+      if (data.class) {
+        setSelectedClass(data.class as any);
+        setAvailableSubjects(data.subjects || []);
+      }
+    } catch (error) {
+      console.error('Error loading class:', error);
+    }
+  };
+
+  const loadSubjectById = async (subjectId: number) => {
+    if (!params.classId) return;
+
+    try {
+      const data = await gradeManagementService.getStudentsWithGrades(Number(params.classId), subjectId);
+      const subject = data.subjects?.find(s => s.id === subjectId);
+      if (subject) {
+        setSelectedSubject(subject);
+        setStudents(data.students || []);
+      }
+    } catch (error) {
+      console.error('Error loading subject:', error);
+    }
+  };
+
+  // Filter majors by search
   const filteredMajors = useMemo(() => {
-    return majors.filter(major => {
-      const matchesSearch = !searchTerm ||
-        major.tenNganh.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        major.maNganh.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!Array.isArray(allMajors)) return [];
 
-      const matchesYear = !selectedYear || major.years.includes(selectedYear);
+    return allMajors.filter(major => {
+      const matchesSearch = !majorSearchTerm ||
+        major.tenNganh.toLowerCase().includes(majorSearchTerm.toLowerCase()) ||
+        major.maNganh.toLowerCase().includes(majorSearchTerm.toLowerCase());
+
+      return matchesSearch;
+    });
+  }, [allMajors, majorSearchTerm]);
+
+  // Get available years for selected major's classes
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    if (Array.isArray(majorClasses)) {
+      majorClasses.forEach(cls => {
+        if (cls.khoaHoc) {
+          const year = typeof cls.khoaHoc === 'number' ? cls.khoaHoc : parseInt(String(cls.khoaHoc));
+          if (!isNaN(year)) {
+            years.add(year);
+          }
+        }
+      });
+    }
+    return Array.from(years).sort((a, b) => b - a);
+  }, [majorClasses]);
+
+  // Filter classes by search and year
+  const filteredClasses = useMemo(() => {
+    if (!Array.isArray(majorClasses)) return [];
+
+    return majorClasses.filter(cls => {
+      const khoaHocStr = String(cls.khoaHoc || '');
+      const matchesSearch = !classSearchTerm ||
+        cls.tenLop.toLowerCase().includes(classSearchTerm.toLowerCase()) ||
+        khoaHocStr.toLowerCase().includes(classSearchTerm.toLowerCase());
+
+      const matchesYear = !selectedYear || cls.khoaHoc === selectedYear;
 
       return matchesSearch && matchesYear;
     });
-  }, [majors, searchTerm, selectedYear]);
+  }, [majorClasses, classSearchTerm, selectedYear]);
 
-  // Handle select major and load subjects
+  // Handle select major - navigate to major URL
   const handleSelectMajor = async (major: Major) => {
-    setSelectedMajor(major);
-    setLoadingSubjects(true);
-    try {
-      console.log('🔍 Loading subjects for major:', major.maNganh);
-      const response = await majorService.getMajorSubjects(Number(major.id));
-      console.log('📚 Subjects response:', response);
-
-      // ✅ Remove duplicates based on subject ID
-      const uniqueSubjects = response.subjects
-        ? response.subjects.filter((subject, index, self) =>
-            index === self.findIndex(s => s.id === subject.id)
-          )
-        : [];
-
-      console.log('📚 Unique subjects count:', uniqueSubjects.length);
-      setSubjects(uniqueSubjects);
-      setStep('view-subjects');
-
-      if (uniqueSubjects.length === 0) {
-        console.warn('⚠️ No subjects found for this major');
-      }
-    } catch (error) {
-      console.error('❌ Error loading subjects:', error);
-      alert('Lỗi khi tải danh sách môn học');
-      setSubjects([]);
-    } finally {
-      setLoadingSubjects(false);
-    }
+    navigate(`/academic/grades/${major.maNganh}`);
   };
 
-  // Handle continue to select class
-  const handleContinueToClasses = async () => {
-    if (!selectedMajor || !selectedYear) {
-      alert('Vui lòng chọn năm học để tiếp tục');
-      return;
-    }
-
-    setLoadingClasses(true);
-    try {
-      const data = await gradeManagementService.getClassesByMajorAndYear(
-        selectedMajor.maNganh,
-        selectedYear.toString()
-      );
-      setClasses(data);
-      setStep('select-class');
-    } catch (error) {
-      console.error('Error loading classes:', error);
-      alert('Lỗi khi tải danh sách lớp');
-    } finally {
-      setLoadingClasses(false);
-    }
-  };
-
-  // Handle select class
+  // Handle select class - navigate to class URL
   const handleSelectClass = async (classItem: Class) => {
-    setSelectedClass(classItem);
-    setLoadingStudents(true);
-    try {
-      console.log('🔍 Loading students for class:', classItem.id);
-      const data = await gradeManagementService.getStudentsWithGrades(classItem.id);
+    navigate(`/academic/grades/${params.majorId}/${classItem.id}`);
+  };
 
-      console.log('📦 Full API response:', data);
-      console.log('👥 Students:', data.students);
-      console.log('📚 Available Subjects:', data.subjects);
-
-      setStudents(data.students || []);
-      setAvailableSubjects(data.subjects || []);
-      setStep('manage-grades');
-
-      if (!data.subjects || data.subjects.length === 0) {
-        console.warn('⚠️ WARNING: No subjects found for this class!');
-      }
-    } catch (error) {
-      console.error('❌ Error loading students:', error);
-      alert('Lỗi khi tải danh sách học sinh và môn học');
-    } finally {
-      setLoadingStudents(false);
-    }
+  // Handle select subject - navigate to subject URL
+  const handleSelectSubject = async (subject: Subject) => {
+    navigate(`/academic/grades/${params.majorId}/${params.classId}/${subject.id}`);
   };
 
   const handleEditGrade = (student: Student, subjectId: number) => {
@@ -231,7 +305,6 @@ export default function GradeManagementPage() {
     setGradeForm({
       x: grade?.x?.toString() || '',
       y: grade?.y?.toString() || '',
-      z: grade?.z?.toString() || '',
     });
   };
 
@@ -240,17 +313,18 @@ export default function GradeManagementPage() {
 
     const x = parseFloat(gradeForm.x);
     const y = parseFloat(gradeForm.y);
-    const z = parseFloat(gradeForm.z);
 
-    if (isNaN(x) || isNaN(y) || isNaN(z)) {
-      alert('Vui lòng nhập đầy đủ điểm X, Y, Z');
+    if (isNaN(x) || isNaN(y)) {
+      alert('Vui lòng nhập đầy đủ điểm X và Y');
       return;
     }
 
-    if (x < 0 || x > 10 || y < 0 || y > 10 || z < 0 || z > 10) {
+    if (x < 0 || x > 10 || y < 0 || y > 10) {
       alert('Điểm phải từ 0 đến 10');
       return;
     }
+
+    const z = (x + y) / 2;
 
     setSaving(true);
     try {
@@ -262,13 +336,13 @@ export default function GradeManagementPage() {
         z,
       });
 
-      if (selectedClass) {
-        const data = await gradeManagementService.getStudentsWithGrades(selectedClass.id);
+      if (selectedClass && selectedSubject) {
+        const data = await gradeManagementService.getStudentsWithGrades(selectedClass.id, selectedSubject.id);
         setStudents(data.students || []);
       }
 
       setEditingGrade(null);
-      setGradeForm({ x: '', y: '', z: '' });
+      setGradeForm({ x: '', y: '' });
       alert('Cập nhật điểm thành công!');
     } catch (error: any) {
       console.error('Error saving grade:', error);
@@ -278,28 +352,22 @@ export default function GradeManagementPage() {
     }
   };
 
-  const calculateFinalGrade = (x: number | null, y: number | null, z: number | null): number => {
-    if (x === null || y === null || z === null) return 0;
-    return (x * 0.1) + (y * 0.2) + (z * 0.7);
-  };
-
   const handleBack = () => {
-    if (step === 'view-subjects') {
-      setStep('select-major');
-      setSelectedMajor(null);
-      setSubjects([]);
+    if (step === 'manage-grades') {
+      navigate(`/academic/grades/${params.majorId}/${params.classId}`);
+    } else if (step === 'select-subject') {
+      navigate(`/academic/grades/${params.majorId}`);
     } else if (step === 'select-class') {
-      setStep('view-subjects');
-      setClasses([]);
-    } else if (step === 'manage-grades') {
-      setStep('select-class');
-      setStudents([]);
-      setAvailableSubjects([]);
+      navigate('/academic/grades');
     }
   };
 
-  const handleClearFilters = () => {
-    setSearchTerm('');
+  const handleClearMajorFilters = () => {
+    setMajorSearchTerm('');
+  };
+
+  const handleClearClassFilters = () => {
+    setClassSearchTerm('');
     setSelectedYear(null);
   };
 
@@ -313,106 +381,54 @@ export default function GradeManagementPage() {
             Quản lý điểm học sinh
           </h1>
           <p className="text-gray-600 mt-1">
-            Nhập và chỉnh sửa điểm cho học sinh theo lớp
+            Nhập và chỉnh sửa điểm cho học sinh theo ngành, lớp và môn học
           </p>
         </div>
         {step !== 'select-major' && (
           <Button variant="outline" onClick={handleBack}>
-            ← Quay lại
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Quay lại
           </Button>
         )}
       </div>
 
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <span className={step === 'select-major' ? 'font-semibold text-blue-600' : ''}>
-          1. Chọn ngành
-        </span>
-        <span>→</span>
-        <span className={step === 'view-subjects' ? 'font-semibold text-blue-600' : ''}>
-          2. Xem môn học
-        </span>
-        <span>→</span>
-        <span className={step === 'select-class' ? 'font-semibold text-blue-600' : ''}>
-          3. Chọn lớp
-        </span>
-        <span>→</span>
-        <span className={step === 'manage-grades' ? 'font-semibold text-blue-600' : ''}>
-          4. Quản lý điểm
-        </span>
-      </div>
 
-      {/* Step 1: Select Major with Search and Filters */}
+      {/* Step 1: Select Major */}
       {step === 'select-major' && (
         <div className="space-y-6">
-          {/* Search and Filters */}
+          {/* Search */}
           <Card>
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Tìm kiếm và lọc ngành học</h2>
+              <h2 className="text-xl font-bold">Tìm kiếm ngành học</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Search Box */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tìm kiếm ngành
-                  </label>
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Tìm theo tên ngành hoặc mã ngành..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {/* Year Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lọc theo năm học
-                  </label>
-                  <Select
-                    value={selectedYear?.toString() || ''}
-                    onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : null)}
-                  >
-                    <option value="">Tất cả các năm</option>
-                    {allYears.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </Select>
-                </div>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Tìm theo tên ngành hoặc mã ngành..."
+                  value={majorSearchTerm}
+                  onChange={(e) => setMajorSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
 
-              {/* Active Filters */}
-              {(searchTerm || selectedYear) && (
+              {majorSearchTerm && (
                 <div className="flex items-center gap-2 pt-2 border-t">
-                  <span className="text-sm text-gray-600">Đang lọc:</span>
-                  {searchTerm && (
-                    <Badge variant="info">
-                      Tìm kiếm: "{searchTerm}"
-                      <button onClick={() => setSearchTerm('')} className="ml-2">
-                        <XMarkIcon className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  )}
-                  {selectedYear && (
-                    <Badge variant="success">
-                      Năm: {selectedYear}
-                      <button onClick={() => setSelectedYear(null)} className="ml-2">
-                        <XMarkIcon className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  )}
-                  <Button variant="outline" size="sm" onClick={handleClearFilters}>
-                    Xóa tất cả
+                  <span className="text-sm text-gray-600">Đang tìm kiếm:</span>
+                  <Badge variant="info">
+                    "{majorSearchTerm}"
+                    <button onClick={() => setMajorSearchTerm('')} className="ml-2">
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={handleClearMajorFilters}>
+                    Xóa tìm kiếm
                   </Button>
                 </div>
               )}
 
               <div className="text-sm text-gray-600">
-                Hiển thị <strong>{filteredMajors.length}</strong> / {majors.length} ngành
+                Hiển thị <strong>{filteredMajors.length}</strong> / {allMajors.length} ngành
               </div>
             </div>
           </Card>
@@ -429,7 +445,7 @@ export default function GradeManagementPage() {
             ) : filteredMajors.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <p>Không tìm thấy ngành nào phù hợp</p>
-                <Button variant="outline" onClick={handleClearFilters} className="mt-4">
+                <Button variant="outline" onClick={handleClearMajorFilters} className="mt-4">
                   Xóa bộ lọc
                 </Button>
               </div>
@@ -437,20 +453,26 @@ export default function GradeManagementPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredMajors.map((major) => (
                   <div
-                    key={major.maNganh}
+                    key={major.id}
                     onClick={() => handleSelectMajor(major)}
-                    className="p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
+                    className="p-6 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all group"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <AcademicCapIcon className="h-6 w-6 text-blue-600" />
-                      <Badge variant="default">{major.maNganh}</Badge>
+                    <div className="flex items-start justify-between mb-3">
+                      <BuildingLibraryIcon className="h-8 w-8 text-blue-600 group-hover:text-blue-700" />
+                      <Badge variant="info">{major.maNganh}</Badge>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{major.tenNganh}</h3>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>{major.years.length} khóa học</span>
-                      {major.years.length > 0 && (
-                        <span>({major.years[0]} - {major.years[major.years.length - 1]})</span>
-                      )}
+                    <h3 className="font-bold text-lg text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                      {major.tenNganh}
+                    </h3>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <div className="flex items-center justify-between">
+                        <span>Số lớp:</span>
+                        <span className="font-semibold text-gray-900">{major.classCount || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Số học sinh:</span>
+                        <span className="font-semibold text-gray-900">{major.studentCount || 0}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -460,97 +482,135 @@ export default function GradeManagementPage() {
         </div>
       )}
 
-      {/* Step 2: View Subjects of Selected Major */}
-      {step === 'view-subjects' && selectedMajor && (
+      {/* Step 2: Select Class */}
+      {step === 'select-class' && selectedMajor && (
         <div className="space-y-6">
           {/* Major Info */}
           <Card>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <BuildingLibraryIcon className="w-12 h-12 text-blue-600" />
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{selectedMajor.tenNganh}</h2>
                 <p className="text-gray-600 mt-1">
-                  Mã ngành: <strong>{selectedMajor.maNganh}</strong>
+                  Mã ngành: {selectedMajor.maNganh} | {selectedMajor.classCount} lớp | {selectedMajor.studentCount} học sinh
                 </p>
               </div>
-              <Badge variant="info" size="lg">
-                {subjects.length} môn học
-              </Badge>
             </div>
           </Card>
 
-          {/* Year Selector for continuing */}
+          {/* Search and Filters */}
           <Card>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Chọn năm học để xem danh sách lớp
-            </label>
-            <div className="flex gap-4">
-              <Select
-                value={selectedYear?.toString() || ''}
-                onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : null)}
-                className="flex-1"
-              >
-                <option value="">-- Chọn năm học --</option>
-                {selectedMajor.years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </Select>
-              <Button
-                onClick={handleContinueToClasses}
-                disabled={!selectedYear || loadingClasses}
-              >
-                {loadingClasses ? 'Đang tải...' : 'Xem danh sách lớp →'}
-              </Button>
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">Tìm kiếm và lọc lớp học</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tìm kiếm lớp
+                  </label>
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Tìm theo tên lớp..."
+                      value={classSearchTerm}
+                      onChange={(e) => setClassSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lọc theo năm học
+                  </label>
+                  <Select
+                    value={selectedYear?.toString() || ''}
+                    onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : null)}
+                  >
+                    <option value="">Tất cả các năm</option>
+                    {availableYears.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              {(classSearchTerm || selectedYear) && (
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <span className="text-sm text-gray-600">Đang lọc:</span>
+                  {classSearchTerm && (
+                    <Badge variant="info">
+                      Tìm kiếm: "{classSearchTerm}"
+                      <button onClick={() => setClassSearchTerm('')} className="ml-2">
+                        <XMarkIcon className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  )}
+                  {selectedYear && (
+                    <Badge variant="success">
+                      Năm: {selectedYear}
+                      <button onClick={() => setSelectedYear(null)} className="ml-2">
+                        <XMarkIcon className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  )}
+                  <Button variant="outline" size="sm" onClick={handleClearClassFilters}>
+                    Xóa tất cả
+                  </Button>
+                </div>
+              )}
+
+              <div className="text-sm text-gray-600">
+                Hiển thị <strong>{filteredClasses.length}</strong> / {majorClasses.length} lớp
+              </div>
             </div>
+          </Card>
+
+          {/* Classes List */}
+          <Card>
+            <h2 className="text-xl font-bold mb-4">Danh sách lớp học</h2>
+
+            {loadingClasses ? (
+              <div className="text-center py-12">
+                <ArrowPathIcon className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                <p>Đang tải...</p>
+              </div>
+            ) : filteredClasses.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>Không tìm thấy lớp nào phù hợp</p>
+                <Button variant="outline" onClick={handleClearClassFilters} className="mt-4">
+                  Xóa bộ lọc
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredClasses.map((classItem) => (
+                  <div
+                    key={classItem.id}
+                    onClick={() => handleSelectClass(classItem)}
+                    className="p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <AcademicCapIcon className="h-6 w-6 text-blue-600" />
+                      <Badge variant="default">{classItem.khoaHoc}</Badge>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{classItem.tenLop}</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{classItem.studentCount} học sinh</span>
+                      <span className="hidden md:inline">|</span>
+                      <span className="hidden md:inline">{classItem.trangThai}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       )}
 
-      {/* Step 3: Select Class */}
-      {step === 'select-class' && selectedMajor && (
-        <Card>
-          <h2 className="text-xl font-bold mb-4">
-            Chọn lớp học - {selectedMajor.tenNganh} ({selectedYear})
-          </h2>
-
-          {loadingClasses ? (
-            <div className="text-center py-12">
-              <ArrowPathIcon className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
-              <p>Đang tải danh sách lớp...</p>
-            </div>
-          ) : classes.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              Không tìm thấy lớp nào cho năm học {selectedYear}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classes.map((classItem) => (
-                <div
-                  key={classItem.id}
-                  onClick={() => handleSelectClass(classItem)}
-                  className="p-6 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-lg text-gray-900">{classItem.tenLop}</h3>
-                    <Badge variant={classItem.trangThai === 'DangHoc' ? 'success' : 'default'}>
-                      {classItem.trangThai}
-                    </Badge>
-                  </div>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p>Khóa học: {classItem.khoaHoc}</p>
-                    <p className="flex items-center gap-1">
-                      <UsersIcon className="w-4 h-4" />
-                      {classItem.studentCount} học sinh
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Step 4: Manage Grades */}
-      {step === 'manage-grades' && selectedClass && (
+      {/* Step 3: Select Subject */}
+      {step === 'select-subject' && selectedClass && (
         <div className="space-y-6">
           {/* Class Info */}
           <Card>
@@ -558,32 +618,99 @@ export default function GradeManagementPage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{selectedClass.tenLop}</h2>
                 <p className="text-gray-600 mt-1">
-                  {selectedClass.tenNganh} - Khóa {selectedClass.khoaHoc} - {students.length} học sinh
+                  {selectedClass.tenNganh} - Khóa {selectedClass.khoaHoc}
                 </p>
               </div>
               <Badge variant="success">{selectedClass.trangThai}</Badge>
             </div>
           </Card>
 
-          {/* Subject Filter */}
-          {availableSubjects.length > 0 && (
-            <Card>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Chọn môn học để nhập điểm
-              </label>
-              <Select
-                value={selectedSubject?.toString() || ''}
-                onChange={(e) => setSelectedSubject(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">-- Tất cả các môn --</option>
+          {/* Subjects List */}
+          <Card>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <BookOpenIcon className="w-6 h-6 text-blue-600" />
+              Chọn môn học để nhập điểm
+            </h2>
+
+            {loadingSubjects ? (
+              <div className="text-center py-12">
+                <ArrowPathIcon className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                <p>Đang tải danh sách môn học...</p>
+              </div>
+            ) : availableSubjects.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <BookOpenIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p>Lớp này chưa có môn học nào</p>
+                <p className="text-sm mt-2">Vui lòng liên hệ quản trị viên để thêm môn học</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableSubjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.tenMon} ({subject.maMon}) - {subject.soTinChi} TC
-                  </option>
+                  <div
+                    key={subject.id}
+                    onClick={() => handleSelectSubject(subject)}
+                    className="p-6 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all group"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <BookOpenIcon className="w-6 h-6 text-green-600 group-hover:text-blue-600 transition-colors" />
+                      <Badge variant="info">{subject.soTinChi} TC</Badge>
+                    </div>
+                    <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                      {subject.tenMon}
+                    </h3>
+                    <p className="text-sm text-gray-500">Mã môn: {subject.maMon}</p>
+                  </div>
                 ))}
-              </Select>
-            </Card>
-          )}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Step 4: Manage Grades */}
+      {step === 'manage-grades' && selectedClass && selectedSubject && (
+        <div className="space-y-6">
+          {/* Class & Subject Info */}
+          <Card>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedClass.tenLop}</h2>
+                  <p className="text-gray-600 mt-1">
+                    {selectedClass.tenNganh} - Khóa {selectedClass.khoaHoc}
+                  </p>
+                </div>
+                <Badge variant="success">{selectedClass.trangThai}</Badge>
+              </div>
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex items-center gap-3">
+                  <BookOpenIcon className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-gray-900">{selectedSubject.tenMon}</p>
+                    <p className="text-sm text-gray-600">
+                      Mã môn: {selectedSubject.maMon} | Số tín chỉ: {selectedSubject.soTinChi}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Grade Calculation Info */}
+          <Card>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <BookOpenIcon className="w-5 h-5" />
+                Công thức tính điểm
+              </h3>
+              <div className="text-sm text-blue-800 space-y-1">
+                <p>• <strong>Điểm X:</strong> Điểm thành phần 1</p>
+                <p>• <strong>Điểm Y:</strong> Điểm thành phần 2</p>
+                <p>• <strong>Điểm Z (Điểm trung bình):</strong> = (X + Y) / 2</p>
+                <p className="mt-2 font-semibold text-blue-900">→ Điểm Z là điểm cuối cùng của học viên</p>
+              </div>
+            </div>
+          </Card>
 
           {/* Students List */}
           {loadingStudents ? (
@@ -593,14 +720,17 @@ export default function GradeManagementPage() {
                 <p>Đang tải danh sách học sinh...</p>
               </div>
             </Card>
+          ) : students.length === 0 ? (
+            <Card>
+              <div className="text-center py-12 text-gray-500">
+                <UsersIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p>Không có học sinh nào trong lớp này</p>
+              </div>
+            </Card>
           ) : (
             <div className="space-y-4">
               {students.map((student) => {
-                const filteredGrades = selectedSubject
-                  ? student.grades.filter(g => g.subject_id === selectedSubject)
-                  : student.grades;
-
-                const selectedSubjectData = availableSubjects.find(s => s.id === selectedSubject);
+                const grade = student.grades.find(g => g.subject_id === selectedSubject.id);
 
                 return (
                   <Card key={student.maHV}>
@@ -618,173 +748,108 @@ export default function GradeManagementPage() {
                         </Badge>
                       </div>
 
-                      {/* Grades Section */}
-                      {selectedSubject && selectedSubjectData ? (
-                        // Single subject view
-                        <div>
-                          <h4 className="font-semibold text-gray-700 mb-3">
-                            Môn học: {selectedSubjectData.tenMon} ({selectedSubjectData.soTinChi} TC)
-                          </h4>
-
-                          {editingGrade?.studentId === student.maHV &&
-                           editingGrade?.subjectId === selectedSubject ? (
-                            // Edit Mode
-                            <div className="bg-blue-50 p-4 rounded-lg space-y-3">
-                              <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Điểm X (10%)</label>
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    max="10"
-                                    value={gradeForm.x}
-                                    onChange={(e) => setGradeForm({ ...gradeForm, x: e.target.value })}
-                                    placeholder="0-10"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Điểm Y (20%)</label>
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    max="10"
-                                    value={gradeForm.y}
-                                    onChange={(e) => setGradeForm({ ...gradeForm, y: e.target.value })}
-                                    placeholder="0-10"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Điểm Z (70%)</label>
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    max="10"
-                                    value={gradeForm.z}
-                                    onChange={(e) => setGradeForm({ ...gradeForm, z: e.target.value })}
-                                    placeholder="0-10"
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex gap-2 justify-end">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingGrade(null);
-                                    setGradeForm({ x: '', y: '', z: '' });
-                                  }}
-                                  disabled={saving}
-                                >
-                                  Hủy
-                                </Button>
-                                <Button size="sm" onClick={handleSaveGrade} disabled={saving}>
-                                  {saving ? 'Đang lưu...' : 'Lưu điểm'}
-                                </Button>
-                              </div>
+                      {/* Grade Input/Display */}
+                      {editingGrade?.studentId === student.maHV &&
+                       editingGrade?.subjectId === selectedSubject.id ? (
+                        // Edit Mode
+                        <div className="bg-blue-50 border-2 border-blue-300 p-4 rounded-lg space-y-3">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-gray-700">
+                                Điểm X <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                max="10"
+                                value={gradeForm.x}
+                                onChange={(e) => setGradeForm({ ...gradeForm, x: e.target.value })}
+                                placeholder="0-10"
+                                className="text-lg"
+                              />
                             </div>
-                          ) : (
-                            // View Mode
-                            <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-                              {filteredGrades.length > 0 ? (
-                                <div className="flex-1 grid grid-cols-5 gap-4 items-center">
-                                  <div>
-                                    <span className="text-xs text-gray-500">Điểm X</span>
-                                    <p className="font-semibold">{filteredGrades[0].x ?? '-'}</p>
-                                  </div>
-                                  <div>
-                                    <span className="text-xs text-gray-500">Điểm Y</span>
-                                    <p className="font-semibold">{filteredGrades[0].y ?? '-'}</p>
-                                  </div>
-                                  <div>
-                                    <span className="text-xs text-gray-500">Điểm Z</span>
-                                    <p className="font-semibold">{filteredGrades[0].z ?? '-'}</p>
-                                  </div>
-                                  <div>
-                                    <span className="text-xs text-gray-500">Điểm TB</span>
-                                    <p className="font-bold text-lg text-blue-600">
-                                      {calculateFinalGrade(
-                                        filteredGrades[0].x,
-                                        filteredGrades[0].y,
-                                        filteredGrades[0].z
-                                      ).toFixed(2)}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Badge variant={
-                                      calculateFinalGrade(
-                                        filteredGrades[0].x,
-                                        filteredGrades[0].y,
-                                        filteredGrades[0].z
-                                      ) >= 5 ? 'success' : 'danger'
-                                    }>
-                                      {calculateFinalGrade(
-                                        filteredGrades[0].x,
-                                        filteredGrades[0].y,
-                                        filteredGrades[0].z
-                                      ) >= 5 ? 'Đạt' : 'Không đạt'}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              ) : (
-                                <p className="text-gray-500 italic">Chưa có điểm</p>
-                              )}
-                              <Button
-                                size="sm"
-                                onClick={() => handleEditGrade(student, selectedSubject)}
-                              >
-                                <PencilSquareIcon className="w-4 w-4" />
-                                {filteredGrades.length > 0 ? 'Sửa' : 'Nhập điểm'}
-                              </Button>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-gray-700">
+                                Điểm Y <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                max="10"
+                                value={gradeForm.y}
+                                onChange={(e) => setGradeForm({ ...gradeForm, y: e.target.value })}
+                                placeholder="0-10"
+                                className="text-lg"
+                              />
+                            </div>
+                          </div>
+                          {gradeForm.x && gradeForm.y && (
+                            <div className="bg-white p-3 rounded border border-blue-200">
+                              <p className="text-sm text-gray-600">Điểm Z (tự động tính):</p>
+                              <p className="text-2xl font-bold text-blue-600">
+                                {((parseFloat(gradeForm.x) + parseFloat(gradeForm.y)) / 2).toFixed(2)}
+                              </p>
                             </div>
                           )}
+                          <div className="flex gap-2 justify-end pt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingGrade(null);
+                                setGradeForm({ x: '', y: '' });
+                              }}
+                              disabled={saving}
+                            >
+                              Hủy
+                            </Button>
+                            <Button size="sm" onClick={handleSaveGrade} disabled={saving}>
+                              {saving ? 'Đang lưu...' : '💾 Lưu điểm'}
+                            </Button>
+                          </div>
                         </div>
                       ) : (
-                        // All subjects view
-                        <div>
-                          {filteredGrades.length === 0 ? (
-                            <p className="text-gray-500 text-center py-4">
-                              Học sinh chưa có điểm. Chọn môn học để nhập điểm.
-                            </p>
-                          ) : (
-                            <div className="space-y-2">
-                              {filteredGrades.map((grade) => (
-                                <div
-                                  key={grade.subject_id}
-                                  className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
-                                >
-                                  <div className="flex-1">
-                                    <p className="font-medium text-gray-900">{grade.tenMon}</p>
-                                    <p className="text-xs text-gray-500">
-                                      {grade.maMon} - {grade.soTinChi} TC
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-4">
-                                    <div className="text-sm">
-                                      <span className="text-gray-500">X:</span> <strong>{grade.x ?? '-'}</strong> |{' '}
-                                      <span className="text-gray-500">Y:</span> <strong>{grade.y ?? '-'}</strong> |{' '}
-                                      <span className="text-gray-500">Z:</span> <strong>{grade.z ?? '-'}</strong>
-                                    </div>
-                                    <div className="text-lg font-bold text-blue-600 w-16 text-right">
-                                      {calculateFinalGrade(grade.x, grade.y, grade.z).toFixed(2)}
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        setSelectedSubject(grade.subject_id);
-                                        handleEditGrade(student, grade.subject_id);
-                                      }}
-                                    >
-                                      <PencilSquareIcon className="w-4 h-4" />
-                                    </Button>
-                                  </div>
+                        // View Mode
+                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          {grade ? (
+                            <div className="flex-1 grid grid-cols-4 gap-6 items-center">
+                              <div>
+                                <span className="text-xs text-gray-500 block mb-1">Điểm X</span>
+                                <p className="font-bold text-xl text-gray-900">{grade.x ?? '-'}</p>
+                              </div>
+                              <div>
+                                <span className="text-xs text-gray-500 block mb-1">Điểm Y</span>
+                                <p className="font-bold text-xl text-gray-900">{grade.y ?? '-'}</p>
+                              </div>
+                              <div className="col-span-2 bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+                                <span className="text-xs text-blue-600 block mb-1 font-medium">
+                                  📊 Điểm trung bình (Z)
+                                </span>
+                                <div className="flex items-center justify-between">
+                                  <p className="font-bold text-3xl text-blue-600">
+                                    {grade.z?.toFixed(2) ?? '-'}
+                                  </p>
+                                  <Badge variant={
+                                    (grade.z ?? 0) >= 5 ? 'success' : 'danger'
+                                  } size="lg">
+                                    {(grade.z ?? 0) >= 5 ? '✓ Đạt' : '✗ Không đạt'}
+                                  </Badge>
                                 </div>
-                              ))}
+                              </div>
                             </div>
+                          ) : (
+                            <p className="text-gray-500 italic">Chưa có điểm</p>
                           )}
+                          <Button
+                            size="sm"
+                            onClick={() => handleEditGrade(student, selectedSubject.id)}
+                            className="ml-4"
+                          >
+                            <PencilSquareIcon className="w-4 h-4 mr-1" />
+                            {grade ? 'Sửa điểm' : 'Nhập điểm'}
+                          </Button>
                         </div>
                       )}
                     </div>

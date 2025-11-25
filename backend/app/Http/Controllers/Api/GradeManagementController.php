@@ -86,6 +86,51 @@ class GradeManagementController extends Controller
     }
 
     /**
+     * Get all classes with full information (major name, student count)
+     */
+    public function getAllClassesWithInfo()
+    {
+        try {
+            \Log::info('getAllClassesWithInfo called');
+
+            $classes = DB::table('classes as c')
+                ->leftJoin('majors as m', function($join) {
+                    $join->on('c.major_id', '=', DB::raw('m.maNganh COLLATE utf8mb4_unicode_ci'));
+                })
+                ->whereNull('c.deleted_at')
+                ->whereNull('m.deleted_in')
+                ->select(
+                    'c.id',
+                    'c.class_name as tenLop',
+                    'c.khoaHoc_id as khoaHoc',
+                    'c.trangThai',
+                    'm.tenNganh',
+                    'm.maNganh',
+                    DB::raw('(SELECT COUNT(*) FROM students WHERE idLop = c.id AND deleted_at IS NULL) as studentCount')
+                )
+                ->orderBy('c.khoaHoc_id', 'desc')
+                ->orderBy('c.class_name')
+                ->get();
+
+            \Log::info('All classes loaded', ['count' => $classes->count()]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $classes,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching all classes: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy danh sách lớp',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+            ], 500);
+        }
+    }
+
+    /**
      * Get classes by major and year
      */
     public function getClassesByMajorAndYear(Request $request)

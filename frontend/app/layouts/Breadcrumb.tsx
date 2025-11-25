@@ -1,8 +1,21 @@
 import { Link, useLocation } from 'react-router';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 export function Breadcrumb() {
   const location = useLocation();
+  const [gradeContext, setGradeContext] = useState<any>(null);
+
+  // Listen for custom event from grade-management page
+  useEffect(() => {
+    const handleGradeContext = (event: CustomEvent) => {
+      setGradeContext(event.detail);
+    };
+
+    window.addEventListener('grade-context-update' as any, handleGradeContext);
+    return () => {
+      window.removeEventListener('grade-context-update' as any, handleGradeContext);
+    };
+  }, []);
 
   // Mapping path to readable names
   const pathNameMap: Record<string, string> = {
@@ -52,17 +65,23 @@ export function Breadcrumb() {
     'education-levels': 'Trình độ đào tạo',
 
     // Academic & Financial
-    'academic': 'Học tập',
-    'grades': 'Điểm học tập',
+    'grades': 'Quản lý điểm',
     'grade-management': 'Quản lý điểm',
+    'transcripts': 'Bảng điểm',
+    'certificates': 'Chứng chỉ',
     'financial': 'Tài chính',
     'tuition-fees': 'Học phí',
+    'payments': 'Thanh toán',
+    'invoices': 'Hóa đơn',
 
     // Common actions
     'create': 'Tạo mới',
     'edit': 'Chỉnh sửa',
     'view': 'Xem chi tiết',
     'detail': 'Chi tiết',
+    'new': 'Tạo mới',
+    'update': 'Cập nhật',
+    'delete': 'Xóa',
   };
 
   // Generate breadcrumb items từ pathname
@@ -73,6 +92,43 @@ export function Breadcrumb() {
       return [{ name: 'Trang chủ', path: '/' }];
     }
 
+    // Special handling for grade management routes
+    if (paths[0] === 'academic' && paths[1] === 'grades') {
+      const items: any[] = [
+        { name: 'Quản lý điểm', path: '/academic/grades', isNumeric: false },
+      ];
+
+      // Add major if present
+      if (paths[2] && gradeContext?.major) {
+        items.push({
+          name: gradeContext.major.tenNganh || paths[2],
+          path: `/academic/grades/${paths[2]}`,
+          isNumeric: false,
+        });
+      }
+
+      // Add class if present
+      if (paths[3] && gradeContext?.class) {
+        items.push({
+          name: gradeContext.class.tenLop || `Lớp ${paths[3]}`,
+          path: `/academic/grades/${paths[2]}/${paths[3]}`,
+          isNumeric: false,
+        });
+      }
+
+      // Add subject if present
+      if (paths[4] && gradeContext?.subject) {
+        items.push({
+          name: gradeContext.subject.tenMon || `Môn ${paths[4]}`,
+          path: `/academic/grades/${paths[2]}/${paths[3]}/${paths[4]}`,
+          isNumeric: false,
+        });
+      }
+
+      return items;
+    }
+
+    // Default breadcrumb generation
     const items = paths.map((path, index) => {
       const fullPath = '/' + paths.slice(0, index + 1).join('/');
 
@@ -95,7 +151,7 @@ export function Breadcrumb() {
     });
 
     return items;
-  }, [location.pathname]);
+  }, [location.pathname, gradeContext]);
 
   // Không hiển thị breadcrumb nếu chỉ có 1 item hoặc đang ở trang chủ
   if (breadcrumbItems.length <= 1 && location.pathname === '/') {
