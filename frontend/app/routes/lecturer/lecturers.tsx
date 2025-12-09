@@ -90,18 +90,33 @@ export default function Lecturers() {
   // ============================================
   const form = useForm<LecturerFormData>({
     initialValues: {
-      ho_ten: '',
-      trinh_do_chuyen_mon: '',
-      hoc_ham: '',
-      ma_nganh: null,
-      ghi_chu: '',
+      hoTen: '',
+      trinhDoChuyenMon: '',
+      hocHam: '',
+      maNganh: null,
+      ghiChu: '',
     },
     onSubmit: async (values) => {
       try {
+        console.log('🔍 [Form] Raw form values:', values);
+        console.log('🔍 [Form] maNganh value:', values.maNganh, 'type:', typeof values.maNganh);
+
+        // Clean up empty string values to null for proper validation
+        const cleanedValues = {
+          ...values,
+          maNganh: values.maNganh ? Number(values.maNganh) : null,
+          trinhDoChuyenMon: values.trinhDoChuyenMon || undefined,
+          hocHam: values.hocHam || undefined,
+          ghiChu: values.ghiChu || undefined,
+        };
+
+        console.log('📤 Submitting lecturer data:', cleanedValues);
+        console.log('📤 maNganh after cleaning:', cleanedValues.maNganh, 'type:', typeof cleanedValues.maNganh);
+
         if (selectedLecturer) {
-          await lecturerService.update(selectedLecturer.id, values);
+          await lecturerService.update(selectedLecturer.id, cleanedValues);
         } else {
-          await lecturerService.create(values);
+          await lecturerService.create(cleanedValues);
         }
         form.reset();
         createModal.close();
@@ -109,6 +124,7 @@ export default function Lecturers() {
         refresh();
       } catch (error: any) {
         console.error('Error saving lecturer:', error);
+        console.error('Error details:', error.data);
         alert(error.message || 'Có lỗi xảy ra');
       }
     },
@@ -125,11 +141,11 @@ export default function Lecturers() {
 
   const handleEdit = (lecturer: Lecturer) => {
     setSelectedLecturer(lecturer);
-    form.setFieldValue('ho_ten', lecturer.hoTen);
-    form.setFieldValue('trinh_do_chuyen_mon', lecturer.trinhDoChuyenMon || '');
-    form.setFieldValue('hoc_ham', lecturer.hocHam || '');
-    form.setFieldValue('ma_nganh', lecturer.maNganh || null);
-    form.setFieldValue('ghi_chu', lecturer.ghiChu || '');
+    form.setFieldValue('hoTen', lecturer.hoTen);
+    form.setFieldValue('trinhDoChuyenMon', lecturer.trinhDoChuyenMon || '');
+    form.setFieldValue('hocHam', lecturer.hocHam || '');
+    form.setFieldValue('maNganh', lecturer.maNganh || null);
+    form.setFieldValue('ghiChu', lecturer.ghiChu || '');
     editModal.open();
   };
 
@@ -406,16 +422,16 @@ export default function Lecturers() {
           <Input
             label="Họ và tên"
             required
-            value={form.values.ho_ten}
-            onChange={(e) => form.setFieldValue('ho_ten', e.target.value)}
+            value={form.values.hoTen}
+            onChange={(e) => form.setFieldValue('hoTen', e.target.value)}
             placeholder="Nhập họ tên giảng viên"
           />
 
           <div className="grid grid-cols-2 gap-4">
             <Select
               label="Học hàm"
-              value={form.values.hoc_ham || ''}
-              onChange={(e) => form.setFieldValue('hoc_ham', e.target.value)}
+              value={form.values.hocHam || ''}
+              onChange={(e) => form.setFieldValue('hocHam', e.target.value)}
               options={[
                 { value: '', label: '-- Chọn học hàm --' },
                 ...HOC_HAM_OPTIONS.filter((opt: SelectOption) => opt.value !== '')
@@ -424,8 +440,8 @@ export default function Lecturers() {
 
             <Select
               label="Trình độ chuyên môn"
-              value={form.values.trinh_do_chuyen_mon || ''}
-              onChange={(e) => form.setFieldValue('trinh_do_chuyen_mon', e.target.value)}
+              value={form.values.trinhDoChuyenMon || ''}
+              onChange={(e) => form.setFieldValue('trinhDoChuyenMon', e.target.value)}
               options={[
                 { value: '', label: '-- Chọn trình độ --' },
                 ...TRINH_DO_CHUYEN_MON_OPTIONS.filter((opt: SelectOption) => opt.value !== '')
@@ -435,15 +451,18 @@ export default function Lecturers() {
 
           <Select
             label="Ngành học"
-            value={form.values.ma_nganh?.toString() || ''}
-            onChange={(e) => form.setFieldValue('ma_nganh', e.target.value ? Number(e.target.value) : null)}
+            value={form.values.maNganh?.toString() || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              form.setFieldValue('maNganh', value && value !== '' ? Number(value) : null);
+            }}
             options={nganhOptions}
           />
 
           <Input
             label="Ghi chú"
-            value={form.values.ghi_chu || ''}
-            onChange={(e) => form.setFieldValue('ghi_chu', e.target.value)}
+            value={form.values.ghiChu || ''}
+            onChange={(e) => form.setFieldValue('ghiChu', e.target.value)}
             placeholder="Ghi chú thêm"
           />
 
@@ -468,16 +487,16 @@ export default function Lecturers() {
           <Input
             label="Họ và tên"
             required
-            value={form.values.ho_ten}
-            onChange={(e) => form.setFieldValue('ho_ten', e.target.value)}
+            value={form.values.hoTen}
+            onChange={(e) => form.setFieldValue('hoTen', e.target.value)}
             placeholder="Nhập họ tên giảng viên"
           />
 
           <div className="grid grid-cols-2 gap-4">
             <Select
               label="Học hàm"
-              value={form.values.hoc_ham || ''}
-              onChange={(e) => form.setFieldValue('hoc_ham', e.target.value)}
+              value={form.values.hocHam || ''}
+              onChange={(e) => form.setFieldValue('hocHam', e.target.value)}
               options={[
                 { value: '', label: '-- Chọn học hàm --' },
                 ...HOC_HAM_OPTIONS.filter((opt: SelectOption) => opt.value !== '')
@@ -486,8 +505,8 @@ export default function Lecturers() {
 
             <Select
               label="Trình độ chuyên môn"
-              value={form.values.trinh_do_chuyen_mon || ''}
-              onChange={(e) => form.setFieldValue('trinh_do_chuyen_mon', e.target.value)}
+              value={form.values.trinhDoChuyenMon || ''}
+              onChange={(e) => form.setFieldValue('trinhDoChuyenMon', e.target.value)}
               options={[
                 { value: '', label: '-- Chọn trình độ --' },
                 ...TRINH_DO_CHUYEN_MON_OPTIONS.filter((opt: SelectOption) => opt.value !== '')
@@ -497,15 +516,18 @@ export default function Lecturers() {
 
           <Select
             label="Ngành học"
-            value={form.values.ma_nganh?.toString() || ''}
-            onChange={(e) => form.setFieldValue('ma_nganh', e.target.value ? Number(e.target.value) : null)}
+            value={form.values.maNganh?.toString() || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              form.setFieldValue('maNganh', value && value !== '' ? Number(value) : null);
+            }}
             options={nganhOptions}
           />
 
           <Input
             label="Ghi chú"
-            value={form.values.ghi_chu || ''}
-            onChange={(e) => form.setFieldValue('ghi_chu', e.target.value)}
+            value={form.values.ghiChu || ''}
+            onChange={(e) => form.setFieldValue('ghiChu', e.target.value)}
             placeholder="Ghi chú thêm"
           />
 

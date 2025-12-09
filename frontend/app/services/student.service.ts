@@ -73,12 +73,32 @@ export const studentService = {
         per_page: filters?.per_page || 20,
       };
 
-      if (filters?.search) params.search = filters.search;
-      if (filters?.namVao) params.namVao = filters.namVao;
-      if (filters?.maNganh) params.maNganh = filters.maNganh;
-      if (filters?.maTrinhDoDaoTao) params.maTrinhDoDaoTao = filters.maTrinhDoDaoTao;
-      if (filters?.trangThai) params.trangThai = filters.trangThai;
-      if (filters?.gioiTinh) params.gioiTinh = filters.gioiTinh;
+      if (filters?.search && filters.search.trim() !== '') {
+        params.search = filters.search.trim();
+      }
+
+      if (filters?.namVao && filters.namVao > 0) {
+        params.namVao = filters.namVao;
+      }
+
+      if (filters?.maNganh && filters.maNganh.trim() !== '') {
+        params.maNganh = filters.maNganh.trim();
+      }
+
+      if (filters?.maTrinhDoDaoTao && filters.maTrinhDoDaoTao.trim() !== '') {
+        params.maTrinhDoDaoTao = filters.maTrinhDoDaoTao.trim();
+      }
+
+      if (filters?.trangThai && filters.trangThai.trim() !== '') {
+        params.trangThai = filters.trangThai.trim();
+      }
+
+      if (filters?.gioiTinh && filters.gioiTinh.trim() !== '') {
+        params.gioiTinh = filters.gioiTinh.trim();
+      }
+
+      // ✅ DEBUG: Log params để kiểm tra
+      console.log('StudentService.getList - Sending params:', params);
 
       const response = await apiService.getPaginated<Student>('/students', params);
 
@@ -118,79 +138,77 @@ export const studentService = {
 
   /**
    * ✅ NEW: Lấy danh sách học viên với pagination (tương thích useTable hook)
-   * Hàm này wrap API external và format về Laravel pagination format
+   * Hàm này gọi API internal Laravel với authentication
    */
   async getStudentsPaginated(params: TableQueryParams): Promise<PaginatedResponse<Student>> {
     try {
       const { page = 1, per_page = 20, search, filters } = params;
 
-      // Lấy filters
-      const namVao = filters?.namVao || new Date().getFullYear();
-      const maNganh = filters?.maNganh || '8310110';
+      const token = localStorage.getItem('auth_token');
 
-      // Gọi API
-      const response = await fetch(
-        `${API_BASE_URL}/students/thac-sy?namVao=${namVao}&maNganh=${maNganh}`,
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const queryParams: Record<string, any> = {
+        page,
+        per_page,
+      };
+
+      if (search && search.trim()) queryParams.search = search;
+      if (filters?.namVao) queryParams.namVao = filters.namVao;
+      if (filters?.maNganh && filters.maNganh.trim()) queryParams.maNganh = filters.maNganh;
+      if (filters?.gioiTinh && filters.gioiTinh.trim()) queryParams.gioiTinh = filters.gioiTinh;
+      if (filters?.trinhDo && filters.trinhDo.trim()) queryParams.maTrinhDoDaoTao = filters.trinhDo;
+
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).map(([key, value]) => [key, String(value)])
+      ).toString();
+
+      const apiUrl = `${API_BASE_URL}/students?${queryString}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch student list');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch student list');
       }
 
       const result = await response.json();
-      let students: Student[] = result.data || [];
 
-      // Client-side filtering
-      if (search) {
-        const searchLower = search.toLowerCase();
-        students = students.filter(s =>
-          s.maHV?.toLowerCase().includes(searchLower) ||
-          `${s.hoDem} ${s.ten}`.toLowerCase().includes(searchLower) ||
-          s.email?.toLowerCase().includes(searchLower) ||
-          s.dienThoai?.includes(search)
-        );
+      if (result.success && result.data) {
+        return {
+          current_page: result.meta.current_page,
+          data: result.data,
+          first_page_url: `?page=1`,
+          from: result.meta.from,
+          last_page: result.meta.last_page,
+          last_page_url: `?page=${result.meta.last_page}`,
+          next_page_url: result.meta.current_page < result.meta.last_page ? `?page=${result.meta.current_page + 1}` : null,
+          path: '/api/students',
+          per_page: result.meta.per_page,
+          prev_page_url: result.meta.current_page > 1 ? `?page=${result.meta.current_page - 1}` : null,
+          to: result.meta.to,
+          total: result.meta.total,
+        };
       }
 
-      // Filter by gender
-      if (filters?.gioiTinh) {
-        students = students.filter(s => s.gioiTinh === filters.gioiTinh);
-      }
-
-      // Filter by trình độ
-      if (filters?.trinhDo) {
-        students = students.filter(s =>
-          s.maTrinhDoDaoTao === filters.trinhDo ||
-          s.trinhDoDaoTao?.maTrinhDoDaoTao === filters.trinhDo
-        );
-      }
-
-      // Pagination
-      const total = students.length;
-      const startIndex = (page - 1) * per_page;
-      const endIndex = startIndex + per_page;
-      const paginatedData = students.slice(startIndex, endIndex);
-
-      // Return Laravel pagination format
       return {
-        current_page: page,
-        data: paginatedData,
+        current_page: 1,
+        data: [],
         first_page_url: `?page=1`,
-        from: startIndex + 1,
-        last_page: Math.ceil(total / per_page),
-        last_page_url: `?page=${Math.ceil(total / per_page)}`,
-        next_page_url: page < Math.ceil(total / per_page) ? `?page=${page + 1}` : null,
+        from: 0,
+        last_page: 1,
+        last_page_url: `?page=1`,
+        next_page_url: null,
         path: '/api/students',
         per_page,
-        prev_page_url: page > 1 ? `?page=${page - 1}` : null,
-        to: Math.min(endIndex, total),
-        total,
+        prev_page_url: null,
+        to: 0,
+        total: 0,
       };
     } catch (error) {
       console.error('Error fetching students paginated:', error);
@@ -203,8 +221,6 @@ export const studentService = {
    */
   async getMajorsList(): Promise<Array<{ value: string; label: string }>> {
     try {
-      console.log('🔍 [getMajorsList] Fetching majors from:', `${API_BASE_URL}/majors`);
-
       const response = await fetch(`${API_BASE_URL}/majors?per_page=1000`, {
         method: 'GET',
         headers: {
@@ -213,48 +229,30 @@ export const studentService = {
         },
       });
 
-      console.log('📡 [getMajorsList] Response status:', response.status, response.statusText);
-
       if (!response.ok) {
-        console.error('❌ [getMajorsList] Response not ok:', response.status);
         throw new Error('Failed to fetch majors list');
       }
 
       const result = await response.json();
-      console.log('📦 [getMajorsList] Raw result structure:', {
-        hasSuccess: 'success' in result,
-        hasData: 'data' in result,
-        hasCurrent_page: 'current_page' in result,
-        topLevelKeys: Object.keys(result).slice(0, 10)
-      });
 
-      // ✅ API trả về pagination trực tiếp: {current_page, data: [...], total, ...}
       let majors = [];
       if (result.data && Array.isArray(result.data)) {
         majors = result.data;
-        console.log('✅ [getMajorsList] Found majors in result.data, length:', majors.length);
-      } else {
-        console.warn('⚠️ [getMajorsList] result.data is not an array:', typeof result.data);
       }
 
-      if (majors.length > 0) {
-        console.log('📋 [getMajorsList] First major:', majors[0]);
-      }
+      const options = majors.map((major: any) => {
+        const tenNganh = major.tenNganh || major.ten_nganh || '';
+        const maNganh = major.maNganh || major.ma_nganh || '';
 
-      // Convert to SelectOption format với đúng fields: maNganh, tenNganh
-      const options = majors.map((major: any) => ({
-        value: major.maNganh || '',
-        label: major.tenNganh || ''
-      }));
-
-      console.log('🎯 [getMajorsList] Final options:', options.length, 'items');
-      if (options.length > 0) {
-        console.log('🎯 [getMajorsList] First option:', options[0]);
-      }
+        return {
+          value: maNganh,
+          label: `${tenNganh} (${maNganh})`
+        };
+      }).filter((opt: { value: string; label: string }) => opt.value && opt.value.trim() !== '');
 
       return options;
     } catch (error) {
-      console.error('❌ [getMajorsList] Error fetching majors:', error);
+      console.error('Error fetching majors:', error);
       return [];
     }
   },

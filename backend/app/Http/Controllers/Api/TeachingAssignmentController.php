@@ -13,48 +13,109 @@ class TeachingAssignmentController extends Controller
 {
     /**
      * Get list of teaching assignments with pagination and filters
+     * Support role-based filtering: lecturers see only their schedules, students see their class schedules, admins see all
      */
     public function index(Request $request): JsonResponse
     {
-        $query = TeachingAssignment::with('lecturer');
+        try {
+            $user = $request->user();
+            $query = TeachingAssignment::with('lecturer');
 
-        // Apply filters
-        if ($request->has('lecturer_id')) {
-            $query->byLecturer($request->lecturer_id);
+            // Role-based filtering - ONLY for non-admin users
+            if ($user) {
+                // Eager load role to avoid N+1 queries
+                if (!$user->relationLoaded('role')) {
+                    $user->load('role');
+                }
+
+                // Check if user has admin role or specific permissions
+                $isAdmin = false;
+
+                // Check if user has admin role
+                if ($user->role && $user->role->name === 'admin') {
+                    $isAdmin = true;
+                }
+
+                try {
+                    if ($user->hasPermission('teaching_assignments', 'view')) {
+                        $isAdmin = true;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('hasPermission check failed in index: ' . $e->getMessage());
+                }
+
+                if (!$isAdmin) {
+                    $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
+
+                    if ($lecturer) {
+                        $query->where('lecturer_id', $lecturer->id);
+                    } else {
+                        $student = \DB::table('students')
+                            ->where('email', $user->email)
+                            ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
+                            ->first();
+
+                        if ($student && $student->idLop) {
+                            $lop = \App\Models\classes::find($student->idLop);
+                            if ($lop) {
+                                $query->where(function($q) use ($lop) {
+                                    $q->where('class_name', $lop->class_name)
+                                      ->orWhere('lop_id', $lop->id)
+                                      ->orWhere('class_id', $lop->id);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($request->has('lecturer_id')) {
+                $query->byLecturer($request->lecturer_id);
+            }
+
+            if ($request->has('status')) {
+                $query->byStatus($request->status);
+            }
+
+            if ($request->has('day_of_week')) {
+                $query->byDayOfWeek($request->day_of_week);
+            }
+
+            if ($request->has('start_date') && $request->has('end_date')) {
+                $query->dateRange($request->start_date, $request->end_date);
+            }
+
+            // Search
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('course_name', 'like', "%{$search}%")
+                      ->orWhere('course_code', 'like', "%{$search}%")
+                      ->orWhere('class_name', 'like', "%{$search}%");
+                });
+            }
+
+            // Sorting
+            $sortBy = $request->get('sort_by', 'start_date');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $assignments = $query->paginate($perPage);
+
+            return response()->json($assignments);
+        } catch (\Exception $e) {
+            \Log::error('Error in index: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch teaching assignments',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
         }
-
-        if ($request->has('status')) {
-            $query->byStatus($request->status);
-        }
-
-        if ($request->has('day_of_week')) {
-            $query->byDayOfWeek($request->day_of_week);
-        }
-
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $query->dateRange($request->start_date, $request->end_date);
-        }
-
-        // Search
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('course_name', 'like', "%{$search}%")
-                  ->orWhere('course_code', 'like', "%{$search}%")
-                  ->orWhere('class_name', 'like', "%{$search}%");
-            });
-        }
-
-        // Sorting
-        $sortBy = $request->get('sort_by', 'start_date');
-        $sortDirection = $request->get('sort_direction', 'desc');
-        $query->orderBy($sortBy, $sortDirection);
-
-        // Pagination
-        $perPage = $request->get('per_page', 15);
-        $assignments = $query->paginate($perPage);
-
-        return response()->json($assignments);
     }
 
     /**
@@ -260,5 +321,191 @@ class TeachingAssignmentController extends Controller
             'success' => true,
             'has_conflict' => $hasConflict
         ]);
+    }
+
+    /**
+     * Get upcoming teaching assignments (for notifications)
+     * Returns assignments that are today or in the next 7 days
+     */
+    public function getUpcoming(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $today = now()->startOfDay();
+            $nextWeek = now()->addDays(7)->endOfDay();
+
+            $query = TeachingAssignment::with('lecturer')
+                ->whereBetween('start_date', [$today, $nextWeek])
+                ->whereIn('status', ['scheduled', 'ongoing'])
+                ->orderBy('start_date')
+                ->orderBy('start_time');
+
+            // Role-based filtering - ONLY for non-admin users
+            if ($user) {
+                // Eager load role to avoid N+1 queries
+                if (!$user->relationLoaded('role')) {
+                    $user->load('role');
+                }
+
+                // Check if user is admin
+                $isAdmin = false;
+
+                if ($user->role && $user->role->name === 'admin') {
+                    $isAdmin = true;
+                }
+
+                try {
+                    if ($user->hasPermission('teaching_assignments', 'view')) {
+                        $isAdmin = true;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('hasPermission check failed in getUpcoming: ' . $e->getMessage());
+                }
+
+                // Only apply filtering if NOT admin
+                if (!$isAdmin) {
+                    // Check if user is a lecturer (only by name, lecturers table doesn't have email)
+                    $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
+
+                    if ($lecturer) {
+                        $query->where('lecturer_id', $lecturer->id);
+                    } else {
+                        // Check if user is a student (students table has email)
+                        $student = \DB::table('students')
+                            ->where('email', $user->email)
+                            ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
+                            ->first();
+
+                        if ($student && $student->idLop) {
+                            $lop = \App\Models\classes::find($student->idLop);
+                            if ($lop) {
+                                $query->where(function($q) use ($lop) {
+                                    $q->where('class_name', $lop->class_name)
+                                      ->orWhere('lop_id', $lop->id)
+                                      ->orWhere('class_id', $lop->id);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            $assignments = $query->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $assignments
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in getUpcoming: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch upcoming schedules',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get today's teaching assignments (for notifications)
+     */
+    public function getToday(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $today = now()->format('Y-m-d');
+            $dayOfWeek = now()->dayOfWeek; // 0 = Sunday, 6 = Saturday
+
+            // Convert to our format
+            $dayName = null;
+            if ($dayOfWeek === 6) {
+                $dayName = 'saturday';
+            } elseif ($dayOfWeek === 0) {
+                $dayName = 'sunday';
+            }
+
+            $query = TeachingAssignment::with('lecturer')
+                ->where('start_date', '<=', $today)
+                ->where('end_date', '>=', $today)
+                ->whereIn('status', ['scheduled', 'ongoing'])
+                ->orderBy('start_time');
+
+            if ($dayName) {
+                $query->where('day_of_week', $dayName);
+            }
+
+            // Role-based filtering - ONLY for non-admin users
+            if ($user) {
+                // Eager load role to avoid N+1 queries
+                if (!$user->relationLoaded('role')) {
+                    $user->load('role');
+                }
+
+                // Check if user is admin
+                $isAdmin = false;
+
+                if ($user->role && $user->role->name === 'admin') {
+                    $isAdmin = true;
+                }
+
+                try {
+                    if ($user->hasPermission('teaching_assignments', 'view')) {
+                        $isAdmin = true;
+                    }
+                } catch (\Exception $e) {
+                    // If hasPermission fails, continue with non-admin flow
+                    \Log::warning('hasPermission check failed: ' . $e->getMessage());
+                }
+
+                // Only apply filtering if NOT admin
+                if (!$isAdmin) {
+                    // Check if user is a lecturer (only by name, lecturers table doesn't have email)
+                    $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
+
+                    if ($lecturer) {
+                        $query->where('lecturer_id', $lecturer->id);
+                    } else {
+                        // Check if user is a student (students table has email)
+                        $student = \DB::table('students')
+                            ->where('email', $user->email)
+                            ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
+                            ->first();
+
+                        if ($student && $student->idLop) {
+                            $lop = \App\Models\classes::find($student->idLop);
+                            if ($lop) {
+                                $query->where(function($q) use ($lop) {
+                                    $q->where('class_name', $lop->class_name)
+                                      ->orWhere('lop_id', $lop->id)
+                                      ->orWhere('class_id', $lop->id);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            $assignments = $query->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $assignments,
+                'today' => $today,
+                'day_of_week' => $dayName
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in getToday: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch today schedules',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 }

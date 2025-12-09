@@ -9,8 +9,40 @@ export interface Subject {
     tenMon: string;
     soTinChi: number;
     moTa?: string;
+    soTiet?: string;
+    loaiMon?: string;
+    hocKy?: string;
+    enrolled_students_count?: number;
     created_at?: string;
     updated_at?: string;
+}
+
+/**
+ * Interface cho thông tin đăng ký môn học của sinh viên
+ */
+export interface SubjectEnrollment {
+    id: number;
+    maHV: string;
+    subject_id: number;
+    major_id: number;
+    namHoc: number;
+    hocKy?: string;
+    trangThai: 'DangHoc' | 'DaHoanThanh' | 'Huy';
+    created_at: string;
+    updated_at: string;
+    student?: {
+        maHV: string;
+        hoDem: string;
+        ten: string;
+        email: string;
+        dienThoai: string;
+        gioiTinh: string;
+        maNganh: string;
+        nganh?: {
+            tenNganh: string;
+        };
+    };
+    subject?: Subject;
 }
 
 /**
@@ -19,9 +51,9 @@ export interface Subject {
 export interface SubjectQueryParams {
     search?: string;
     major_id?: number;
+    nam_hoc?: number;
     page?: number;
     per_page?: number;
     sort_by?: string;
     sort_direction?: 'asc' | 'desc';
 }
-

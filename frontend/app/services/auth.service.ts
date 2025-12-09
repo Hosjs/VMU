@@ -22,6 +22,7 @@ class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await apiService.postPublic<any>('/auth/login', credentials);
 
+    // Backend trả về { user, token, token_type } trong response
     if (response && response.token) {
       localStorage.setItem(TOKEN_KEY, response.token);
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));

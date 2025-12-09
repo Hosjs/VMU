@@ -1,4 +1,3 @@
-
 export interface Lecturer {
   id: number;
   hoTen: string;
@@ -22,11 +21,11 @@ export interface Lecturer {
 }
 
 export interface LecturerFormData {
-  ho_ten: string;
-  trinh_do_chuyen_mon?: string;
-  hoc_ham?: string;
-  ma_nganh?: number | null;
-  ghi_chu?: string;
+  hoTen: string;
+  trinhDoChuyenMon?: string;
+  hocHam?: string;
+  maNganh?: number | null;
+  ghiChu?: string;
 }
 
 export interface LecturerFilters {

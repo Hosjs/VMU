@@ -74,6 +74,28 @@ export const teachingAssignmentService = {
   }): Promise<{ success: boolean; has_conflict: boolean }> {
     return apiService.post<{ success: boolean; has_conflict: boolean }>('/teaching-assignments/check-conflict', data);
   },
+
+  /**
+   * Lấy lịch sắp tới (trong vòng 7 ngày)
+   */
+  async getUpcoming(): Promise<{ success: boolean; data: TeachingAssignment[] }> {
+    return apiService.get<{ success: boolean; data: TeachingAssignment[] }>('/teaching-assignments/upcoming');
+  },
+
+  /**
+   * Lấy lịch hôm nay
+   */
+  async getToday(): Promise<{
+    success: boolean;
+    data: TeachingAssignment[];
+    today: string;
+    day_of_week: string | null;
+  }> {
+    return apiService.get<{
+      success: boolean;
+      data: TeachingAssignment[];
+      today: string;
+      day_of_week: string | null;
+    }>('/teaching-assignments/today');
+  },
 };
-
-

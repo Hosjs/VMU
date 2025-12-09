@@ -74,16 +74,24 @@ class Cors
             return $origin;
         }
 
-        // For development, allow localhost origins
+        // For development, allow localhost origins, local network IPs, and Cloudflare tunnels
         if ($origin && (
             str_starts_with($origin, 'http://localhost') ||
-            str_starts_with($origin, 'http://127.0.0.1')
+            str_starts_with($origin, 'http://127.0.0.1') ||
+            str_starts_with($origin, 'http://192.168.') ||
+            str_starts_with($origin, 'http://10.') ||
+            str_starts_with($origin, 'http://172.') ||
+            str_starts_with($origin, 'https://') && str_contains($origin, '.trycloudflare.com')
         )) {
             return $origin;
+        }
+
+        // Default: allow all origins in development mode (not recommended for production)
+        if (env('APP_ENV') === 'development' || env('APP_ENV') === 'local') {
+            return $origin ?: '*';
         }
 
         // Default to first allowed origin
         return $allowedOrigins[0];
     }
 }
-

@@ -20,9 +20,10 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         try {
+            // ✅ Remove strict validation - allow viewing all students
             $query = HocVien::with(['trinhDoDaoTao', 'nganh', 'lop']);
 
-            // Apply filters using scopes
+            // Apply filters using scopes - all optional
             $query->search($request->search)
                   ->byNamVao($request->namVao)
                   ->byNganh($request->maNganh)
@@ -39,6 +40,7 @@ class StudentController extends Controller
             $perPage = $request->get('per_page', 20);
             $students = $query->paginate($perPage);
 
+
             return response()->json([
                 'success' => true,
                 'data' => $students->items(),
@@ -52,6 +54,11 @@ class StudentController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
+            \Log::error('StudentController@index - Error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching students',
@@ -69,23 +76,23 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'maHV' => 'required|string|max:20|unique:hoc_vien,maHV',
+            'maHV' => 'required|string|max:20|unique:students,maHV',
             'hoDem' => 'required|string|max:100',
             'ten' => 'required|string|max:50',
             'ngaySinh' => 'required|date',
             'gioiTinh' => 'required|string|max:10',
             'soGiayToTuyThan' => 'required|string|max:20',
-            'dienThoai' => 'required|string|max:20|unique:hoc_vien,dienThoai',
-            'email' => 'required|email|max:100|unique:hoc_vien,email',
+            'dienThoai' => 'required|string|max:20|unique:students,dienThoai',
+            'email' => 'required|email|max:100|unique:students,email',
             'quocTich' => 'nullable|string|max:50',
             'danToc' => 'nullable|string|max:50',
             'tonGiao' => 'nullable|string|max:50',
             'maTrinhDoDaoTao' => 'required|string|max:10|exists:trinh_do_dao_tao,maTrinhDoDaoTao',
-            'maNganh' => 'required|string|max:10|exists:nganh_hoc,maNganh',
+            'maNganh' => 'required|string|max:10',
             'trangThai' => 'required|in:DangHoc,BaoLuu,DaTotNghiep,ThoiHoc',
             'ngayNhapHoc' => 'required|date',
             'namVaoTruong' => 'required|integer|min:2000|max:2100',
-            'idLop' => 'nullable|exists:lop,id',
+            'idLop' => 'nullable|exists:classes,id',
         ]);
 
         if ($validator->fails()) {
@@ -99,10 +106,15 @@ class StudentController extends Controller
         try {
             DB::beginTransaction();
 
-            $student = HocVien::create([
-                ...$request->all(),
-                'createdBy' => auth()->id(),
-            ]);
+            // Use validated data only
+            $validatedData = $validator->validated();
+
+            // Add createdBy from authenticated user (if exists)
+            if (auth()->check()) {
+                $validatedData['createdBy'] = auth()->id();
+            }
+
+            $student = HocVien::create($validatedData);
 
             $student->load(['trinhDoDaoTao', 'nganh', 'lop']);
 
@@ -113,13 +125,36 @@ class StudentController extends Controller
                 'data' => $student,
                 'message' => 'Thêm học viên thành công',
             ], 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Student creation failed - Database error', [
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi database khi tạo học viên',
+                'error' => $e->getMessage(),
+                'details' => config('app.debug') ? $e->getTrace() : null,
+            ], 500);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Student creation failed - General error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating student',
                 'error' => $e->getMessage(),
+                'details' => config('app.debug') ? $e->getTrace() : null,
             ], 500);
         }
     }
@@ -166,17 +201,17 @@ class StudentController extends Controller
             'ngaySinh' => 'sometimes|date',
             'gioiTinh' => 'sometimes|string|max:10',
             'soGiayToTuyThan' => 'sometimes|string|max:20',
-            'dienThoai' => 'sometimes|string|max:20|unique:hoc_vien,dienThoai,' . $maHV . ',maHV',
-            'email' => 'sometimes|email|max:100|unique:hoc_vien,email,' . $maHV . ',maHV',
+            'dienThoai' => 'sometimes|string|max:20|unique:students,dienThoai,' . $maHV . ',maHV',
+            'email' => 'sometimes|email|max:100|unique:students,email,' . $maHV . ',maHV',
             'quocTich' => 'nullable|string|max:50',
             'danToc' => 'nullable|string|max:50',
             'tonGiao' => 'nullable|string|max:50',
             'maTrinhDoDaoTao' => 'sometimes|string|max:10|exists:trinh_do_dao_tao,maTrinhDoDaoTao',
-            'maNganh' => 'sometimes|string|max:10|exists:nganh_hoc,maNganh',
+            'maNganh' => 'sometimes|string|exists:majors,maNganh',
             'trangThai' => 'sometimes|in:DangHoc,BaoLuu,DaTotNghiep,ThoiHoc',
             'ngayNhapHoc' => 'sometimes|date',
             'namVaoTruong' => 'sometimes|integer|min:2000|max:2100',
-            'idLop' => 'nullable|exists:lop,id',
+            'idLop' => 'nullable|exists:classes,id',
         ]);
 
         if ($validator->fails()) {

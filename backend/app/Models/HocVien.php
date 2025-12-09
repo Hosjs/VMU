@@ -10,7 +10,7 @@ class HocVien extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'hoc_vien';
+    protected $table = 'students';
     protected $primaryKey = 'maHV';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -54,12 +54,13 @@ class HocVien extends Model
 
     public function nganh()
     {
-        return $this->belongsTo(NganhHoc::class, 'maNganh', 'maNganh');
+        // ✅ Sửa: dùng cột maNganh thay vì accessor ma
+        return $this->belongsTo(Major::class, 'maNganh', 'maNganh');
     }
 
     public function lop()
     {
-        return $this->belongsTo(Lop::class, 'idLop', 'id');
+        return $this->belongsTo(classes::class, 'idLop', 'id');
     }
 
     public function createdByUser()
@@ -95,20 +96,22 @@ class HocVien extends Model
 
     public function scopeByNamVao($query, $namVao)
     {
-        if (!$namVao) {
+        // ✅ Kiểm tra chặt chẽ hơn: phải có giá trị và phải là số hợp lệ
+        if (!$namVao || !is_numeric($namVao) || $namVao <= 0) {
             return $query;
         }
 
-        return $query->where('namVaoTruong', $namVao);
+        return $query->where('namVaoTruong', (int)$namVao);
     }
 
     public function scopeByNganh($query, $maNganh)
     {
-        if (!$maNganh) {
+        // ✅ Kiểm tra chặt chẽ hơn: phải có giá trị và không được là chuỗi rỗng
+        if (!$maNganh || trim($maNganh) === '') {
             return $query;
         }
 
-        return $query->where('maNganh', $maNganh);
+        return $query->where('maNganh', trim($maNganh));
     }
 
     public function scopeByTrinhDo($query, $maTrinhDo)
@@ -138,4 +141,3 @@ class HocVien extends Model
         return $query->where('gioiTinh', $gioiTinh);
     }
 }
-

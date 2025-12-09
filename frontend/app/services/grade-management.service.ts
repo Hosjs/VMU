@@ -50,14 +50,22 @@ interface StudentsWithGradesResponse {
         tenMon: string;
         soTinChi: number;
     }>;
+    gradePermissions: {
+        canEditX: boolean;
+        canEditY: boolean;
+        canEditZ: boolean;
+        isSubjectTeacher: boolean;
+        isHomeroomTeacher: boolean;
+    };
 }
 
 interface GradeUpdateData {
     student_id: string;
     subject_id: number;
-    x: number;
-    y: number;
-    z: number;
+    class_id: number;
+    x?: number | null;
+    y?: number | null;
+    z?: number | null;
 }
 
 interface GradeUpdateResponse {

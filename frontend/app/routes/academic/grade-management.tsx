@@ -118,8 +118,17 @@ export default function GradeManagementPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [editingGrade, setEditingGrade] = useState<{ studentId: string; subjectId: number } | null>(null);
-  const [gradeForm, setGradeForm] = useState({ x: '', y: '' });
+  const [gradeForm, setGradeForm] = useState({ x: '', y: '', z: '' });
   const [saving, setSaving] = useState(false);
+
+  // ✅ Grade permissions
+  const [gradePermissions, setGradePermissions] = useState({
+    canEditX: false,
+    canEditY: false,
+    canEditZ: false,
+    isSubjectTeacher: false,
+    isHomeroomTeacher: false,
+  });
 
   // Load majors on mount
   useEffect(() => {
@@ -232,7 +241,27 @@ export default function GradeManagementPage() {
       const subject = data.subjects?.find(s => s.id === subjectId);
       if (subject) {
         setSelectedSubject(subject);
-        setStudents(data.students || []);
+
+        // ✅ Loại bỏ duplicate students dựa trên maHV
+        const uniqueStudents = Array.from(
+          new Map(
+            (data.students || []).map(student => [student.maHV, student])
+          ).values()
+        );
+
+        console.log('📊 Students data:', {
+          total_received: data.students?.length || 0,
+          unique_students: uniqueStudents.length,
+          duplicates_removed: (data.students?.length || 0) - uniqueStudents.length,
+          student_ids: uniqueStudents.map(s => s.maHV)
+        });
+
+        setStudents(uniqueStudents);
+
+        // ✅ Lưu trữ permissions từ phản hồi API
+        if (data.gradePermissions) {
+          setGradePermissions(data.gradePermissions);
+        }
       }
     } catch (error) {
       console.error('Error loading subject:', error);
@@ -305,44 +334,79 @@ export default function GradeManagementPage() {
     setGradeForm({
       x: grade?.x?.toString() || '',
       y: grade?.y?.toString() || '',
+      z: grade?.z?.toString() || '', // Keep z in form but will be auto-calculated
     });
   };
 
   const handleSaveGrade = async () => {
-    if (!editingGrade) return;
+    if (!editingGrade || !selectedClass) return;
 
-    const x = parseFloat(gradeForm.x);
-    const y = parseFloat(gradeForm.y);
+    // Build grade data based on permissions
+    const gradeData: any = {
+      student_id: editingGrade.studentId,
+      subject_id: editingGrade.subjectId,
+      class_id: selectedClass.id,
+    };
 
-    if (isNaN(x) || isNaN(y)) {
-      alert('Vui lòng nhập đầy đủ điểm X và Y');
-      return;
+    // Only include fields that user has permission to edit
+    if (gradePermissions.canEditX && gradeForm.x) {
+      const x = parseFloat(gradeForm.x);
+      if (isNaN(x) || x < 0 || x > 10) {
+        alert('Điểm X phải từ 0 đến 10');
+        return;
+      }
+      gradeData.x = x;
     }
 
-    if (x < 0 || x > 10 || y < 0 || y > 10) {
-      alert('Điểm phải từ 0 đến 10');
-      return;
+    if (gradePermissions.canEditY && gradeForm.y) {
+      const y = parseFloat(gradeForm.y);
+      if (isNaN(y) || y < 0 || y > 10) {
+        alert('Điểm Y phải từ 0 đến 10');
+        return;
+      }
+      gradeData.y = y;
     }
 
-    const z = (x + y) / 2;
+    // Z is now auto-calculated on backend, but admin can override
+    if (gradePermissions.canEditZ && gradeForm.z) {
+      const z = parseFloat(gradeForm.z);
+      if (isNaN(z) || z < 0 || z > 10) {
+        alert('Điểm Z phải từ 0 đến 10');
+        return;
+      }
+      gradeData.z = z;
+    }
+
+    // Check if at least one grade field is being updated
+    if (!gradeData.x && !gradeData.y && !gradeData.z) {
+      alert('Vui lòng nhập ít nhất một điểm');
+      return;
+    }
 
     setSaving(true);
     try {
-      await gradeManagementService.updateGrade({
-        student_id: editingGrade.studentId,
-        subject_id: editingGrade.subjectId,
-        x,
-        y,
-        z,
-      });
+      await gradeManagementService.updateGrade(gradeData);
 
       if (selectedClass && selectedSubject) {
         const data = await gradeManagementService.getStudentsWithGrades(selectedClass.id, selectedSubject.id);
-        setStudents(data.students || []);
+
+        // ✅ Loại bỏ duplicate students sau khi cập nhật
+        const uniqueStudents = Array.from(
+          new Map(
+            (data.students || []).map(student => [student.maHV, student])
+          ).values()
+        );
+
+        setStudents(uniqueStudents);
+
+        // Update permissions if changed
+        if (data.gradePermissions) {
+          setGradePermissions(data.gradePermissions);
+        }
       }
 
       setEditingGrade(null);
-      setGradeForm({ x: '', y: '' });
+      setGradeForm({ x: '', y: '', z: '' });
       alert('Cập nhật điểm thành công!');
     } catch (error: any) {
       console.error('Error saving grade:', error);
@@ -696,22 +760,6 @@ export default function GradeManagementPage() {
             </div>
           </Card>
 
-          {/* Grade Calculation Info */}
-          <Card>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                <BookOpenIcon className="w-5 h-5" />
-                Công thức tính điểm
-              </h3>
-              <div className="text-sm text-blue-800 space-y-1">
-                <p>• <strong>Điểm X:</strong> Điểm thành phần 1</p>
-                <p>• <strong>Điểm Y:</strong> Điểm thành phần 2</p>
-                <p>• <strong>Điểm Z (Điểm trung bình):</strong> = (X + Y) / 2</p>
-                <p className="mt-2 font-semibold text-blue-900">→ Điểm Z là điểm cuối cùng của học viên</p>
-              </div>
-            </div>
-          </Card>
-
           {/* Students List */}
           {loadingStudents ? (
             <Card>
@@ -729,6 +777,62 @@ export default function GradeManagementPage() {
             </Card>
           ) : (
             <div className="space-y-4">
+              {/* Permission Notice */}
+              <Card>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-2">Quyền nhập điểm của bạn:</h3>
+                      <div className="space-y-1 text-sm">
+                        {gradePermissions.canEditX && gradePermissions.canEditY && gradePermissions.canEditZ ? (
+                          <p className="text-green-700 font-medium">✅ Admin: Bạn có thể nhập và chỉnh sửa tất cả các loại điểm (X, Y, Z)</p>
+                        ) : (
+                          <>
+                            {gradePermissions.isSubjectTeacher && (
+                              <p className="text-blue-700">
+                                <span className="font-medium">👨‍🏫 Giáo viên môn học:</span> Bạn chỉ được nhập <strong>Điểm X</strong>
+                              </p>
+                            )}
+                            {gradePermissions.isHomeroomTeacher && (
+                              <p className="text-indigo-700">
+                                <span className="font-medium">👨‍💼 Giáo viên chủ nhiệm:</span> Bạn chỉ được nhập <strong>Điểm Y</strong>
+                              </p>
+                            )}
+                            {!gradePermissions.canEditX && !gradePermissions.canEditY && (
+                              <p className="text-orange-700 font-medium">⚠️ Bạn không có quyền nhập điểm cho lớp này</p>
+                            )}
+                            <p className="text-gray-600 italic mt-2">
+                              💡 Điểm Z sẽ được tự động tính từ công thức: <strong>Z = (X + Y) / 2</strong>
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Hiển thị số lượng học viên */}
+              <Card>
+                <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <UsersIcon className="w-6 h-6 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Tổng số học viên</p>
+                      <p className="text-2xl font-bold text-blue-600">{students.length} học viên</p>
+                    </div>
+                  </div>
+                  <Badge variant="info" size="lg">
+                    Môn: {selectedSubject.tenMon}
+                  </Badge>
+                </div>
+              </Card>
+
               {students.map((student) => {
                 const grade = student.grades.find(g => g.subject_id === selectedSubject.id);
 
@@ -754,52 +858,95 @@ export default function GradeManagementPage() {
                         // Edit Mode
                         <div className="bg-blue-50 border-2 border-blue-300 p-4 rounded-lg space-y-3">
                           <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1 text-gray-700">
-                                Điểm X <span className="text-red-500">*</span>
-                              </label>
-                              <Input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                max="10"
-                                value={gradeForm.x}
-                                onChange={(e) => setGradeForm({ ...gradeForm, x: e.target.value })}
-                                placeholder="0-10"
-                                className="text-lg"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1 text-gray-700">
-                                Điểm Y <span className="text-red-500">*</span>
-                              </label>
-                              <Input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                max="10"
-                                value={gradeForm.y}
-                                onChange={(e) => setGradeForm({ ...gradeForm, y: e.target.value })}
-                                placeholder="0-10"
-                                className="text-lg"
-                              />
-                            </div>
+                            {/* Only show X input if user can edit X */}
+                            {(gradePermissions.canEditX || gradePermissions.canEditZ) && (
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">
+                                  Điểm X {gradePermissions.canEditX && <span className="text-red-500">*</span>}
+                                </label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  max="10"
+                                  value={gradeForm.x}
+                                  onChange={(e) => setGradeForm({ ...gradeForm, x: e.target.value })}
+                                  placeholder="0-10"
+                                  className="text-lg"
+                                  disabled={!gradePermissions.canEditX}
+                                />
+                                {!gradePermissions.canEditX && (
+                                  <p className="text-xs text-gray-500 mt-1">Chỉ xem (không có quyền sửa)</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Only show Y input if user can edit Y */}
+                            {(gradePermissions.canEditY || gradePermissions.canEditZ) && (
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-gray-700">
+                                  Điểm Y {gradePermissions.canEditY && <span className="text-red-500">*</span>}
+                                </label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  max="10"
+                                  value={gradeForm.y}
+                                  onChange={(e) => setGradeForm({ ...gradeForm, y: e.target.value })}
+                                  placeholder="0-10"
+                                  className="text-lg"
+                                  disabled={!gradePermissions.canEditY}
+                                />
+                                {!gradePermissions.canEditY && (
+                                  <p className="text-xs text-gray-500 mt-1">Chỉ xem (không có quyền sửa)</p>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          {gradeForm.x && gradeForm.y && (
+
+                          {/* Show auto-calculated Z preview */}
+                          {gradeForm.x && gradeForm.y && !gradePermissions.canEditZ && (
                             <div className="bg-white p-3 rounded border border-blue-200">
-                              <p className="text-sm text-gray-600">Điểm Z (tự động tính):</p>
+                              <p className="text-sm text-gray-600">Điểm Z (tự động tính từ X và Y):</p>
                               <p className="text-2xl font-bold text-blue-600">
                                 {((parseFloat(gradeForm.x) + parseFloat(gradeForm.y)) / 2).toFixed(2)}
                               </p>
+                              <p className="text-xs text-gray-500 mt-1">Công thức: Z = (X + Y) / 2</p>
                             </div>
                           )}
+
+                          {/* Admin can manually edit Z */}
+                          {gradePermissions.canEditZ && (
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-gray-700">
+                                Điểm Z (Admin có thể nhập thủ công)
+                              </label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                max="10"
+                                value={gradeForm.z}
+                                onChange={(e) => setGradeForm({ ...gradeForm, z: e.target.value })}
+                                placeholder="0-10 hoặc để trống để tự động tính"
+                                className="text-lg"
+                              />
+                              {gradeForm.x && gradeForm.y && !gradeForm.z && (
+                                <p className="text-xs text-blue-600 mt-1">
+                                  Nếu để trống, Z = {((parseFloat(gradeForm.x) + parseFloat(gradeForm.y)) / 2).toFixed(2)}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
                           <div className="flex gap-2 justify-end pt-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => {
                                 setEditingGrade(null);
-                                setGradeForm({ x: '', y: '' });
+                                setGradeForm({ x: '', y: '', z: '' });
                               }}
                               disabled={saving}
                             >
@@ -842,14 +989,16 @@ export default function GradeManagementPage() {
                           ) : (
                             <p className="text-gray-500 italic">Chưa có điểm</p>
                           )}
-                          <Button
-                            size="sm"
-                            onClick={() => handleEditGrade(student, selectedSubject.id)}
-                            className="ml-4"
-                          >
-                            <PencilSquareIcon className="w-4 h-4 mr-1" />
-                            {grade ? 'Sửa điểm' : 'Nhập điểm'}
-                          </Button>
+                          {(gradePermissions.canEditX || gradePermissions.canEditY || gradePermissions.canEditZ) && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleEditGrade(student, selectedSubject.id)}
+                              className="ml-4"
+                            >
+                              <PencilSquareIcon className="w-4 h-4 mr-1" />
+                              {grade ? 'Sửa điểm' : 'Nhập điểm'}
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

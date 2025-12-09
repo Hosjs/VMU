@@ -216,6 +216,7 @@ class GradeManagementController extends Controller
                     'c.*',
                     'c.class_name as tenLop',
                     'c.major_id as maNganhHoc',
+                    'c.lecurer_id as homeroomTeacherId',
                     'm.tenNganh',
                     'm.maNganh',
                     'm.id as major_id'
@@ -229,51 +230,105 @@ class GradeManagementController extends Controller
                 ], 404);
             }
 
-            // Get students in class - FIX: Sử dụng bảng students thay vì hoc_vien
-            $studentsQuery = DB::table('students as s')
-                ->where('s.idLop', $classId)
-                ->whereNull('s.deleted_at')
-                ->select(
-                    's.maHV',
-                    's.hoDem',
-                    's.ten',
-                    's.ngaySinh',
-                    's.gioiTinh',
-                    's.email',
-                    's.dienThoai',
-                    's.trangThai as trangThaiHoc'
-                )
-                ->orderBy('s.maHV');
+            // ✅ Check user permissions for grade entry
+            $user = auth('api')->user();
+            $gradePermissions = $this->getGradePermissions($user, $class, $subjectId);
 
-            $students = $studentsQuery->get()->map(function ($student) use ($subjectId) {
-                $student->hoTen = trim($student->hoDem . ' ' . $student->ten);
-
-                // Get grades for this student from subject_students
-                $gradesQuery = DB::table('subject_students as ss')
-                    ->join('subjects as sub', 'ss.subject_id', '=', 'sub.id')
-                    ->where('ss.student_id', $student->maHV);
-
-                if ($subjectId) {
-                    $gradesQuery->where('ss.subject_id', $subjectId);
-                }
-
-                $student->grades = $gradesQuery
+            if ($subjectId) {
+                $studentsQuery = DB::table('subject_enrollments as se')
+                    ->join('students as s', 'se.maHV', '=', 's.maHV')
+                    ->where('se.subject_id', $subjectId)
+                    ->where('se.major_id', $class->major_id)
+                    ->whereNull('se.deleted_at')
+                    ->whereNull('s.deleted_at')
                     ->select(
-                        'ss.id as grade_id',
-                        'ss.subject_id',
-                        'sub.maMon',
-                        'sub.tenMon',
-                        'sub.soTinChi',
-                        'ss.x',
-                        'ss.y',
-                        'ss.z',
-                        'ss.created_at',
-                        'ss.updated_at'
+                        's.maHV',
+                        's.hoDem',
+                        's.ten',
+                        's.ngaySinh',
+                        's.gioiTinh',
+                        's.email',
+                        's.dienThoai',
+                        's.trangThai as trangThaiHoc',
+                        's.idLop'
                     )
-                    ->get();
+                    ->distinct()
+                    ->orderBy('s.maHV');
 
-                return $student;
-            });
+                $students = $studentsQuery->get()->map(function ($student) use ($subjectId) {
+                    $student->hoTen = trim($student->hoDem . ' ' . $student->ten);
+
+                    // LEFT JOIN to get grades (may be null if no grades yet)
+                    $student->grades = DB::table('subject_students as ss')
+                        ->join('subjects as sub', 'ss.subject_id', '=', 'sub.id')
+                        ->where('ss.student_id', $student->maHV)
+                        ->where('ss.subject_id', $subjectId)
+                        ->select(
+                            'ss.id as grade_id',
+                            'ss.subject_id',
+                            'sub.maMon',
+                            'sub.tenMon',
+                            'sub.soTinChi',
+                            'ss.x',
+                            'ss.y',
+                            'ss.z',
+                            'ss.created_at',
+                            'ss.updated_at'
+                        )
+                        ->get();
+
+                    return $student;
+                });
+
+                \Log::info('Students with enrollments for subject:', [
+                    'subject_id' => $subjectId,
+                    'class_id' => $classId,
+                    'major_id' => $class->major_id,
+                    'total_students' => $students->count(),
+                    'student_ids' => $students->pluck('maHV')->toArray(),
+                    'query' => 'Using subject_enrollments without idLop filter'
+                ]);
+            } else {
+                // No subject filter - get all students in class
+                $studentsQuery = DB::table('students as s')
+                    ->where('s.idLop', $classId)
+                    ->whereNull('s.deleted_at')
+                    ->select(
+                        's.maHV',
+                        's.hoDem',
+                        's.ten',
+                        's.ngaySinh',
+                        's.gioiTinh',
+                        's.email',
+                        's.dienThoai',
+                        's.trangThai as trangThaiHoc'
+                    )
+                    ->orderBy('s.maHV');
+
+                $students = $studentsQuery->get()->map(function ($student) {
+                    $student->hoTen = trim($student->hoDem . ' ' . $student->ten);
+
+                    // Get all grades for this student
+                    $student->grades = DB::table('subject_students as ss')
+                        ->join('subjects as sub', 'ss.subject_id', '=', 'sub.id')
+                        ->where('ss.student_id', $student->maHV)
+                        ->select(
+                            'ss.id as grade_id',
+                            'ss.subject_id',
+                            'sub.maMon',
+                            'sub.tenMon',
+                            'sub.soTinChi',
+                            'ss.x',
+                            'ss.y',
+                            'ss.z',
+                            'ss.created_at',
+                            'ss.updated_at'
+                        )
+                        ->get();
+
+                    return $student;
+                });
+            }
 
             // Get available subjects for this major from major_subjects
             $subjects = DB::table('subjects as s')
@@ -300,6 +355,7 @@ class GradeManagementController extends Controller
                     'class' => $class,
                     'students' => $students,
                     'subjects' => $subjects,
+                    'gradePermissions' => $gradePermissions,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -315,6 +371,69 @@ class GradeManagementController extends Controller
     }
 
     /**
+     * Get grade entry permissions for current user
+     */
+    private function getGradePermissions($user, $class, $subjectId)
+    {
+        $permissions = [
+            'canEditX' => false,
+            'canEditY' => false,
+            'canEditZ' => false,
+            'isSubjectTeacher' => false,
+            'isHomeroomTeacher' => false,
+        ];
+
+        if (!$user) {
+            return $permissions;
+        }
+
+        // Check if user is admin - only admin can edit all grades including Z
+        if ($user->hasPermission('grades', 'create')) {
+            $permissions['canEditX'] = true;
+            $permissions['canEditY'] = true;
+            $permissions['canEditZ'] = true;
+            return $permissions;
+        }
+
+        // Get lecturer_id from user
+        $lecturerId = $user->lecturer_id ?? null;
+
+        if (!$lecturerId) {
+            return $permissions;
+        }
+
+        // Check if user is homeroom teacher of this class
+        // Homeroom teacher can ONLY edit Y (not X or Z)
+        if ($class->homeroomTeacherId && $class->homeroomTeacherId == $lecturerId) {
+            $permissions['isHomeroomTeacher'] = true;
+            $permissions['canEditY'] = true;
+        }
+
+        // Check if user is subject teacher
+        // Subject teacher can ONLY edit X (not Y or Z)
+        if ($subjectId) {
+            $isSubjectTeacher = DB::table('teaching_assignments')
+                ->where('lecturer_id', $lecturerId)
+                ->where('course_code', function($query) use ($subjectId) {
+                    $query->select('maMon')
+                        ->from('subjects')
+                        ->where('id', $subjectId)
+                        ->limit(1);
+                })
+                ->where('class_id', $class->id)
+                ->whereNull('deleted_at')
+                ->exists();
+
+            if ($isSubjectTeacher) {
+                $permissions['isSubjectTeacher'] = true;
+                $permissions['canEditX'] = true;
+            }
+        }
+
+        return $permissions;
+    }
+
+    /**
      * Update or create grade for a student
      */
     public function updateGrade(Request $request)
@@ -323,9 +442,10 @@ class GradeManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|string|exists:students,maHV',
             'subject_id' => 'required|integer|exists:subjects,id',
-            'x' => 'required|numeric|min:0|max:10',
-            'y' => 'required|numeric|min:0|max:10',
-            'z' => 'required|numeric|min:0|max:10',
+            'x' => 'nullable|numeric|min:0|max:10',
+            'y' => 'nullable|numeric|min:0|max:10',
+            'z' => 'nullable|numeric|min:0|max:10',
+            'class_id' => 'required|integer|exists:classes,id',
         ]);
 
         if ($validator->fails()) {
@@ -339,20 +459,99 @@ class GradeManagementController extends Controller
         try {
             DB::beginTransaction();
 
+            // Get class info
+            $class = DB::table('classes')->where('id', $request->class_id)->first();
+            if (!$class) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy lớp',
+                ], 404);
+            }
+
+            // Check permissions
+            $user = auth('api')->user();
+            $permissions = $this->getGradePermissions($user, $class, $request->subject_id);
+
+            // Get existing grade
+            $existingGrade = DB::table('subject_students')
+                ->where('student_id', $request->student_id)
+                ->where('subject_id', $request->subject_id)
+                ->first();
+
+            // Prepare data to update
+            $updateData = [];
+
+            // Check X permission
+            if ($request->has('x') && $request->x !== null) {
+                if (!$permissions['canEditX']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn không có quyền nhập điểm X. Chỉ giáo viên dạy môn mới được nhập điểm X.',
+                    ], 403);
+                }
+                $updateData['x'] = $request->x;
+            } else if ($existingGrade) {
+                $updateData['x'] = $existingGrade->x;
+            }
+
+            // Check Y permission
+            if ($request->has('y') && $request->y !== null) {
+                if (!$permissions['canEditY']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn không có quyền nhập điểm Y. Chỉ giáo viên chủ nhiệm mới được nhập điểm Y.',
+                    ], 403);
+                }
+                $updateData['y'] = $request->y;
+            } else if ($existingGrade) {
+                $updateData['y'] = $existingGrade->y;
+            }
+
+            // Check Z permission
+            if ($request->has('z') && $request->z !== null) {
+                if (!$permissions['canEditZ']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn không có quyền nhập điểm Z.',
+                    ], 403);
+                }
+                $updateData['z'] = $request->z;
+            } else if ($existingGrade) {
+                $updateData['z'] = $existingGrade->z;
+            }
+
             $grade = SubjectStudent::updateOrCreate(
                 [
                     'student_id' => $request->student_id,
                     'subject_id' => $request->subject_id,
                 ],
-                [
-                    'x' => $request->x,
-                    'y' => $request->y,
-                    'z' => $request->z,
-                ]
+                $updateData
             );
 
-            // Calculate final grade
-            $finalGrade = ($request->x * 0.1) + ($request->y * 0.2) + ($request->z * 0.7);
+            // ✅ Auto-calculate Z if both X and Y are present (for non-admin users)
+            // Admin can manually set Z, but teachers get auto-calculated Z
+            if (!$permissions['canEditZ']) {
+                // Refresh to get latest values
+                $grade->refresh();
+
+                if ($grade->x !== null && $grade->y !== null) {
+                    $autoZ = ($grade->x + $grade->y) / 2;
+                    $grade->z = round($autoZ, 2);
+                    $grade->save();
+                }
+            }
+
+            // Refresh grade to get final values
+            $grade->refresh();
+
+            // Calculate final grade based on formula: X*10% + Y*20% + Z*70%
+            $x = $grade->x ?? 0;
+            $y = $grade->y ?? 0;
+            $z = $grade->z ?? 0;
+            $finalGrade = ($x * 0.1) + ($y * 0.2) + ($z * 0.7);
 
             DB::commit();
 

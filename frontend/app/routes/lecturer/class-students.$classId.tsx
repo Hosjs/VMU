@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { classStudentService } from '~/services/class-student.service';
-import type { ClassStudent } from '~/types/class-student';
+import { useParams, useNavigate, useSearchParams } from 'react-router';
+import { subjectService } from '~/services/subject.service';
+import type { SubjectEnrollment } from '~/types/subject';
 import { formatters } from '~/utils/formatters';
 import {
   UserGroupIcon,
@@ -20,71 +20,93 @@ import { Badge } from '~/components/ui/Badge';
 export function meta() {
   return [
     { title: "Danh sách học viên - VMU Training" },
-    { name: "description", content: "Xem danh sách học viên trong lớp" },
+    { name: "description", content: "Xem danh sách học viên đã đăng ký môn học" },
   ];
 }
 
 export default function ClassStudentsPage() {
   const { classId } = useParams<{ classId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [students, setStudents] = useState<ClassStudent[]>([]);
+  const [enrollments, setEnrollments] = useState<SubjectEnrollment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [className, setClassName] = useState<string>('');
+  const [subjectName, setSubjectName] = useState<string>('');
 
   useEffect(() => {
-    const loadStudents = async () => {
+    const loadEnrolledStudents = async () => {
       if (!classId) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await classStudentService.getStudentsByClassId(classId);
-        if (response.success) {
-          setStudents(response.data);
-          // Get class name from response.lop or first student
-          if (response.lop?.tenLop) {
-            setClassName(response.lop.tenLop);
-          } else if (response.data.length > 0 && response.data[0].tenLop) {
-            setClassName(response.data[0].tenLop);
-          }
-        } else {
-          setError(response.message || 'Không thể tải danh sách học viên');
+        // Lấy tên môn học từ URL params
+        const subjectFromUrl = searchParams.get('subject');
+        if (subjectFromUrl) {
+          setSubjectName(decodeURIComponent(subjectFromUrl));
         }
+
+        // Tìm môn học theo tên để lấy subject_id
+        // Nếu không tìm thấy, sẽ hiển thị danh sách trống
+        const allSubjects = await subjectService.getAllSubjects();
+        const subject = allSubjects.find(s =>
+          s.tenMon === decodeURIComponent(subjectFromUrl || '') ||
+          s.maMon === classId
+        );
+
+        if (!subject) {
+          setError('Không tìm thấy thông tin môn học');
+          setEnrollments([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Lấy danh sách sinh viên đã đăng ký môn học này
+        // Sử dụng API getEnrolledStudents với pagination
+        const response = await subjectService.getEnrolledStudents(subject.id, {
+          per_page: 1000, // Lấy tất cả sinh viên
+        });
+
+        setEnrollments(response.data || []);
+        setSubjectName(subject.tenMon);
       } catch (err) {
+        console.error('Error loading enrolled students:', err);
         setError('Có lỗi xảy ra khi tải danh sách học viên');
+        setEnrollments([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadStudents();
-  }, [classId]);
+    loadEnrolledStudents();
+  }, [classId, searchParams]);
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  // Table columns
+  // Table columns - hiển thị thông tin từ SubjectEnrollment
   const columns = useMemo(() => [
     {
-      key: 'mahv',
+      key: 'maHV',
       label: 'Mã học viên',
-      render: (item: ClassStudent) => (
-        <div className="font-medium text-gray-900">{item.mahv}</div>
+      render: (item: SubjectEnrollment) => (
+        <div className="font-medium text-gray-900">{item.maHV}</div>
       ),
     },
     {
       key: 'hoTen',
       label: 'Họ và tên',
-      render: (item: ClassStudent) => (
+      render: (item: SubjectEnrollment) => (
         <div>
-          <div className="font-medium text-gray-900">{`${item.hodem} ${item.ten}`}</div>
-          {item.email && (
+          <div className="font-medium text-gray-900">
+            {item.student?.hoDem} {item.student?.ten}
+          </div>
+          {item.student?.email && (
             <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
               <EnvelopeIcon className="w-3 h-3" />
-              {item.email}
+              {item.student.email}
             </div>
           )}
         </div>
@@ -93,23 +115,23 @@ export default function ClassStudentsPage() {
     {
       key: 'info',
       label: 'Thông tin cá nhân',
-      render: (item: ClassStudent) => (
+      render: (item: SubjectEnrollment) => (
         <div className="space-y-1 text-sm">
-          {item.ngaysinh && (
+          {item.student?.ngaySinh && (
             <div className="flex items-center gap-1 text-gray-600">
               <CalendarIcon className="w-4 h-4 text-gray-400" />
-              <span>{formatters.formatDate(item.ngaysinh)}</span>
+              <span>{formatters.formatDate(item.student.ngaySinh)}</span>
             </div>
           )}
-          {item.gioitinh && (
+          {item.student?.gioiTinh && (
             <div className="text-gray-600">
-              <span className="text-gray-500">Giới tính:</span> {item.gioitinh}
+              <span className="text-gray-500">Giới tính:</span> {item.student.gioiTinh}
             </div>
           )}
-          {item.noisinh && (
+          {item.student?.noiSinh && (
             <div className="flex items-center gap-1 text-gray-500">
               <MapPinIcon className="w-4 h-4 text-gray-400" />
-              <span>{item.noisinh}</span>
+              <span>{item.student.noiSinh}</span>
             </div>
           )}
         </div>
@@ -118,42 +140,37 @@ export default function ClassStudentsPage() {
     {
       key: 'contact',
       label: 'Liên hệ',
-      render: (item: ClassStudent) => (
+      render: (item: SubjectEnrollment) => (
         <div className="space-y-1 text-sm">
-          {item.dienthoai && (
+          {item.student?.dienThoai && (
             <div className="flex items-center gap-1 text-gray-600">
               <PhoneIcon className="w-4 h-4 text-gray-400" />
-              <span>{item.dienthoai}</span>
+              <span>{item.student.dienThoai}</span>
             </div>
           )}
         </div>
       ),
     },
     {
-      key: 'scores',
-      label: 'Điểm',
-      render: (item: ClassStudent) => (
-        <div className="space-y-1 text-sm">
-          {(item.diemX !== undefined || item.diemY !== undefined) ? (
-            <>
-              {item.diemX !== undefined && (
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-500">Điểm X:</span>
-                  <span className="font-medium text-blue-600">{item.diemX}</span>
-                </div>
-              )}
-              {item.diemY !== undefined && (
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-500">Điểm Y:</span>
-                  <span className="font-medium text-green-600">{item.diemY}</span>
-                </div>
-              )}
-            </>
-          ) : (
-            <span className="text-gray-400">Chưa có điểm</span>
-          )}
-        </div>
-      ),
+      key: 'status',
+      label: 'Trạng thái',
+      render: (item: SubjectEnrollment) => {
+        const statusColors: Record<string, 'info' | 'success' | 'danger'> = {
+          DangHoc: 'info',
+          DaHoanThanh: 'success',
+          Huy: 'danger',
+        };
+        const statusLabels: Record<string, string> = {
+          DangHoc: 'Đang học',
+          DaHoanThanh: 'Đã hoàn thành',
+          Huy: 'Đã hủy',
+        };
+        return (
+          <Badge variant={statusColors[item.trangThai] || 'info'}>
+            {statusLabels[item.trangThai] || item.trangThai}
+          </Badge>
+        );
+      },
     },
   ], []);
 
@@ -175,25 +192,25 @@ export default function ClassStudentsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Danh sách học viên
+              Danh sách học viên đã đăng ký
             </h1>
             <p className="text-sm text-gray-500">
-              {className ? `Lớp: ${className}` : `Mã lớp: ${classId}`}
-              {students.length > 0 && ` • ${students.length} học viên`}
+              {subjectName ? `Môn: ${subjectName}` : `Mã lớp: ${classId}`}
+              {enrollments.length > 0 && ` • ${enrollments.length} học viên`}
             </p>
           </div>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      {students.length > 0 && (
+      {enrollments.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Tổng học viên</p>
-                  <p className="text-2xl font-bold text-gray-900">{students.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <UserGroupIcon className="w-6 h-6 text-blue-600" />
@@ -207,8 +224,8 @@ export default function ClassStudentsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Đang học</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {students.filter(s => s.trangThai === 'Đang học').length}
+                  <p className="text-2xl font-bold text-gray-900">
+                    {enrollments.filter(e => e.trangThai === 'DangHoc').length}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -222,11 +239,13 @@ export default function ClassStudentsPage() {
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Mã lớp</p>
-                  <p className="text-2xl font-bold text-gray-900">{classId}</p>
+                  <p className="text-sm text-gray-500">Đã hoàn thành</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {enrollments.filter(e => e.trangThai === 'DaHoanThanh').length}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <CalendarIcon className="w-6 h-6 text-purple-600" />
+                  <AcademicCapIcon className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -234,22 +253,35 @@ export default function ClassStudentsPage() {
         </div>
       )}
 
-      {/* Students Table */}
+      {/* Table */}
       <Card>
         <div className="p-6">
-          {error ? (
-            <div className="text-center py-12">
-              <div className="text-red-600 mb-2">⚠️ {error}</div>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Thử lại
-              </Button>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Đang tải danh sách học viên...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="text-red-500 text-lg mb-2">⚠️</div>
+                <p className="text-gray-600">{error}</p>
+              </div>
+            </div>
+          ) : enrollments.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <UserGroupIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Chưa có học viên nào đăng ký môn học này</p>
+              </div>
             </div>
           ) : (
             <Table
               columns={columns}
-              data={students}
-              isLoading={isLoading}
-              emptyMessage="Không có học viên nào trong lớp này"
+              data={enrollments}
+              keyExtractor={(item) => item.id.toString()}
             />
           )}
         </div>

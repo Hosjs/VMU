@@ -24,17 +24,46 @@ export function meta() {
 
 export default function Students() {
   // ============================================
-  // DYNAMIC OPTIONS từ API
+  // HELPER FUNCTIONS
+  // ============================================
+  /**
+   * Format date string to yyyy-MM-dd for API compatibility
+   * Handles: ISO datetime, yyyy-MM-dd, null/undefined
+   */
+  const formatDateToYYYYMMDD = (dateValue: string | null | undefined): string => {
+    if (!dateValue) return '';
+
+    // Already in yyyy-MM-dd format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+
+    // Convert ISO datetime or other formats
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '';
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  };
+
+  // ============================================
+  // STATE & HOOKS
   // ============================================
   const [nganhOptions, setNganhOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
   const [trinhDoOptions, setTrinhDoOptions] = useState<SelectOption[]>(TRINH_DO_OPTIONS);
-  const [namVaoOptions, setNamVaoOptions] = useState<SelectOption[]>([]);
 
-  // Local filters (sẽ merge vào useTable filters)
-  const [namVao, setNamVao] = useState<number>(new Date().getFullYear());
-  const [maNganh, setMaNganh] = useState<string>('');
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // ✅ SỬ DỤNG useTable HOOK (phải gọi trước)
+  // ✅ SỬ DỤNG useTable HOOK (kế thừa logic pagination, search, filter)
   const {
     data: students,
     isLoading,
@@ -55,8 +84,10 @@ export default function Students() {
     initialPage: 1,
     initialPerPage: 20,
     initialFilters: {
-      namVao: new Date().getFullYear(),
+      namVao: '',
       maNganh: '',
+      trinhDo: '',
+      gioiTinh: '',
     },
   });
 
@@ -67,9 +98,6 @@ export default function Students() {
   const editModal = useModal();
   const deleteModal = useModal();
 
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-
   // ============================================
   // FORM INITIAL VALUES
   // ============================================
@@ -79,7 +107,7 @@ export default function Students() {
         maHV: student.maHV,
         hoDem: student.hoDem,
         ten: student.ten,
-        ngaySinh: student.ngaySinh,
+        ngaySinh: formatDateToYYYYMMDD(student.ngaySinh),
         gioiTinh: student.gioiTinh,
         soGiayToTuyThan: student.soGiayToTuyThan,
         dienThoai: student.dienThoai,
@@ -90,7 +118,7 @@ export default function Students() {
         maTrinhDoDaoTao: student.maTrinhDoDaoTao,
         maNganh: student.maNganh,
         trangThai: student.trangThai,
-        ngayNhapHoc: student.ngayNhapHoc,
+        ngayNhapHoc: formatDateToYYYYMMDD(student.ngayNhapHoc),
         namVaoTruong: student.namVaoTruong,
       };
     }
@@ -129,6 +157,7 @@ export default function Students() {
       errors.email = 'Email không hợp lệ';
     }
     if (!values.dienThoai?.trim()) errors.dienThoai = 'Số điện thoại là bắt buộc';
+    if (!values.soGiayToTuyThan?.trim()) errors.soGiayToTuyThan = 'Số CMND/CCCD là bắt buộc';
     if (!values.maNganh?.trim()) errors.maNganh = 'Ngành học là bắt buộc';
     if (!values.maTrinhDoDaoTao?.trim()) errors.maTrinhDoDaoTao = 'Trình độ là bắt buộc';
 
@@ -143,7 +172,14 @@ export default function Students() {
     validate: validateForm,
     onSubmit: async (values) => {
       try {
-        await studentService.create(values);
+        // Format dates before sending to API
+        const payload = {
+          ...values,
+          ngaySinh: formatDateToYYYYMMDD(values.ngaySinh),
+          ngayNhapHoc: formatDateToYYYYMMDD(values.ngayNhapHoc),
+        };
+
+        await studentService.create(payload);
         setToast({ message: '✅ Thêm học viên thành công!', type: 'success' });
         createModal.close();
         refresh();
@@ -163,13 +199,51 @@ export default function Students() {
       if (!selectedStudent?.maHV) return;
 
       try {
-        await studentService.update(selectedStudent.maHV, values);
+        // Format dates before sending to API
+        const payload = {
+          ...values,
+          ngaySinh: formatDateToYYYYMMDD(values.ngaySinh),
+          ngayNhapHoc: formatDateToYYYYMMDD(values.ngayNhapHoc),
+        };
+
+        console.log('📤 Sending update request:', {
+          maHV: selectedStudent.maHV,
+          payload: payload
+        });
+
+        await studentService.update(selectedStudent.maHV, payload);
+
+        console.log('✅ Update successful');
         setToast({ message: '✅ Cập nhật học viên thành công!', type: 'success' });
         editModal.close();
         setSelectedStudent(null);
         refresh();
       } catch (error: any) {
-        setToast({ message: `❌ Lỗi: ${error.message}`, type: 'error' });
+        console.error('❌ Update failed:', error);
+        console.error('Error details:', {
+          message: error.message,
+          status: error.status,
+          data: error.data
+        });
+
+        // Show detailed error message
+        let errorMessage = '❌ Lỗi: ';
+        if (error.data?.errors) {
+          // Laravel validation errors
+          const validationErrors = Object.entries(error.data.errors)
+            .map(([field, messages]: [string, any]) => {
+              const msgs = Array.isArray(messages) ? messages : [messages];
+              return `${field}: ${msgs.join(', ')}`;
+            })
+            .join('; ');
+          errorMessage += validationErrors;
+        } else if (error.data?.message) {
+          errorMessage += error.data.message;
+        } else {
+          errorMessage += error.message;
+        }
+
+        setToast({ message: errorMessage, type: 'error' });
       }
     },
   });
@@ -209,8 +283,6 @@ export default function Students() {
   // ============================================
   // EXPORT TO EXCEL
   // ============================================
-  const [isExporting, setIsExporting] = useState(false);
-
   const handleExportToExcel = async () => {
     try {
       setIsExporting(true);
@@ -219,14 +291,9 @@ export default function Students() {
       // Lấy tất cả học viên (không phân trang)
       const allStudentsResponse = await studentService.getStudentsPaginated({
         page: 1,
-        per_page: 10000, // Lấy tất cả
+        per_page: 10000,
         search,
-        filters: {
-          namVao,
-          maNganh,
-          gioiTinh: filters.gioiTinh,
-          trinhDo: filters.trinhDo,
-        },
+        filters,
       });
 
       const allStudents = allStudentsResponse.data;
@@ -264,24 +331,9 @@ export default function Students() {
 
       // Tự động điều chỉnh độ rộng cột
       const columnWidths = [
-        { wch: 5 },  // STT
-        { wch: 15 }, // Mã học viên
-        { wch: 20 }, // Họ đệm
-        { wch: 15 }, // Tên
-        { wch: 12 }, // Ngày sinh
-        { wch: 10 }, // Giới tính
-        { wch: 15 }, // Số điện thoại
-        { wch: 30 }, // Email
-        { wch: 15 }, // CMND/CCCD
-        { wch: 12 }, // Quốc tịch
-        { wch: 12 }, // Dân tộc
-        { wch: 12 }, // Tôn giáo
-        { wch: 35 }, // Ngành học
-        { wch: 12 }, // Mã ngành
-        { wch: 20 }, // Trình độ
-        { wch: 12 }, // Năm vào trường
-        { wch: 15 }, // Ngày nhập học
-        { wch: 15 }, // Trạng thái
+        { wch: 5 },  { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 10 },
+        { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+        { wch: 35 }, { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 },
       ];
       worksheet['!cols'] = columnWidths;
 
@@ -335,18 +387,6 @@ export default function Students() {
     }
   };
 
-  // Generate year options dynamically
-  useEffect(() => {
-    const currentYear = new Date().getFullYear();
-    const years: SelectOption[] = [{ value: '', label: 'Tất cả' }];
-
-    for (let year = currentYear + 2; year >= currentYear - 10; year--) {
-      years.push({ value: year.toString(), label: year.toString() });
-    }
-
-    setNamVaoOptions(years);
-  }, []);
-
   // Update edit form when selectedStudent changes
   useEffect(() => {
     if (selectedStudent && editModal.isOpen) {
@@ -368,28 +408,6 @@ export default function Students() {
       editForm.setFieldValue('namVaoTruong', selectedStudent.namVaoTruong);
     }
   }, [selectedStudent, editModal.isOpen]);
-
-  // ============================================
-  // FILTER HANDLERS
-  // ============================================
-  const handleNamVaoChange = (value: string) => {
-    const year = value ? Number(value) : new Date().getFullYear();
-    setNamVao(year);
-    handleFilter('namVao', year);
-  };
-
-  const handleMaNganhChange = (value: string) => {
-    setMaNganh(value);
-    handleFilter('maNganh', value);
-  };
-
-  const handleGioiTinhChange = (value: string) => {
-    handleFilter('gioiTinh', value);
-  };
-
-  const handleTrinhDoChange = (value: string) => {
-    handleFilter('trinhDo', value);
-  };
 
   // ============================================
   // TABLE CONFIGURATION
@@ -454,20 +472,23 @@ export default function Students() {
       label: 'Hành động',
       render: (student: Student) => (
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => handleEdit(student)}
-            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+            leftIcon={<PencilIcon className="w-4 h-4" />}
           >
-            <PencilIcon className="w-4 h-4" />
             Sửa
-          </button>
-          <button
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => handleDeleteClick(student)}
-            className="text-red-600 hover:underline text-sm flex items-center gap-1"
+            leftIcon={<TrashIcon className="w-4 h-4" />}
+            className="text-red-600 hover:bg-red-50"
           >
-            <TrashIcon className="w-4 h-4" />
             Xóa
-          </button>
+          </Button>
         </div>
       ),
     },
@@ -491,6 +512,13 @@ export default function Students() {
     );
   }
 
+  // Generate year options dynamically
+  const yearOptions: SelectOption[] = [{ value: '', label: 'Tất cả' }];
+  const currentYear = new Date().getFullYear();
+  for (let year = currentYear + 2; year >= currentYear - 10; year--) {
+    yearOptions.push({ value: year.toString(), label: year.toString() });
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -505,8 +533,8 @@ export default function Students() {
           </div>
         </div>
 
-        <Button variant="primary" onClick={handleCreate}>
-          + Thêm học viên
+        <Button variant="primary" onClick={handleCreate} leftIcon={<span>+</span>}>
+          Thêm học viên
         </Button>
       </div>
 
@@ -536,46 +564,46 @@ export default function Students() {
               </div>
             </div>
 
-            {/* Năm vào - Dynamic từ API */}
+            {/* Năm vào */}
             <Select
               label="Năm vào trường"
-              value={namVao.toString()}
-              onChange={(e) => handleNamVaoChange(e.target.value)}
-              options={namVaoOptions}
+              value={filters.namVao?.toString() || ''}
+              onChange={(e) => handleFilter('namVao', e.target.value ? Number(e.target.value) : '')}
+              options={yearOptions}
             />
 
-            {/* Trình độ - Dynamic từ API */}
+            {/* Trình độ */}
             <Select
               label="Trình độ đào tạo"
               value={filters.trinhDo || ''}
-              onChange={(e) => handleTrinhDoChange(e.target.value)}
+              onChange={(e) => handleFilter('trinhDo', e.target.value)}
               options={trinhDoOptions}
             />
 
-            {/* Giới tính - Static */}
+            {/* Giới tính */}
             <Select
               label="Giới tính"
               value={filters.gioiTinh || ''}
-              onChange={(e) => handleGioiTinhChange(e.target.value)}
+              onChange={(e) => handleFilter('gioiTinh', e.target.value)}
               options={GIOI_TINH_OPTIONS}
             />
           </div>
 
-          {/* Ngành học - Dynamic từ database */}
+          {/* Ngành học */}
           <Select
             label="Ngành học"
-            value={maNganh}
-            onChange={(e) => handleMaNganhChange(e.target.value)}
+            value={filters.maNganh || ''}
+            onChange={(e) => handleFilter('maNganh', e.target.value)}
             options={nganhOptions}
           />
 
           {/* Clear filters button */}
-          {(search || filters.gioiTinh || filters.trinhDo) && (
+          {(search || filters.gioiTinh || filters.trinhDo || filters.maNganh || filters.namVao) && (
             <div className="flex justify-end">
               <Button
                 variant="secondary"
+                size="sm"
                 onClick={handleClearFilters}
-                className="text-sm"
               >
                 🔄 Xóa bộ lọc
               </Button>
@@ -597,25 +625,27 @@ export default function Students() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Tổng số: <span className="text-blue-600">{meta.total}</span> học viên
-              <span className="text-sm text-gray-500 ml-2">
-                (Hiển thị {meta.from}-{meta.to})
-              </span>
+              {meta.total > 0 && (
+                <span className="text-sm text-gray-500 ml-2">
+                  (Hiển thị {meta.from}-{meta.to})
+                </span>
+              )}
             </h2>
             <div className="flex gap-2">
               <Button
                 variant="secondary"
+                size="sm"
                 onClick={refresh}
-                className="text-sm"
               >
                 🔄 Làm mới
               </Button>
               <Button
                 variant="success"
+                size="sm"
                 onClick={handleExportToExcel}
-                className="text-sm"
                 isLoading={isExporting}
+                leftIcon={<DocumentArrowDownIcon className="w-4 h-4" />}
               >
-                <DocumentArrowDownIcon className="w-4 h-4 -ml-1" />
                 Xuất Excel
               </Button>
             </div>
@@ -719,6 +749,16 @@ export default function Students() {
               onBlur={() => createForm.handleBlur('email')}
               error={createForm.errors.email}
               placeholder="Nhập email"
+            />
+
+            <Input
+              label="CMND/CCCD"
+              type="text"
+              value={createForm.values.soGiayToTuyThan || ''}
+              onChange={(e) => createForm.handleChange('soGiayToTuyThan', e.target.value)}
+              onBlur={() => createForm.handleBlur('soGiayToTuyThan')}
+              error={createForm.errors.soGiayToTuyThan}
+              placeholder="Nhập số CMND/CCCD"
             />
 
             <Input
@@ -866,6 +906,16 @@ export default function Students() {
             />
 
             <Input
+              label="CMND/CCCD"
+              type="text"
+              value={editForm.values.soGiayToTuyThan || ''}
+              onChange={(e) => editForm.handleChange('soGiayToTuyThan', e.target.value)}
+              onBlur={() => editForm.handleBlur('soGiayToTuyThan')}
+              error={editForm.errors.soGiayToTuyThan}
+              placeholder="Nhập số CMND/CCCD"
+            />
+
+            <Input
               label="Quốc tịch"
               type="text"
               value={editForm.values.quocTich || ''}
@@ -928,7 +978,7 @@ export default function Students() {
               Hủy
             </Button>
             <Button type="submit" variant="primary" isLoading={editForm.isSubmitting}>
-              Cập nhật thông tin
+              Cập nhật
             </Button>
           </div>
         </form>
@@ -938,21 +988,23 @@ export default function Students() {
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={deleteModal.close}
-        title="Xóa học viên"
+        title="Xác nhận xóa"
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Bạn có chắc chắn muốn xóa học viên <strong>{selectedStudent?.maHV}</strong> - <strong>{selectedStudent?.hoDem} {selectedStudent?.ten}</strong>?
+          <p className="text-gray-700">
+            Bạn có chắc chắn muốn xóa học viên <strong>{selectedStudent?.maHV}</strong> -
+            <strong> {selectedStudent?.hoDem} {selectedStudent?.ten}</strong>?
           </p>
-          <p className="text-sm text-red-600">Hành động này không thể hoàn tác!</p>
-
+          <p className="text-sm text-red-600">
+            ⚠️ Hành động này không thể hoàn tác!
+          </p>
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={deleteModal.close}>
               Hủy
             </Button>
             <Button variant="danger" onClick={handleDeleteConfirm}>
-              Xóa học viên
+              Xóa
             </Button>
           </div>
         </div>

@@ -147,17 +147,43 @@ class ApiService {
       per_page: params.per_page,
     };
 
+    // ✅ Add standard search/sort params
     if (params.search) queryParams.search = params.search;
     if (params.sort_by) queryParams.sort_by = params.sort_by;
     if (params.sort_direction) queryParams.sort_direction = params.sort_direction;
+
+    // ✅ Add all filters
     if (params.filters) {
       Object.entries(params.filters).forEach(([key, value]) => {
-        queryParams[key] = value;
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams[key] = value;
+        }
       });
     }
 
+    // ✅ CRITICAL FIX: Also add any additional params that are not in filters
+    // This handles cases where params like namVao, maNganh are passed directly
+    Object.entries(params).forEach(([key, value]) => {
+      if (
+        key !== 'page' &&
+        key !== 'per_page' &&
+        key !== 'search' &&
+        key !== 'sort_by' &&
+        key !== 'sort_direction' &&
+        key !== 'filters' &&
+        value !== undefined &&
+        value !== null &&
+        value !== ''
+      ) {
+        queryParams[key] = value;
+      }
+    });
+
     const queryString = this.buildQueryString(queryParams);
     const url = `${endpoint}?${queryString}`;
+
+    console.log('🔍 [api.service] Final URL:', url);
+    console.log('🔍 [api.service] Query params:', queryParams);
 
     const response = await httpClient.get<PaginatedResponse<T>>(url, token || undefined);
     return response;

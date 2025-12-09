@@ -50,7 +50,7 @@ class TeachingAssignment extends Model
      */
     public function lop()
     {
-        return $this->belongsTo(Lop::class, 'lop_id', 'id');
+        return $this->belongsTo(classes::class, 'lop_id', 'id');
     }
 
     /**

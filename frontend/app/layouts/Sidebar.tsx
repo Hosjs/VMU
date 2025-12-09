@@ -126,10 +126,10 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['classrooms.view'], // ✅ Manager có
         },
         {
-          title: 'Phân lớp',
-          path: '/class-assignments',
-          icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
-          requiredPermissions: ['class_assignments.view'], // ✅ Manager có
+          title: 'Quản lý môn học',
+          path: '/subject-management',
+          icon: <BookOpenIcon className="w-5 h-5" />,
+          requiredPermissions: ['students.view'],
         },
       ],
     },
@@ -142,12 +142,6 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           path: '/lecturers',
           icon: <AcademicCapIcon className="w-5 h-5" />,
           requiredPermissions: ['teachers.view'], // ✅ Manager có
-        },
-        {
-          title: 'Hợp đồng giảng dạy',
-          path: '/teachers/contracts',
-          icon: <IdentificationIcon className="w-5 h-5" />,
-          requiredPermissions: ['teaching_contracts.view'], // ❌ Manager không có
         },
         {
           title: 'Phân công giảng dạy',

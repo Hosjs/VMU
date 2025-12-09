@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\GradeManagementController;
+use App\Http\Controllers\Api\SubjectController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -27,6 +28,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('students')->group(function () {
     Route::get('/thac-sy', [StudentController::class, 'getThacSy']);
     Route::get('/by-code/{maHV}', [StudentController::class, 'getByCode']);
+    Route::get('/test', [StudentController::class, 'index']); // Public test route
 });
 
 Route::get('/majors', [MajorController::class, 'index']);
@@ -43,12 +45,29 @@ Route::get('/rooms', [RoomController::class, 'index']);
 Route::get('/major-subjects', [MajorSubjectController::class, 'index']);
 Route::get('/major-subjects/{id}', [MajorSubjectController::class, 'show']);
 Route::get('/major-subjects/available-subjects/{majorId}', [MajorSubjectController::class, 'getAvailableSubjects']);
+Route::post('/major-subjects', [MajorSubjectController::class, 'store']);
+Route::post('/major-subjects/bulk-assign', [MajorSubjectController::class, 'bulkAssign']);
+Route::delete('/major-subjects/{id}', [MajorSubjectController::class, 'destroy']);
 
 Route::get("/courses/{id}",[CourseController::class, 'show']);
 
 Route::get('/trinh-do-dao-tao', [EducationLevelController::class, 'simple']);
 Route::get('/education-levels', [EducationLevelController::class, 'index']);
 Route::get('/education-levels/{id}', [EducationLevelController::class, 'show']);
+
+Route::prefix('subjects')->group(function () {
+    Route::get('/', [SubjectController::class, 'index']);
+    Route::get('/by-major', [SubjectController::class, 'getSubjectsByMajorAndYear']);
+    Route::get('/{subjectId}/students', [SubjectController::class, 'getEnrolledStudents']);
+    Route::get('/available-students', [SubjectController::class, 'getAvailableStudents']);
+    Route::post('/', [SubjectController::class, 'store']);
+    Route::put('/{id}', [SubjectController::class, 'update']);
+    Route::delete('/{id}', [SubjectController::class, 'destroy']);
+    Route::post('/enroll', [SubjectController::class, 'enrollStudent']);
+    Route::post('/bulk-enroll', [SubjectController::class, 'bulkEnrollStudents']);
+    Route::delete('/unenroll/{enrollmentId}', [SubjectController::class, 'unenrollStudent']);
+    Route::post('/bulk-unenroll', [SubjectController::class, 'bulkUnenrollStudents']);
+});
 
 // Public Classes (Lop) Routes
 Route::get('/classes', [ClassController::class, 'index']);
@@ -163,12 +182,14 @@ Route::middleware('auth:api')->group(function () {
     // Teaching Assignments Management
     Route::prefix('teaching-assignments')->group(function () {
         Route::get('/', [TeachingAssignmentController::class, 'index']);
+        Route::get('/upcoming', [TeachingAssignmentController::class, 'getUpcoming']);
+        Route::get('/today', [TeachingAssignmentController::class, 'getToday']);
+        Route::post('/check-conflict', [TeachingAssignmentController::class, 'checkConflict']);
+        Route::get('/lecturer/{lecturerId}/schedule', [TeachingAssignmentController::class, 'lecturerSchedule']);
         Route::get('/{id}', [TeachingAssignmentController::class, 'show']);
         Route::post('/', [TeachingAssignmentController::class, 'store']);
         Route::put('/{id}', [TeachingAssignmentController::class, 'update']);
         Route::delete('/{id}', [TeachingAssignmentController::class, 'destroy']);
-        Route::get('/lecturer/{lecturerId}/schedule', [TeachingAssignmentController::class, 'lecturerSchedule']);
-        Route::post('/check-conflict', [TeachingAssignmentController::class, 'checkConflict']);
     });
 
     Route::prefix('education-levels')->group(function () {

@@ -67,7 +67,7 @@ class LecturerController extends Controller
             'hoTen' => 'required|string|max:255',
             'trinhDoChuyenMon' => 'nullable|string|max:100',
             'hocHam' => 'nullable|string|max:100',
-            'maNganh' => 'nullable|integer|exists:majors,id',
+            'maNganh' => 'nullable|integer',
             'ghiChu' => 'nullable|string',
         ]);
 
@@ -79,10 +79,29 @@ class LecturerController extends Controller
             ], 422);
         }
 
+        // Additional validation for maNganh if it's provided
+        if ($request->filled('maNganh')) {
+            $majorExists = \App\Models\Major::where('id', $request->maNganh)->exists();
+            if (!$majorExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => ['maNganh' => ['Ngành học không tồn tại.']],
+                ], 422);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
-            $lecturer = Lecturer::create($request->all());
+            $lecturer = Lecturer::create([
+                'hoTen' => $request->hoTen,
+                'trinhDoChuyenMon' => $request->trinhDoChuyenMon,
+                'hocHam' => $request->hocHam,
+                'maNganh' => $request->maNganh,
+                'ghiChu' => $request->ghiChu,
+            ]);
+
             $lecturer->load(['major']);
 
             DB::commit();
@@ -142,7 +161,7 @@ class LecturerController extends Controller
             'hoTen' => 'sometimes|string|max:255',
             'trinhDoChuyenMon' => 'nullable|string|max:100',
             'hocHam' => 'nullable|string|max:100',
-            'maNganh' => 'nullable|integer|exists:majors,id',
+            'maNganh' => 'nullable|integer',
             'ghiChu' => 'nullable|string',
         ]);
 
@@ -152,6 +171,18 @@ class LecturerController extends Controller
                 'message' => 'Validation error',
                 'errors' => $validator->errors(),
             ], 422);
+        }
+
+        // Additional validation for maNganh if it's provided
+        if ($request->filled('maNganh')) {
+            $majorExists = \App\Models\Major::where('id', $request->maNganh)->exists();
+            if (!$majorExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => ['maNganh' => ['Ngành học không tồn tại.']],
+                ], 422);
+            }
         }
 
         try {

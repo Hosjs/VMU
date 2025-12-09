@@ -13,7 +13,7 @@ export default [
     //student routes
     route("students", "routes/student/students.tsx"),
     route("rooms", "routes/student/rooms.tsx"),
-    route("class-assignments", "routes/student/class-assignments.tsx"),
+    route("subject-management", "routes/student/subject-management.tsx"),
 
     //lecturer routes
     route("lecturers", "routes/lecturer/lecturers.tsx"),
@@ -23,6 +23,7 @@ export default [
     //training routes
     route("training/course-registrations", "routes/training/course-registrations.tsx"),
     route("training/study-plans", "routes/training/study-plans.tsx"),
+    route("training/schedules", "routes/training/schedules.tsx"),
 
     //categories routes
     route("majors", "routes/categories/majors.tsx"),

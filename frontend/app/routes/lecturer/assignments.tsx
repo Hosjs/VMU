@@ -260,9 +260,12 @@ export default function TeachingAssignmentsPage() {
     deleteModal.open();
   };
 
-  // Navigate to class students page
-  const handleViewClassStudents = (classId: number | string) => {
-    navigate(`/lecturer/class-students/${classId}`);
+  // Navigate to class students page with subject info
+  const handleViewClassStudents = (assignment: TeachingAssignment) => {
+    // Truyền cả classId và course_name để lọc sinh viên theo môn học
+    const classId = assignment.course_code || assignment.class_id || assignment.id;
+    const courseName = encodeURIComponent(assignment.course_name);
+    navigate(`/lecturer/class-students/${classId}?subject=${courseName}`);
   };
 
   // Convert lecturers to autocomplete options
@@ -444,7 +447,7 @@ export default function TeachingAssignmentsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleViewClassStudents(item.course_code || item.class_id || item.id)}
+            onClick={() => handleViewClassStudents(item)}
             title="Xem danh sách học viên"
           >
             <UserGroupIcon className="w-4 h-4 text-green-600" />
