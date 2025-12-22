@@ -13,8 +13,16 @@ import type {
 export const roleService = {
   /**
    * Lấy danh sách roles với phân trang
+   * Sử dụng public endpoint /api/roles (không cần auth)
    */
   async getRoles(params?: RoleListParams): Promise<RoleListResponse> {
+    return await apiService.get<RoleListResponse>('/roles', params);
+  },
+
+  /**
+   * Lấy danh sách roles cho management (authenticated)
+   */
+  async getRolesManagement(params?: RoleListParams): Promise<RoleListResponse> {
     return await apiService.get<RoleListResponse>('/users/roles', params);
   },
 
@@ -22,24 +30,21 @@ export const roleService = {
    * Lấy chi tiết một role
    */
   async getRoleById(id: number): Promise<Role> {
-    const response = await apiService.get<RoleDetailResponse>(`/users/roles/${id}`);
-    return response.data;
+    return await apiService.get<Role>(`/roles/${id}`);
   },
 
   /**
    * Tạo role mới
    */
   async createRole(data: RoleFormData): Promise<Role> {
-    const response = await apiService.post<RoleDetailResponse>('/users/roles', data);
-    return response.data;
+    return await apiService.post<Role>('/users/roles', data);
   },
 
   /**
    * Cập nhật role
    */
   async updateRole(id: number, data: Partial<RoleFormData>): Promise<Role> {
-    const response = await apiService.put<RoleDetailResponse>(`/users/roles/${id}`, data);
-    return response.data;
+    return await apiService.put<Role>(`/users/roles/${id}`, data);
   },
 
   /**
@@ -53,19 +58,17 @@ export const roleService = {
    * Lấy danh sách tất cả modules và actions
    */
   async getPermissions(): Promise<PermissionModule[]> {
-    const response = await apiService.get<PermissionsResponse>('/users/roles/permissions');
-    return response.data;
+    return await apiService.get<PermissionModule[]>('/users/roles/permissions');
   },
 
   /**
    * Cập nhật permissions cho role
    */
   async updatePermissions(id: number, permissions: PermissionMap): Promise<Role> {
-    const response = await apiService.post<RoleDetailResponse>(
+    return await apiService.post<Role>(
       `/users/roles/${id}/permissions`,
       { permissions }
     );
-    return response.data;
   },
 
   /**

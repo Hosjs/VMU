@@ -211,17 +211,6 @@ export default function SchedulesPage() {
       ),
     },
     {
-      key: 'students',
-      label: 'Học viên',
-      width: '100px',
-      render: (item: TeachingAssignment) => (
-        <div className="flex items-center gap-2">
-          <UserGroupIcon className="w-5 h-5 text-gray-400" />
-          <span className="font-medium">{item.student_count || 0}</span>
-        </div>
-      ),
-    },
-    {
       key: 'status',
       label: 'Trạng thái',
       width: '130px',
@@ -564,27 +553,6 @@ export default function SchedulesPage() {
                     {formatDate(selectedAssignment.start_date)} - {formatDate(selectedAssignment.end_date)}
                   </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Student Info */}
-            <div>
-              <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <UserGroupIcon className="w-5 h-5" />
-                Học viên
-              </h5>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Số lượng học viên:</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    {selectedAssignment.student_count || 0}
-                  </span>
-                </div>
-                {selectedAssignment.class_name && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Lớp: {selectedAssignment.class_name}
-                  </p>
-                )}
               </div>
             </div>
 

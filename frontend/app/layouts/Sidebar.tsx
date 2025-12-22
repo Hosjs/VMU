@@ -73,7 +73,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       items: [
         {
           title: 'Người dùng',
-          path: '/users/list',
+          path: 'users/user-managements',
           icon: <UsersIcon className="w-5 h-5" />,
           requiredPermissions: ['users.view'], // ❌ Manager không có
         },

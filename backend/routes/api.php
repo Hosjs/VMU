@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\GradeManagementController;
 use App\Http\Controllers\Api\SubjectController;
+use App\Http\Controllers\Api\LecturerPaymentController;
+use App\Http\Controllers\Api\PaymentRateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -36,6 +38,10 @@ Route::get('/majors/{id}', [MajorController::class, 'show']);
 
 Route::get('/lecturers', [LecturerController::class, 'index']);
 Route::get('/lecturers/{id}', [LecturerController::class, 'show']);
+
+// Roles Routes (Public - for dropdowns)
+Route::get('/roles', [RoleController::class, 'index']);
+Route::get('/roles/{id}', [RoleController::class, 'show']);
 
 // Rooms/Classes Routes (Public)
 Route::get('/rooms/thac-sy', [RoomController::class, 'getThacSy']);
@@ -120,9 +126,14 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 
-    // User Profile
+    // User Management
     Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->middleware('permission:users.view');
         Route::get('/profile/{id}', [UserController::class, 'profile'])->middleware('permission:users.view');
+        Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:users.view');
+        Route::post('/', [UserController::class, 'store'])->middleware('permission:users.create');
+        Route::put('/{id}', [UserController::class, 'update'])->middleware('permission:users.edit');
+        Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
 
         Route::prefix('roles')->group(function () {
             Route::get('/', [RoleController::class, 'index'])->middleware('permission:roles.view');
@@ -196,5 +207,34 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/', [EducationLevelController::class, 'store'])->middleware('permission:education_levels.create');
         Route::put('/{id}', [EducationLevelController::class, 'update'])->middleware('permission:education_levels.edit');
         Route::delete('/{id}', [EducationLevelController::class, 'destroy'])->middleware('permission:education_levels.delete');
+    });
+
+    // Lecturer Payments Management
+    Route::prefix('lecturer-payments')->group(function () {
+        Route::get('/', [LecturerPaymentController::class, 'index']);
+        Route::get('/statistics', [LecturerPaymentController::class, 'getStatistics']);
+        Route::get('/available-semesters', [LecturerPaymentController::class, 'getAvailableSemesters']);
+        Route::get('/available-subjects', [LecturerPaymentController::class, 'getAvailableSubjects']);
+        Route::get('/teaching-assignments-for-autofill', [LecturerPaymentController::class, 'getTeachingAssignmentsForAutoFill']);
+        Route::get('/lecturer/{lecturerId}/summary', [LecturerPaymentController::class, 'getLecturerSummary']);
+        Route::post('/calculate-from-assignment', [LecturerPaymentController::class, 'calculateFromAssignment']);
+        Route::get('/{id}', [LecturerPaymentController::class, 'show']);
+        Route::post('/', [LecturerPaymentController::class, 'store']);
+        Route::put('/{id}', [LecturerPaymentController::class, 'update']);
+        Route::delete('/{id}', [LecturerPaymentController::class, 'destroy']);
+        Route::post('/{id}/approve', [LecturerPaymentController::class, 'approve']);
+        Route::post('/{id}/reject', [LecturerPaymentController::class, 'reject']);
+        Route::post('/{id}/mark-as-paid', [LecturerPaymentController::class, 'markAsPaid']);
+    });
+
+    // Payment Rates Management
+    Route::prefix('payment-rates')->group(function () {
+        Route::get('/', [PaymentRateController::class, 'index']);
+        Route::get('/active', [PaymentRateController::class, 'getActiveRates']);
+        Route::get('/{id}', [PaymentRateController::class, 'show']);
+        Route::post('/', [PaymentRateController::class, 'store']);
+        Route::put('/{id}', [PaymentRateController::class, 'update']);
+        Route::delete('/{id}', [PaymentRateController::class, 'destroy']);
+        Route::post('/{id}/toggle-active', [PaymentRateController::class, 'toggleActive']);
     });
 });

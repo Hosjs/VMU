@@ -1,8 +1,24 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router';
 import { useAuth } from '~/contexts/AuthContext';
-import { dashboardService } from '~/services/dashboard.service';
+import { apiService } from '~/services/api.service';
 import { Card } from '~/components/ui/Card';
-import type { DashboardData, QuickStats } from '~/types/dashboard';
+import {
+    UsersIcon,
+    AcademicCapIcon,
+    BanknotesIcon,
+    ClockIcon,
+    CheckCircleIcon,
+    CalendarIcon,
+    DocumentTextIcon,
+} from '@heroicons/react/24/outline';
+
+// Helper function to format numbers with dot separator
+const formatNumber = (num: number | string): string => {
+    const number = typeof num === 'string' ? parseFloat(num) : num;
+    if (isNaN(number)) return '0';
+    return number.toLocaleString('de-DE');
+};
 
 // Loader function for React Router v7
 export function loader() {
@@ -11,14 +27,38 @@ export function loader() {
 
 export function meta() {
     return [
-        { title: "Dashboard - VMU Management" },
-        { name: "description", content: "Trang tổng quan hệ thống" },
+        { title: "Tổng quan - VMU Training" },
+        { name: "description", content: "Trang tổng quan hệ thống quản lý giảng viên" },
     ];
 }
 
+interface DashboardStats {
+    total_lecturers: number;
+    total_teaching_assignments: number;
+    total_payments: number;
+    pending_payments: number;
+    approved_payments: number;
+    paid_payments: number;
+    total_amount: number;
+    pending_amount: number;
+    paid_amount: number;
+    current_semester: string;
+}
+
+interface RecentPayment {
+    id: number;
+    lecturer_name: string;
+    subject_name: string;
+    semester_code: string;
+    total_amount: number;
+    payment_status: string;
+    created_at: string;
+}
+
 export default function Dashboard() {
-    const { user, hasPermission } = useAuth();
-    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+    const { user } = useAuth();
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [recentPayments, setRecentPayments] = useState<RecentPayment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,8 +70,18 @@ export default function Dashboard() {
         try {
             setIsLoading(true);
             setError(null);
-            const data = await dashboardService.getDashboardData();
-            setDashboardData(data);
+
+            // Load statistics
+            const statsResponse = await apiService.get<DashboardStats>('/lecturer-payments/statistics');
+            setStats(statsResponse);
+
+            // Load recent payments
+            const paymentsResponse = await apiService.getPaginated('/lecturer-payments', {
+                page: 1,
+                per_page: 5,
+            });
+            setRecentPayments((paymentsResponse.data || []) as RecentPayment[]);
+
         } catch (err: any) {
             console.error('Failed to load dashboard:', err);
             setError(err.message || 'Không thể tải dữ liệu dashboard');
@@ -40,51 +90,15 @@ export default function Dashboard() {
         }
     };
 
-    // Quick stats configuration
-    const quickStats: QuickStats[] = dashboardData ? [
-        {
-            label: 'Tổng người dùng',
-            value: dashboardData.stats.total_users,
-            icon: '👥',
-            color: 'blue',
-            trend: { value: 12, isUp: true }
-        },
-        {
-            label: 'Tổng khách hàng',
-            value: dashboardData.stats.total_customers,
-            icon: '🧑‍💼',
-            color: 'green',
-            trend: { value: 8, isUp: true }
-        },
-        {
-            label: 'Đơn hàng',
-            value: dashboardData.stats.total_orders,
-            icon: '📦',
-            color: 'purple',
-            trend: { value: 5, isUp: false }
-        },
-        {
-            label: 'Doanh thu',
-            value: new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND'
-            }).format(dashboardData.stats.total_revenue),
-            icon: '💰',
-            color: 'yellow',
-            trend: { value: 15, isUp: true }
-        },
-    ] : [];
 
-    const getColorClasses = (color: string) => {
-        const colors: Record<string, string> = {
-            blue: 'bg-blue-50 text-blue-600 border-blue-200',
-            green: 'bg-green-50 text-green-600 border-green-200',
-            yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-            red: 'bg-red-50 text-red-600 border-red-200',
-            purple: 'bg-purple-50 text-purple-600 border-purple-200',
-            indigo: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    const getPaymentStatusBadge = (status: string) => {
+        const badges: Record<string, { label: string; className: string }> = {
+            pending: { label: 'Chờ duyệt', className: 'bg-yellow-100 text-yellow-800' },
+            approved: { label: 'Đã duyệt', className: 'bg-blue-100 text-blue-800' },
+            paid: { label: 'Đã thanh toán', className: 'bg-green-100 text-green-800' },
+            rejected: { label: 'Từ chối', className: 'bg-red-100 text-red-800' },
         };
-        return colors[color] || colors.blue;
+        return badges[status] || badges.pending;
     };
 
     if (isLoading) {
@@ -116,151 +130,270 @@ export default function Dashboard() {
     return (
         <div className="space-y-6">
             {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 text-white">
-                <h1 className="text-3xl font-bold mb-2">
-                    Xin chào, {user?.name || 'User'}! 👋
-                </h1>
-                <p className="text-blue-100">
-                    Chào mừng bạn quay trở lại.
-                </p>
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-8 text-white">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2">
+                            Xin chào, {user?.name || 'User'}! 👋
+                        </h1>
+                        <p className="text-blue-100 text-lg">
+                            Hệ thống quản lý giảng viên VMU Training
+                        </p>
+                        {stats?.current_semester && (
+                            <div className="mt-3 inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                                <CalendarIcon className="w-5 h-5" />
+                                <span>Học kỳ hiện tại: {stats.current_semester}</span>
+                            </div>
+                        )}
+                    </div>
+                    <AcademicCapIcon className="w-24 h-24 opacity-30" />
+                </div>
             </div>
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {quickStats.map((stat, index) => (
-                    <Card key={index} className="hover:shadow-lg transition-shadow">
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                                <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                                <p className="text-2xl font-bold text-gray-900 mb-2">
-                                    {stat.value}
-                                </p>
-                                {stat.trend && (
-                                    <div className="flex items-center text-sm">
-                    <span className={stat.trend.isUp ? 'text-green-600' : 'text-red-600'}>
-                      {stat.trend.isUp ? '↑' : '↓'} {stat.trend.value}%
-                    </span>
-                                        <span className="text-gray-500 ml-2">vs tháng trước</span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className={`w-16 h-16 rounded-lg flex items-center justify-center text-3xl ${getColorClasses(stat.color)}`}>
-                                {stat.icon}
-                            </div>
+                {/* Total Lecturers */}
+                <Card className="hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-600 mb-1">Tổng giảng viên</p>
+                            <p className="text-3xl font-bold text-gray-900">
+                                {stats?.total_lecturers || 0}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">Đang hoạt động</p>
                         </div>
-                    </Card>
-                ))}
+                        <div className="w-16 h-16 rounded-lg bg-blue-50 flex items-center justify-center">
+                            <UsersIcon className="w-8 h-8 text-blue-600" />
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Teaching Assignments */}
+                <Card className="hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-600 mb-1">Lịch giảng dạy</p>
+                            <p className="text-3xl font-bold text-gray-900">
+                                {stats?.total_teaching_assignments || 0}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">Tổng số lịch</p>
+                        </div>
+                        <div className="w-16 h-16 rounded-lg bg-purple-50 flex items-center justify-center">
+                            <AcademicCapIcon className="w-8 h-8 text-purple-600" />
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Total Payments */}
+                <Card className="hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-600 mb-1">Bản kê thanh toán</p>
+                            <p className="text-3xl font-bold text-gray-900">
+                                {stats?.total_payments || 0}
+                            </p>
+                            <p className="text-xs text-green-600 mt-2">
+                                {stats?.paid_payments || 0} đã thanh toán
+                            </p>
+                        </div>
+                        <div className="w-16 h-16 rounded-lg bg-green-50 flex items-center justify-center">
+                            <DocumentTextIcon className="w-8 h-8 text-green-600" />
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Total Amount */}
+                <Card className="hover:shadow-lg transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-600 mb-1">Tổng số tiền</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                                {formatNumber(stats?.total_amount || 0)}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">VNĐ</p>
+                        </div>
+                        <div className="w-16 h-16 rounded-lg bg-yellow-50 flex items-center justify-center">
+                            <BanknotesIcon className="w-8 h-8 text-yellow-600" />
+                        </div>
+                    </div>
+                </Card>
             </div>
 
-            {/* Main Content Grid */}
+            {/* Payment Status Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Orders Overview */}
-                <Card title="Tổng quan đơn hàng" className="lg:col-span-2">
+                <Card className="lg:col-span-2">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Tổng quan thanh toán</h3>
+                        <Link
+                            to="/teachers/salaries"
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                            Xem tất cả →
+                        </Link>
+                    </div>
                     <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                        <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <ClockIcon className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
                             <p className="text-3xl font-bold text-yellow-600">
-                                {dashboardData?.stats.pending_orders || 0}
+                                {stats?.pending_payments || 0}
                             </p>
-                            <p className="text-sm text-gray-600 mt-2">Đang xử lý</p>
+                            <p className="text-sm text-gray-600 mt-2">Chờ duyệt</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {formatNumber(stats?.pending_amount || 0)} đ
+                            </p>
                         </div>
-                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <CheckCircleIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                            <p className="text-3xl font-bold text-blue-600">
+                                {stats?.approved_payments || 0}
+                            </p>
+                            <p className="text-sm text-gray-600 mt-2">Đã duyệt</p>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                            <BanknotesIcon className="w-8 h-8 text-green-600 mx-auto mb-2" />
                             <p className="text-3xl font-bold text-green-600">
-                                {dashboardData?.stats.completed_orders || 0}
+                                {stats?.paid_payments || 0}
                             </p>
-                            <p className="text-sm text-gray-600 mt-2">Hoàn thành</p>
-                        </div>
-                        <div className="text-center p-4 bg-red-50 rounded-lg">
-                            <p className="text-3xl font-bold text-red-600">
-                                {dashboardData?.stats.cancelled_orders || 0}
+                            <p className="text-sm text-gray-600 mt-2">Đã thanh toán</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {formatNumber(stats?.paid_amount || 0)} đ
                             </p>
-                            <p className="text-sm text-gray-600 mt-2">Đã hủy</p>
                         </div>
                     </div>
                 </Card>
 
-                {/* Inventory Alert */}
-                <Card title="Cảnh báo tồn kho">
-                    <div className="text-center">
-                        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span className="text-4xl">⚠️</span>
+                {/* Quick Stats Card */}
+                <Card>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê nhanh</h3>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="text-sm text-gray-600">Chờ duyệt</span>
+                            <span className="text-lg font-bold text-yellow-600">
+                                {stats?.pending_payments || 0}
+                            </span>
                         </div>
-                        <p className="text-3xl font-bold text-red-600 mb-2">
-                            {dashboardData?.stats.low_stock_products || 0}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                            Sản phẩm sắp hết hàng
-                        </p>
-                        {(dashboardData?.stats.low_stock_products || 0) > 0 && (
-                            <button className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium">
-                                Xem chi tiết →
-                            </button>
-                        )}
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="text-sm text-gray-600">Cần thanh toán</span>
+                            <span className="text-lg font-bold text-blue-600">
+                                {stats?.approved_payments || 0}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="text-sm text-gray-600">Hoàn thành</span>
+                            <span className="text-lg font-bold text-green-600">
+                                {stats?.paid_payments || 0}
+                            </span>
+                        </div>
                     </div>
                 </Card>
             </div>
 
-            {/* Recent Activities */}
-            <Card title="Hoạt động gần đây">
-                {dashboardData?.recent_activities && dashboardData.recent_activities.length > 0 ? (
-                    <div className="space-y-4">
-                        {dashboardData.recent_activities.map((activity) => (
-                            <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                    activity.type === 'order' ? 'bg-blue-100 text-blue-600' :
-                                        activity.type === 'customer' ? 'bg-green-100 text-green-600' :
-                                            activity.type === 'product' ? 'bg-purple-100 text-purple-600' :
-                                                'bg-gray-100 text-gray-600'
-                                }`}>
-                                    {activity.type === 'order' ? '📦' :
-                                        activity.type === 'customer' ? '👤' :
-                                            activity.type === 'product' ? '📦' : '🔔'}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-gray-900">{activity.title}</p>
-                                    <p className="text-sm text-gray-600">{activity.description}</p>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {new Date(activity.created_at).toLocaleString('vi-VN')}
-                                        {activity.user_name && ` • ${activity.user_name}`}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+            {/* Recent Payments */}
+            <Card>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Bản kê thanh toán gần đây</h3>
+                    <Link
+                        to="/teachers/salaries"
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                        Xem tất cả →
+                    </Link>
+                </div>
+                {recentPayments && recentPayments.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                        Giảng viên
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                        Môn học
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                        Học kỳ
+                                    </th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                        Số tiền
+                                    </th>
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                        Trạng thái
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {recentPayments.map((payment: any) => {
+                                    const badge = getPaymentStatusBadge(payment.payment_status);
+                                    return (
+                                        <tr key={payment.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {payment.lecturer?.hoTen || 'N/A'}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900">{payment.subject_name}</div>
+                                                <div className="text-xs text-gray-500">{payment.class_name}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                {payment.semester_code}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <div className="text-sm font-semibold text-gray-900">
+                                                    {formatNumber(payment.total_amount)} đ
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badge.className}`}>
+                                                    {badge.label}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 ) : (
-                    <div className="text-center py-8 text-gray-500">
-                        <p className="text-4xl mb-2">📋</p>
-                        <p>Chưa có hoạt động nào</p>
+                    <div className="text-center py-12 text-gray-500">
+                        <DocumentTextIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>Chưa có bản kê thanh toán nào</p>
                     </div>
                 )}
             </Card>
 
             {/* Quick Actions */}
-            <Card title="Thao tác nhanh">
+            <Card>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {hasPermission('customers.create') && (
-                        <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition-colors">
-                            <span className="text-3xl block mb-2">➕</span>
-                            <span className="text-sm font-medium text-gray-700">Thêm khách hàng</span>
-                        </button>
-                    )}
-                    {hasPermission('orders.create') && (
-                        <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition-colors">
-                            <span className="text-3xl block mb-2">🛒</span>
-                            <span className="text-sm font-medium text-gray-700">Tạo đơn hàng</span>
-                        </button>
-                    )}
-                    {hasPermission('products.create') && (
-                        <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-center transition-colors">
-                            <span className="text-3xl block mb-2">📦</span>
-                            <span className="text-sm font-medium text-gray-700">Thêm sản phẩm</span>
-                        </button>
-                    )}
-                    {hasPermission('reports.view') && (
-                        <button className="p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-center transition-colors">
-                            <span className="text-3xl block mb-2">📊</span>
-                            <span className="text-sm font-medium text-gray-700">Xem báo cáo</span>
-                        </button>
-                    )}
+                    <Link
+                        to="/teachers/salaries"
+                        className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition-colors border border-blue-200 block"
+                    >
+                        <BanknotesIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                        <span className="text-sm font-medium text-gray-700">Quản lý thanh toán</span>
+                    </Link>
+                    <Link
+                        to="/lecturers"
+                        className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition-colors border border-green-200 block"
+                    >
+                        <UsersIcon className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <span className="text-sm font-medium text-gray-700">Quản lý giảng viên</span>
+                    </Link>
+                    <Link
+                        to="/lecturer/assignments"
+                        className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-center transition-colors border border-purple-200 block"
+                    >
+                        <AcademicCapIcon className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                        <span className="text-sm font-medium text-gray-700">Lịch giảng dạy</span>
+                    </Link>
+                    <Link
+                        to="/teachers/salaries"
+                        className="p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-center transition-colors border border-yellow-200 block"
+                    >
+                        <DocumentTextIcon className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                        <span className="text-sm font-medium text-gray-700">Bảng giá thanh toán</span>
+                    </Link>
                 </div>
             </Card>
         </div>

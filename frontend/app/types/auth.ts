@@ -34,10 +34,11 @@ export interface AuthUser {
   role_name?: string;
   role_display_name?: string;
 
-  // ✅ Custom Permissions - Quyền bổ sung riêng (ngoài quyền role)
+  // Lecturer association
+  lecturer_id?: number;
+
   custom_permissions?: PermissionMap;
 
-  // ✅ All Permissions - Tổng hợp (role + custom) từ backend
   all_permissions?: PermissionMap;
 
   // Employee Info

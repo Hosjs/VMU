@@ -34,6 +34,7 @@ class User extends Authenticatable
         'hire_date',
         'salary',
         'role_id', // ✅ Thêm role_id vào fillable
+        'lecturer_id', // ✅ Thêm lecturer_id vào fillable
         'is_active',
         'notes',
         'custom_permissions',
@@ -96,6 +97,14 @@ class User extends Authenticatable
     public function userRole()
     {
         return $this->hasOne(UserRole::class)->where('is_active', true);
+    }
+
+    /**
+     * Get the lecturer associated with this user
+     */
+    public function lecturer()
+    {
+        return $this->belongsTo(Lecturer::class, 'lecturer_id', 'id');
     }
 
     public function ordersAsSalesperson()

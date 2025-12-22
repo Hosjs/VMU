@@ -41,6 +41,7 @@ export default function RoleManagement() {
   const loadRoles = useCallback(async () => {
     setLoading(true);
     try {
+      // Use public endpoint for loading roles list (no auth required)
       const response = await roleService.getRoles({
         page: currentPage,
         per_page: 15,

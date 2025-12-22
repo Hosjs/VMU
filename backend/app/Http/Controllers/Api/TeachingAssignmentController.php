@@ -32,37 +32,54 @@ class TeachingAssignmentController extends Controller
                 $isAdmin = false;
 
                 // Check if user has admin role
-                if ($user->role && $user->role->name === 'admin') {
+                if ($user->role && ($user->role->name === 'admin' || $user->role->name === 'training_manager')) {
                     $isAdmin = true;
                 }
 
-                try {
-                    if ($user->hasPermission('teaching_assignments', 'view')) {
-                        $isAdmin = true;
+                // Check permission (only if method exists)
+                if (!$isAdmin && method_exists($user, 'hasPermission')) {
+                    try {
+                        if ($user->hasPermission('teaching_assignments', 'view_all')) {
+                            $isAdmin = true;
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('hasPermission check failed in index: ' . $e->getMessage());
                     }
-                } catch (\Exception $e) {
-                    \Log::warning('hasPermission check failed in index: ' . $e->getMessage());
                 }
 
+                // If not admin, filter by lecturer_id
                 if (!$isAdmin) {
-                    $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
-
-                    if ($lecturer) {
-                        $query->where('lecturer_id', $lecturer->id);
+                    // Priority 1: Check if user has direct lecturer_id
+                    if ($user->lecturer_id) {
+                        $query->where('lecturer_id', $user->lecturer_id);
+                        \Log::info("Filtering teaching assignments for lecturer_id: {$user->lecturer_id}");
                     } else {
-                        $student = \DB::table('students')
-                            ->where('email', $user->email)
-                            ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
-                            ->first();
+                        // Priority 2: Try to match by name
+                        $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
 
-                        if ($student && $student->idLop) {
-                            $lop = \App\Models\classes::find($student->idLop);
-                            if ($lop) {
-                                $query->where(function($q) use ($lop) {
-                                    $q->where('class_name', $lop->class_name)
-                                      ->orWhere('lop_id', $lop->id)
-                                      ->orWhere('class_id', $lop->id);
-                                });
+                        if ($lecturer) {
+                            $query->where('lecturer_id', $lecturer->id);
+                            \Log::info("Filtering teaching assignments by name match, lecturer_id: {$lecturer->id}");
+                        } else {
+                            // Priority 3: Check if user is a student
+                            $student = \DB::table('hoc_vien')
+                                ->where('email', $user->email)
+                                ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
+                                ->first();
+
+                            if ($student && isset($student->idLop)) {
+                                $lop = \App\Models\classes::find($student->idLop);
+                                if ($lop) {
+                                    $query->where(function($q) use ($lop) {
+                                        $q->where('class_name', $lop->tenLop)
+                                          ->orWhere('lop_id', $lop->id);
+                                    });
+                                    \Log::info("Filtering teaching assignments for student class: {$lop->tenLop}");
+                                }
+                            } else {
+                                // User is neither lecturer nor student, return empty results
+                                $query->whereRaw('1 = 0');
+                                \Log::info("User is neither lecturer nor student, returning empty results");
                             }
                         }
                     }
@@ -364,26 +381,34 @@ class TeachingAssignmentController extends Controller
 
                 // Only apply filtering if NOT admin
                 if (!$isAdmin) {
-                    // Check if user is a lecturer (only by name, lecturers table doesn't have email)
-                    $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
-
-                    if ($lecturer) {
-                        $query->where('lecturer_id', $lecturer->id);
+                    // Check if user has direct lecturer_id
+                    if ($user->lecturer_id) {
+                        $query->where('lecturer_id', $user->lecturer_id);
                     } else {
-                        // Check if user is a student (students table has email)
-                        $student = \DB::table('students')
-                            ->where('email', $user->email)
-                            ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
-                            ->first();
+                        // Fallback: Try to match by name
+                        $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
 
-                        if ($student && $student->idLop) {
-                            $lop = \App\Models\classes::find($student->idLop);
-                            if ($lop) {
-                                $query->where(function($q) use ($lop) {
-                                    $q->where('class_name', $lop->class_name)
-                                      ->orWhere('lop_id', $lop->id)
-                                      ->orWhere('class_id', $lop->id);
-                                });
+                        if ($lecturer) {
+                            $query->where('lecturer_id', $lecturer->id);
+                        } else {
+                            // Check if user is a student
+                            $student = \DB::table('students')
+                                ->where('email', $user->email)
+                                ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
+                                ->first();
+
+                            if ($student && $student->idLop) {
+                                $lop = \App\Models\classes::find($student->idLop);
+                                if ($lop) {
+                                    $query->where(function($q) use ($lop) {
+                                        $q->where('class_name', $lop->class_name)
+                                          ->orWhere('lop_id', $lop->id)
+                                          ->orWhere('class_id', $lop->id);
+                                    });
+                                }
+                            } else {
+                                // User is neither lecturer nor student, return empty results
+                                $query->whereRaw('1 = 0');
                             }
                         }
                     }
@@ -462,26 +487,34 @@ class TeachingAssignmentController extends Controller
 
                 // Only apply filtering if NOT admin
                 if (!$isAdmin) {
-                    // Check if user is a lecturer (only by name, lecturers table doesn't have email)
-                    $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
-
-                    if ($lecturer) {
-                        $query->where('lecturer_id', $lecturer->id);
+                    // Check if user has direct lecturer_id
+                    if ($user->lecturer_id) {
+                        $query->where('lecturer_id', $user->lecturer_id);
                     } else {
-                        // Check if user is a student (students table has email)
-                        $student = \DB::table('students')
-                            ->where('email', $user->email)
-                            ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
-                            ->first();
+                        // Fallback: Try to match by name
+                        $lecturer = \App\Models\Lecturer::where('hoTen', $user->name)->first();
 
-                        if ($student && $student->idLop) {
-                            $lop = \App\Models\classes::find($student->idLop);
-                            if ($lop) {
-                                $query->where(function($q) use ($lop) {
-                                    $q->where('class_name', $lop->class_name)
-                                      ->orWhere('lop_id', $lop->id)
-                                      ->orWhere('class_id', $lop->id);
-                                });
+                        if ($lecturer) {
+                            $query->where('lecturer_id', $lecturer->id);
+                        } else {
+                            // Check if user is a student
+                            $student = \DB::table('students')
+                                ->where('email', $user->email)
+                                ->orWhereRaw("CONCAT(hoDem, ' ', ten) = ?", [$user->name])
+                                ->first();
+
+                            if ($student && $student->idLop) {
+                                $lop = \App\Models\classes::find($student->idLop);
+                                if ($lop) {
+                                    $query->where(function($q) use ($lop) {
+                                        $q->where('class_name', $lop->class_name)
+                                          ->orWhere('lop_id', $lop->id)
+                                          ->orWhere('class_id', $lop->id);
+                                    });
+                                }
+                            } else {
+                                // User is neither lecturer nor student, return empty results
+                                $query->whereRaw('1 = 0');
                             }
                         }
                     }
