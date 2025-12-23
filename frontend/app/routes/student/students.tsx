@@ -206,14 +206,8 @@ export default function Students() {
           ngayNhapHoc: formatDateToYYYYMMDD(values.ngayNhapHoc),
         };
 
-        console.log('📤 Sending update request:', {
-          maHV: selectedStudent.maHV,
-          payload: payload
-        });
-
         await studentService.update(selectedStudent.maHV, payload);
 
-        console.log('✅ Update successful');
         setToast({ message: '✅ Cập nhật học viên thành công!', type: 'success' });
         editModal.close();
         setSelectedStudent(null);

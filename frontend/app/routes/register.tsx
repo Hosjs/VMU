@@ -263,7 +263,6 @@ export default function Register() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             // TODO: Implement terms modal
-                                            console.log('Terms clicked');
                                         }}
                                         className="font-medium text-blue-600 hover:text-blue-500"
                                     >
@@ -275,7 +274,6 @@ export default function Register() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             // TODO: Implement privacy modal
-                                            console.log('Privacy clicked');
                                         }}
                                         className="font-medium text-blue-600 hover:text-blue-500"
                                     >

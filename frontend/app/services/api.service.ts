@@ -182,9 +182,6 @@ class ApiService {
     const queryString = this.buildQueryString(queryParams);
     const url = `${endpoint}?${queryString}`;
 
-    console.log('🔍 [api.service] Final URL:', url);
-    console.log('🔍 [api.service] Query params:', queryParams);
-
     const response = await httpClient.get<PaginatedResponse<T>>(url, token || undefined);
     return response;
   }

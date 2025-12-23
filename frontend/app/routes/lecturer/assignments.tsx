@@ -177,11 +177,9 @@ export default function TeachingAssignmentsPage() {
 
       setIsLoadingCourses(true);
       try {
-        console.log(`🔍 Loading courses for lecturer: ${selectedLecturer.hoTen}, maNganh: ${actualMaNganh}`);
         const response = await trainingService.getCoursesByMajor(actualMaNganh);
 
         if (response.success && response.data && response.data.length > 0) {
-          console.log(`✅ ${response.message || `Loaded ${response.data.length} courses`}`);
           setAvailableCourses(response.data);
           // Clear any previous error
           form.setFieldError('lecturer_id', '');
@@ -295,7 +293,6 @@ export default function TeachingAssignmentsPage() {
     );
 
     if (selectedCourse) {
-      console.log('✅ Selected course:', selectedCourse);
       form.setFieldValue('course_code', selectedCourse.maHocPhan || '');
       form.setFieldValue('course_name', selectedCourse.tenMon || '');
       form.setFieldValue('credits', selectedCourse.soTinChi || 0);

@@ -62,11 +62,9 @@ export default function CourseRegistrationsPage() {
       onSuccess: (response) => {
         if (response && Array.isArray(response.data)) {
           setTrainingData(response.data);
-          console.log('✅ Course Reg - Set training data:', response.data.length, 'items');
         } else if (response && response.success && Array.isArray(response.data)) {
           setTrainingData(response.data);
         } else {
-          console.warn('⚠️ Course Reg - Response format unexpected:', response);
           setTrainingData([]);
         }
       },

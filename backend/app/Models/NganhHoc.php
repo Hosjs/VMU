@@ -10,7 +10,7 @@ class NganhHoc extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'nganh_hoc';
+    protected $table = 'majors';
     protected $primaryKey = 'maNganh';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -18,13 +18,9 @@ class NganhHoc extends Model
     protected $fillable = [
         'maNganh',
         'tenNganh',
-        'moTa',
-        'trangThai',
-        'createdBy',
-    ];
-
-    protected $casts = [
-        'trangThai' => 'boolean',
+        'ghiChu',
+        'parent_id',
+        'thoi_gian_dao_tao',
     ];
 
     /**
@@ -35,9 +31,14 @@ class NganhHoc extends Model
         return $this->hasMany(HocVien::class, 'maNganh', 'maNganh');
     }
 
-    public function createdByUser()
+    public function parent()
     {
-        return $this->belongsTo(User::class, 'createdBy', 'id');
+        return $this->belongsTo(NganhHoc::class, 'parent_id', 'id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(NganhHoc::class, 'parent_id', 'id');
     }
 }
 

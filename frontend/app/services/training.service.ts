@@ -154,8 +154,6 @@ class TrainingService {
         const queryString = new URLSearchParams(params).toString();
         const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/training/study-plans?${queryString}`;
 
-        console.log(`🔍 Trying year ${year} for maNganh: ${maNganh} (${educationType})`);
-
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -167,7 +165,6 @@ class TrainingService {
 
         // Transform dữ liệu từ API format sang format cần thiết
         if (jsonData.success && Array.isArray(jsonData.data) && jsonData.data.length > 0) {
-          console.log(`✅ Found ${jsonData.data.length} courses for year ${year}`);
 
           const transformedData = jsonData.data.map((course: ExternalCourse) => ({
             // Tạo mã học phần từ hocPhanSo và hocPhanChu
@@ -196,7 +193,6 @@ class TrainingService {
     // Nếu là Tiến sỹ và không có dữ liệu, thử fallback sang Thạc sỹ
     if (educationType === 'tien-sy' && maNganh.startsWith('9')) {
       const masterMaNganh = '8' + maNganh.substring(1);
-      console.log(`⚠️ No data for Tiến sỹ, trying Thạc sỹ fallback: ${masterMaNganh}`);
 
       for (const year of yearsToTry) {
         try {
@@ -219,8 +215,6 @@ class TrainingService {
           const jsonData = await response.json();
 
           if (jsonData.success && Array.isArray(jsonData.data) && jsonData.data.length > 0) {
-            console.log(`✅ Found ${jsonData.data.length} courses from Thạc sỹ program (year ${year})`);
-
             const transformedData = jsonData.data.map((course: ExternalCourse) => ({
               maHocPhan: course.hocPhanChu
                 ? `${course.hocPhanSo || ''} ${course.hocPhanChu}`.trim()

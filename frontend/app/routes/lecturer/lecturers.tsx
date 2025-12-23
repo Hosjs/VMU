@@ -98,10 +98,7 @@ export default function Lecturers() {
     },
     onSubmit: async (values) => {
       try {
-        console.log('🔍 [Form] Raw form values:', values);
-        console.log('🔍 [Form] maNganh value:', values.maNganh, 'type:', typeof values.maNganh);
-
-        // Clean up empty string values to null for proper validation
+     // Clean up empty string values to null for proper validation
         const cleanedValues = {
           ...values,
           maNganh: values.maNganh ? Number(values.maNganh) : null,
@@ -109,9 +106,6 @@ export default function Lecturers() {
           hocHam: values.hocHam || undefined,
           ghiChu: values.ghiChu || undefined,
         };
-
-        console.log('📤 Submitting lecturer data:', cleanedValues);
-        console.log('📤 maNganh after cleaning:', cleanedValues.maNganh, 'type:', typeof cleanedValues.maNganh);
 
         if (selectedLecturer) {
           await lecturerService.update(selectedLecturer.id, cleanedValues);

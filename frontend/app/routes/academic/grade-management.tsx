@@ -192,10 +192,8 @@ export default function GradeManagementPage() {
         };
       });
 
-      console.log('✅ Majors loaded:', majors);
       setAllMajors(majors);
     } catch (error) {
-      console.error('❌ Error loading majors:', error);
       setAllMajors([]);
       alert('Lỗi khi tải danh sách ngành');
     } finally {
@@ -248,13 +246,6 @@ export default function GradeManagementPage() {
             (data.students || []).map(student => [student.maHV, student])
           ).values()
         );
-
-        console.log('📊 Students data:', {
-          total_received: data.students?.length || 0,
-          unique_students: uniqueStudents.length,
-          duplicates_removed: (data.students?.length || 0) - uniqueStudents.length,
-          student_ids: uniqueStudents.map(s => s.maHV)
-        });
 
         setStudents(uniqueStudents);
 

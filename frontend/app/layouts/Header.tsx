@@ -24,8 +24,6 @@ export function Header({ onToggleSidebar, sidebarOpen, user }: HeaderProps) {
 
   const handleLogout = useCallback(async () => {
     try {
-      console.log('🔴 Logging out...');
-      // Clear local storage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
       navigate('/login', { replace: true });
@@ -50,7 +48,6 @@ export function Header({ onToggleSidebar, sidebarOpen, user }: HeaderProps) {
 
   // Handler cho navigation từ user menu
   const handleNavigation = useCallback((path: string) => {
-    console.log('🔍 Header navigation to:', path);
     setShowUserMenu(false);
     navigate(path);
   }, [navigate]);

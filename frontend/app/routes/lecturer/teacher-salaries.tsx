@@ -224,13 +224,10 @@ export default function TeacherSalaries() {
         '/lecturer-payments/available-semesters'
       );
 
-      console.log('📦 Semesters response:', result);
 
       if (result && Array.isArray(result) && result.length > 0) {
-        console.log('✅ Setting semesters:', result.length, 'items');
         setSemesterOptions(result);
       } else {
-        console.log('⚠️ No semesters from API, using fallback');
         // Fallback
         const currentYear = new Date().getFullYear();
         setSemesterOptions([
@@ -255,12 +252,9 @@ export default function TeacherSalaries() {
 
   const loadSubjectsBySemester = async (semesterCode: string) => {
     if (!semesterCode) {
-      console.log('🔴 loadSubjectsBySemester: No semester code provided');
       setSubjectOptions([]);
       return;
     }
-
-    console.log('🔵 loadSubjectsBySemester called with:', semesterCode);
 
     try {
       // apiService.get() returns data directly, already unwrapped
@@ -271,9 +265,6 @@ export default function TeacherSalaries() {
         subject_code: string;
       }>>('/lecturer-payments/available-subjects', { semester_code: semesterCode });
 
-      console.log('📦 API Response (direct array):', result);
-      console.log('📈 Data length:', result ? result.length : 0);
-
       // result is already the array, not wrapped in {success, data}
       if (result && Array.isArray(result) && result.length > 0) {
         const subjects = result.map((item: any) => ({
@@ -281,11 +272,8 @@ export default function TeacherSalaries() {
           label: item.label,
           tenMonHoc: item.subject_name,
         }));
-        console.log('✅ Mapped subjects:', subjects);
-        console.log('✅ Subject count:', subjects.length);
         setSubjectOptions(subjects);
       } else {
-        console.log('⚠️ No data in response - array is empty or not an array');
         setSubjectOptions([]);
       }
     } catch (err) {
@@ -300,8 +288,6 @@ export default function TeacherSalaries() {
       return;
     }
 
-    console.log('🔄 Loading teaching assignments for lecturer:', lecturerId, 'semester:', semesterCode);
-
     try {
       // apiService.get() returns data directly
       const result = await apiService.get<TeachingAssignmentOption[]>(
@@ -312,14 +298,9 @@ export default function TeacherSalaries() {
         }
       );
 
-      console.log('📦 Teaching assignments response:', result);
-      console.log('📈 Assignments count:', result ? result.length : 0);
-
       if (result && Array.isArray(result)) {
-        console.log('✅ Setting teaching assignments:', result.length, 'items');
         setTeachingAssignmentOptions(result);
       } else {
-        console.log('⚠️ No teaching assignments found');
         setTeachingAssignmentOptions([]);
       }
     } catch (err) {
@@ -413,12 +394,9 @@ export default function TeacherSalaries() {
 
   // Load subjects when semester changes
   useEffect(() => {
-    console.log('🔄 useEffect triggered - semester_code changed to:', form.values.semester_code);
     if (form.values.semester_code) {
-      console.log('✅ Calling loadSubjectsBySemester with:', form.values.semester_code);
       loadSubjectsBySemester(form.values.semester_code);
     } else {
-      console.log('⚠️ No semester_code, skipping loadSubjectsBySemester');
     }
   }, [form.values.semester_code]);
 
@@ -928,23 +906,14 @@ export default function TeacherSalaries() {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Debug: Log subject options state */}
-            {console.log('🎨 RENDER - subjectOptions:', subjectOptions)}
-            {console.log('🎨 RENDER - subjectOptions.length:', subjectOptions.length)}
-            {console.log('🎨 RENDER - semester_code:', form.values.semester_code)}
-            {console.log('🎨 RENDER - disabled:', !form.values.semester_code || subjectOptions.length === 0)}
-
             <Select
               label="Môn học *"
               options={subjectOptions}
               value={form.values.subject_code || ''}
               onChange={(e) => {
-                console.log('📝 Subject selected:', e.target.value);
                 const selected = subjectOptions.find(s => s.value === e.target.value);
-                console.log('🔍 Found subject:', selected);
                 form.setFieldValue('subject_code', e.target.value);
                 if (selected && selected.tenMonHoc) {
-                  console.log('✅ Setting subject_name to:', selected.tenMonHoc);
                   form.setFieldValue('subject_name', selected.tenMonHoc);
                 } else {
                   console.log('⚠️ No tenMonHoc found in selected subject');

@@ -123,16 +123,6 @@ export default function ClassAssignments() {
   const loadStudentsByMajorAndYear = async () => {
     if (!namVao || !selectedMaNganh) return;
 
-    // ✅ DEBUG: Log giá trị filter
-    console.log('🔍 [class-assignments] loadStudentsByMajorAndYear called with:', {
-      namVao,
-      selectedMaNganh,
-      types: {
-        namVao: typeof namVao,
-        selectedMaNganh: typeof selectedMaNganh
-      }
-    });
-
     try {
       setIsLoadingStudents(true);
 
@@ -141,16 +131,6 @@ export default function ClassAssignments() {
         namVao: namVao, // Backend sẽ map thành namVaoTruong
         maNganh: selectedMaNganh,
         per_page: 1000,
-      });
-
-      console.log('✅ [class-assignments] API Response:', {
-        totalReceived: response.data.length,
-        total: response.meta?.total,
-        firstStudent: response.data[0] ? {
-          maHV: response.data[0].maHV,
-          namVaoTruong: response.data[0].namVaoTruong,
-          maNganh: response.data[0].maNganh
-        } : null
       });
 
       setDisplayStudents(response.data);

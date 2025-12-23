@@ -16,40 +16,37 @@ class NganhHocSeeder extends Seeder
             [
                 'maNganh' => '8310110',
                 'tenNganh' => 'Kỹ thuật Điện tử, Truyền thông',
-                'moTa' => 'Ngành đào tạo về điện tử và truyền thông',
-                'trangThai' => true,
+                'ghiChu' => 'Ngành đào tạo về điện tử và truyền thông',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'maNganh' => '8480101',
                 'tenNganh' => 'Kinh tế',
-                'moTa' => 'Ngành đào tạo về kinh tế',
-                'trangThai' => true,
+                'ghiChu' => 'Ngành đào tạo về kinh tế',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'maNganh' => '8520101',
                 'tenNganh' => 'Quản trị kinh doanh',
-                'moTa' => 'Ngành đào tạo về quản trị',
-                'trangThai' => true,
+                'ghiChu' => 'Ngành đào tạo về quản trị',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         ];
 
         // Check if already seeded
-        $existingCount = DB::table('nganh_hoc')->count();
+        $existingCount = DB::table('majors')->count();
 
         if ($existingCount > 0) {
             $this->command->info("⚠️  Majors already exist ({$existingCount} records). Skipping...");
             return;
         }
 
-        DB::table('nganh_hoc')->insert($nganhs);
+        DB::table('majors')->insert($nganhs);
 
-        $this->command->info('✅ Created 3 majors');
+        $this->command->info('✅ Created 3 majors (nganh_hoc)');
     }
 }
 

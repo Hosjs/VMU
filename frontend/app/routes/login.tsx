@@ -125,7 +125,6 @@ export default function Login() {
                                     type="button"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        console.log('Forgot password clicked');
                                     }}
                                     className="font-medium text-blue-600 hover:text-blue-500"
                                 >

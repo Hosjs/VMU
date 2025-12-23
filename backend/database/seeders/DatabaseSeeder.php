@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('📚 Creating Training Categories...');
         $this->call([
             TrinhDoDaoTaoSeeder::class,
-            NganhHocSeeder::class,
+            // NganhHocSeeder::class, // Removed: now using MajorsSeeder instead
         ]);
         $this->command->newLine();
 
@@ -76,19 +76,28 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 7. STUDENT PERMISSIONS
+        // 7. STUDENTS
         // =====================
-        $this->command->info('🎓 Creating Student Permissions...');
+        $this->command->info('🎓 Creating Students...');
+        $this->call([
+            StudentsSeeder::class,      // 500+ students
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 8. STUDENT PERMISSIONS
+        // =====================
+        $this->command->info('📋 Creating Student Permissions...');
         $this->call([
             StudentPermissionSeeder::class,
         ]);
         $this->command->newLine();
 
         // =====================
-        // 8. CLASSES & STUDENTS (Optional - only if you have data)
+        // 9. CLASSES & STUDENTS RELATIONS (Optional - only if you have data)
         // =====================
         // Uncomment these when you have classes and students data
-        // $this->command->info('🎒 Creating Classes & Students...');
+        // $this->command->info('🎒 Creating Classes & Students Relations...');
         // $this->call([
         //     ClassStudentsSeeder::class,
         //     SubjectStudentsSeeder::class,
@@ -97,7 +106,7 @@ class DatabaseSeeder extends Seeder
         // $this->command->newLine();
 
         // =====================
-        // 9. TEACHING ASSIGNMENTS (Optional)
+        // 10. TEACHING ASSIGNMENTS (Optional)
         // =====================
         // Uncomment when you have teaching assignments
         // $this->command->info('📅 Creating Teaching Assignments...');
@@ -107,7 +116,7 @@ class DatabaseSeeder extends Seeder
         // $this->command->newLine();
 
         // =====================
-        // 10. ADMIN USER
+        // 11. ADMIN USER
         // =====================
         $this->command->info('👥 Creating Admin User...');
 

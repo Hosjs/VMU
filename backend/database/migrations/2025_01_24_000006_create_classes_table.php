@@ -31,7 +31,7 @@ return new class extends Migration
 
             $table->foreign('major_id', 'lop_manganhhoc_foreign')
                 ->references('maNganh')
-                ->on('nganh_hoc')
+                ->on('majors')
                 ->onDelete('restrict');
 
             $table->foreign('khoaHoc_id', 'lop_khoahoc_foreign')

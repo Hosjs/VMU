@@ -97,9 +97,6 @@ export const studentService = {
         params.gioiTinh = filters.gioiTinh.trim();
       }
 
-      // ✅ DEBUG: Log params để kiểm tra
-      console.log('StudentService.getList - Sending params:', params);
-
       const response = await apiService.getPaginated<Student>('/students', params);
 
       return {
@@ -277,7 +274,6 @@ export const studentService = {
       const result = await response.json();
       return result.data || [];
     } catch (error) {
-      console.error('Error fetching trinh do:', error);
       return [];
     }
   },
