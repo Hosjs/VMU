@@ -39,6 +39,14 @@ class NganhHocSeeder extends Seeder
             ],
         ];
 
+        // Check if already seeded
+        $existingCount = DB::table('nganh_hoc')->count();
+
+        if ($existingCount > 0) {
+            $this->command->info("⚠️  Majors already exist ({$existingCount} records). Skipping...");
+            return;
+        }
+
         DB::table('nganh_hoc')->insert($nganhs);
 
         $this->command->info('✅ Created 3 majors');

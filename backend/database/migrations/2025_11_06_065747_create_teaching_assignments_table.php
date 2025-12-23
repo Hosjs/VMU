@@ -14,16 +14,18 @@ return new class extends Migration
         Schema::create('teaching_assignments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lecturer_id')->constrained('lecturers')->onDelete('cascade');
-            $table->string('course_code')->nullable(); // Mã học phần
-            $table->string('course_name'); // Tên môn học
+            $table->unsignedBigInteger('lop_id')->nullable(); // ID của bảng lop (cũ)
+            $table->unsignedBigInteger('class_id')->nullable(); // ID của bảng classes
+            $table->string('course_code', 255)->nullable(); // Mã học phần
+            $table->string('course_name', 255); // Tên môn học
             $table->integer('credits')->default(0); // Số tín chỉ
             $table->date('start_date'); // Ngày bắt đầu
             $table->date('end_date'); // Ngày kết thúc
             $table->enum('day_of_week', ['saturday', 'sunday']); // Thứ 7 hoặc Chủ nhật
             $table->time('start_time'); // Giờ bắt đầu
             $table->time('end_time'); // Giờ kết thúc
-            $table->string('room')->nullable(); // Phòng học
-            $table->string('class_name')->nullable(); // Tên lớp
+            $table->string('room', 255)->nullable(); // Phòng học
+            $table->string('class_name', 255)->nullable(); // Tên lớp
             $table->integer('student_count')->default(0); // Số lượng sinh viên
             $table->enum('status', ['scheduled', 'ongoing', 'completed', 'cancelled'])->default('scheduled');
             $table->text('notes')->nullable(); // Ghi chú

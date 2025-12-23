@@ -90,13 +90,28 @@ class RoleSeeder extends Seeder
                 'is_system' => false,
             ],
             [
-                'name' => 'staff',
-                'display_name' => 'Nhân viên',
-                'description' => 'Quyền nhân viên cơ bản',
+                'name' => 'student',
+                'display_name' => 'Học viên',
+                'description' => 'Quyền học viên cơ bản',
                 'permissions' => [
                     'dashboard' => ['view'],
                     'students' => ['view'],
                     'classrooms' => ['view'],
+                    'schedules' => ['view', 'create', 'edit', 'delete'],
+                ],
+                'is_active' => true,
+                'is_system' => false,
+            ],
+            [
+                'name' => 'homeroom_teacher',
+                'display_name' => 'Giáo viên chủ nhiệm',
+                'description' => 'Quyền của giáo viên chủ nhiệm',
+                'permissions' => [
+                    'dashboard' => ['view'],
+                    'students' => ['view', 'edit'],
+                    'classrooms' => ['view', 'edit'],
+                    'schedules' => ['view'],
+                    'grades' => ['view', 'create', 'edit'],
                 ],
                 'is_active' => true,
                 'is_system' => false,
@@ -104,8 +119,15 @@ class RoleSeeder extends Seeder
         ];
 
         foreach ($roles as $roleData) {
-            Role::create($roleData);
-            $this->command->info("✅ Created role: {$roleData['display_name']}");
+            $role = Role::updateOrCreate(
+                ['name' => $roleData['name']], // Find by name
+                $roleData // Update or create with this data
+            );
+
+            $action = $role->wasRecentlyCreated ? 'Created' : 'Updated';
+            $this->command->info("✅ {$action} role: {$roleData['display_name']}");
         }
+
+        $this->command->info("✅ Total roles: " . Role::count());
     }
 }

@@ -17,7 +17,11 @@ return new class extends Migration
             $table->string('tenMon', 255);
             $table->integer('soTinChi');
             $table->text('moTa')->nullable();
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->integer('soTiet')->nullable();
+            $table->enum('loaiMon', ['BatBuoc', 'TuChon'])->nullable();
+            $table->integer('hocKy')->nullable();
         });
     }
 

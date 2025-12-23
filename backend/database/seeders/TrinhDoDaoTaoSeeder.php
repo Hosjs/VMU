@@ -39,6 +39,14 @@ class TrinhDoDaoTaoSeeder extends Seeder
             ],
         ];
 
+        // Check if already seeded
+        $existingCount = DB::table('trinh_do_dao_tao')->count();
+
+        if ($existingCount > 0) {
+            $this->command->info("⚠️  Training levels already exist ({$existingCount} records). Skipping...");
+            return;
+        }
+
         DB::table('trinh_do_dao_tao')->insert($trinhDos);
 
         $this->command->info('✅ Created 3 training levels');

@@ -47,7 +47,36 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 4. STUDENT PERMISSIONS
+        // 4. ACADEMIC STRUCTURE
+        // =====================
+        $this->command->info('🏫 Creating Academic Structure...');
+        $this->call([
+            KhoaHocSeeder::class,      // Khóa học/học kỳ
+            MajorsSeeder::class,        // 58 majors with parent_id
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 5. SUBJECTS
+        // =====================
+        $this->command->info('📖 Creating Subjects...');
+        $this->call([
+            SubjectsSeeder::class,      // Môn học
+            MajorSubjectsSeeder::class, // Quan hệ major-subject
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 6. LECTURERS
+        // =====================
+        $this->command->info('👨‍🏫 Creating Lecturers...');
+        $this->call([
+            LecturersSeeder::class,     // 349 lecturers
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 7. STUDENT PERMISSIONS
         // =====================
         $this->command->info('🎓 Creating Student Permissions...');
         $this->call([
@@ -56,38 +85,67 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 5. ADMIN USER
+        // 8. CLASSES & STUDENTS (Optional - only if you have data)
+        // =====================
+        // Uncomment these when you have classes and students data
+        // $this->command->info('🎒 Creating Classes & Students...');
+        // $this->call([
+        //     ClassStudentsSeeder::class,
+        //     SubjectStudentsSeeder::class,
+        //     SubjectEnrollmentsSeeder::class,
+        // ]);
+        // $this->command->newLine();
+
+        // =====================
+        // 9. TEACHING ASSIGNMENTS (Optional)
+        // =====================
+        // Uncomment when you have teaching assignments
+        // $this->command->info('📅 Creating Teaching Assignments...');
+        // $this->call([
+        //     TeachingAssignmentsSeeder::class,
+        // ]);
+        // $this->command->newLine();
+
+        // =====================
+        // 10. ADMIN USER
         // =====================
         $this->command->info('👥 Creating Admin User...');
 
         $roles = Role::all()->keyBy('name');
 
-        // Admin User
-        $admin = User::create([
-            'name' => 'System Administrator',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
-            'phone' => '0900000000',
-            'employee_code' => 'ADMIN-001',
-            'position' => 'System Administrator',
-            'department' => 'Management',
-            'hire_date' => now(),
-            'salary' => 30000000,
-            'role_id' => $roles['admin']->id,
-            'custom_permissions' => null,
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        // Admin User - use firstOrCreate to avoid duplicates
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'System Administrator',
+                'password' => Hash::make('password'),
+                'phone' => '0900000000',
+                'employee_code' => 'ADMIN-001',
+                'position' => 'System Administrator',
+                'department' => 'Management',
+                'hire_date' => now(),
+                'salary' => 30000000,
+                'role_id' => $roles['admin']->id,
+                'custom_permissions' => null,
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]
+        );
 
         // Log into user_roles for audit trail
-        UserRole::create([
-            'user_id' => $admin->id,
-            'role_id' => $roles['admin']->id,
-            'assigned_by' => null, // System assigned
-            'is_active' => true,
-        ]);
+        UserRole::firstOrCreate(
+            [
+                'user_id' => $admin->id,
+                'role_id' => $roles['admin']->id,
+            ],
+            [
+                'assigned_by' => null, // System assigned
+                'is_active' => true,
+            ]
+        );
 
-        $this->command->info('✅ Admin user created successfully');
+        $action = $admin->wasRecentlyCreated ? 'created' : 'already exists';
+        $this->command->info("✅ Admin user {$action}");
         $this->command->table(
             ['Email', 'Password', 'Role'],
             [

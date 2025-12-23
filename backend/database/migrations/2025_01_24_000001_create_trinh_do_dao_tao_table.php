@@ -16,12 +16,18 @@ return new class extends Migration
             $table->string('tenTrinhDo', 100);
             $table->string('moTa', 255)->nullable();
             $table->boolean('trangThai')->default(true);
-
             $table->timestamps();
             $table->softDeletes();
             $table->unsignedBigInteger('createdBy')->nullable();
 
-            $table->foreign('createdBy')->references('id')->on('users')->onDelete('set null');
+            // Foreign key
+            $table->foreign('createdBy', 'trinh_do_dao_tao_createdby_foreign')
+                ->references('id')
+                ->on('users')
+                ->onDelete('set null');
+
+            // Index
+            $table->index('createdBy');
         });
     }
 

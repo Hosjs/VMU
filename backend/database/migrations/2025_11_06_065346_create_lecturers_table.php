@@ -18,13 +18,14 @@ return new class extends Migration
 
         Schema::create('lecturers', function (Blueprint $table) {
             $table->id();
-            $table->string('hoTen');
-            $table->string('trinhDoChuyenMon')->nullable();
-            $table->string('hocHam')->nullable();
+            $table->string('hoTen', 255);
+            $table->string('trinhDoChuyenMon', 50)->nullable();
+            $table->string('hocHam', 50)->nullable();
             $table->unsignedBigInteger('maNganh')->nullable();
             $table->text('ghiChu')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
+            $table->timestamp('deleted_at')->nullable();
 
             // Foreign key
             $table->foreign('maNganh')->references('id')->on('majors')->onDelete('set null');

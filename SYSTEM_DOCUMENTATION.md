@@ -1,17 +1,19 @@
-# Hệ Thống Quản Lý Garage - Base Code Documentation
+# Hệ Thống Quản Lý Đào Tạo Sau Đại Học VMU - System Documentation
 
 ## Tổng Quan Hệ Thống
 
 ### Giới Thiệu
-Đây là base code cho hệ thống quản lý garage được xây dựng với kiến trúc **Full-stack Modern Web Application**:
+Hệ thống quản lý đào tạo sau đại học (Master & PhD programs) được xây dựng với kiến trúc **Full-stack Modern Web Application**:
 - **Backend**: Laravel 11 + Passport (OAuth2 Authentication)
 - **Frontend**: React 19 + React Router v7 + TypeScript + Vite
-- **Database**: SQLite (có thể chuyển sang MySQL/PostgreSQL)
+- **Database**: MySQL
 - **Styling**: TailwindCSS v4
 
 ### Mục Đích
-- Base code chuẩn cho các dự án quản lý nghiệp vụ
-- Kiến trúc sạch, dễ bảo trì và mở rộng
+- Quản lý học viên, giảng viên, lớp học
+- Quản lý môn học, chương trình đào tạo
+- Quản lý phân công giảng dạy
+- Quản lý thanh toán giảng viên
 - Hệ thống phân quyền linh hoạt
 - UI/UX hiện đại, responsive
 
@@ -70,6 +72,27 @@ backend/
 - Soft deletes support
 - Timestamps tracking
 - Foreign key constraints
+
+**Key Tables:**
+```
+- users: Người dùng hệ thống
+- roles: Vai trò (admin, manager, accountant, teacher, student, homeroom_teacher)
+- trinh_do_dao_tao: Trình độ đào tạo (Cử nhân, Thạc sỹ, Tiến sỹ)
+- nganh_hoc: Ngành học cũ
+- majors: Ngành học mới với cấu trúc cây (parent_id)
+- khoa_hoc: Khóa học/học kỳ
+- classes: Lớp học
+- students: Học viên
+- class_students: Quan hệ lớp-học viên
+- lecturers: Giảng viên (349 records)
+- subjects: Môn học
+- major_subjects: Quan hệ ngành-môn học
+- subject_students: Quan hệ môn học-học viên (với điểm)
+- subject_enrollments: Đăng ký môn học
+- teaching_assignments: Phân công giảng dạy
+- payment_rates: Đơn giá thanh toán
+- lecturer_payments: Thanh toán giảng viên
+```
 
 ---
 
@@ -313,9 +336,11 @@ Ví dụ:
 
 **Built-in Roles:**
 - **Admin**: Full access tất cả modules
-- **Manager**: Access hầu hết modules, hạn chế một số actions
-- **Staff**: Access giới hạn theo nghiệp vụ
-- **Customer**: Chỉ xem thông tin cá nhân
+- **Manager**: Quản lý đào tạo - access hầu hết modules
+- **Accountant**: Quản lý tài chính, thanh toán giảng viên
+- **Teacher**: Giảng viên - xem lịch, nhập điểm
+- **Homeroom Teacher**: Giáo viên chủ nhiệm - quản lý lớp, học viên
+- **Student**: Học viên - xem thông tin cá nhân, đăng ký môn học
 
 ---
 

@@ -76,7 +76,7 @@ return new class extends Migration
             $table->index('semester_code');
 
             // Foreign keys
-            $table->foreign('lop_id')->references('id')->on('lop')->onDelete('set null');
+            $table->foreign('lop_id')->references('id')->on('classes')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');

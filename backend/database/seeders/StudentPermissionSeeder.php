@@ -14,12 +14,14 @@ class StudentPermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Students module
-        $module = PermissionModule::create([
-            'name' => 'students',
-            'display_name' => 'Quản lý học viên',
-            'description' => 'Quản lý thông tin học viên, hồ sơ, phân lớp',
-        ]);
+        // Create Students module - use firstOrCreate
+        $module = PermissionModule::firstOrCreate(
+            ['name' => 'students'],
+            [
+                'display_name' => 'Quản lý học viên',
+                'description' => 'Quản lý thông tin học viên, hồ sơ, phân lớp',
+            ]
+        );
 
         // Create actions for Students module
         $actions = [
@@ -31,12 +33,16 @@ class StudentPermissionSeeder extends Seeder
         ];
 
         foreach ($actions as $action) {
-            PermissionAction::create([
-                'module_id' => $module->id,
-                'action' => $action['action'],
-                'display_name' => $action['display_name'],
-                'description' => $action['description'],
-            ]);
+            PermissionAction::firstOrCreate(
+                [
+                    'module_id' => $module->id,
+                    'action' => $action['action'],
+                ],
+                [
+                    'display_name' => $action['display_name'],
+                    'description' => $action['description'],
+                ]
+            );
         }
 
         // Update admin role to have all students permissions
