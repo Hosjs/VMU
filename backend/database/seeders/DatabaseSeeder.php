@@ -130,52 +130,30 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 13. ADMIN USER
+        // 13. USERS (Admin & Staff)
         // =====================
-        $this->command->info('👥 Creating Admin User...');
-
-        $roles = Role::all()->keyBy('name');
-
-        // Admin User - use firstOrCreate to avoid duplicates
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'System Administrator',
-                'password' => Hash::make('password'),
-                'phone' => '0900000000',
-                'employee_code' => 'ADMIN-001',
-                'position' => 'System Administrator',
-                'department' => 'Management',
-                'hire_date' => now(),
-                'salary' => 30000000,
-                'role_id' => $roles['admin']->id,
-                'custom_permissions' => null,
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ]
-        );
-
-        // Log into user_roles for audit trail
-        UserRole::firstOrCreate(
-            [
-                'user_id' => $admin->id,
-                'role_id' => $roles['admin']->id,
-            ],
-            [
-                'assigned_by' => null, // System assigned
-                'is_active' => true,
-            ]
-        );
-
-        $action = $admin->wasRecentlyCreated ? 'created' : 'already exists';
-        $this->command->info("✅ Admin user {$action}");
-        $this->command->table(
-            ['Email', 'Password', 'Role'],
-            [
-                ['admin@example.com', 'password', 'Admin'],
-            ]
-        );
+        $this->command->info('👥 Creating Users...');
+        $this->call([
+            UsersSeeder::class,
+        ]);
         $this->command->newLine();
+
+        // Sync user_roles for audit trail
+        $users = User::all();
+        foreach ($users as $user) {
+            if ($user->role_id) {
+                UserRole::firstOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'role_id' => $user->role_id,
+                    ],
+                    [
+                        'assigned_by' => null, // System assigned
+                        'is_active' => true,
+                    ]
+                );
+            }
+        }
 
         $this->command->info('✅ Database seeding completed!');
     }
