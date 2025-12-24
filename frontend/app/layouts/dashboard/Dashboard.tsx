@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { useAuth } from '~/contexts/AuthContext';
 import { apiService } from '~/services/api.service';
 import { Card } from '~/components/ui/Card';
+import { Alert } from '~/components/ui/Alert';
 import {
     UsersIcon,
     AcademicCapIcon,
@@ -57,10 +58,22 @@ interface RecentPayment {
 
 export default function Dashboard() {
     const { user } = useAuth();
+    const location = useLocation();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [recentPayments, setRecentPayments] = useState<RecentPayment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [unauthorizedAlert, setUnauthorizedAlert] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Check if redirected due to unauthorized access
+        const state = location.state as { unauthorized?: boolean; message?: string } | null;
+        if (state?.unauthorized && state?.message) {
+            setUnauthorizedAlert(state.message);
+            // Clear the state
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     useEffect(() => {
         loadDashboardData();
@@ -129,6 +142,17 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-6">
+
+            {/* Unauthorized Access Alert */}
+            {unauthorizedAlert && (
+                <Alert
+                    type="error"
+                    title="Không có quyền truy cập"
+                    message={unauthorizedAlert}
+                    onClose={() => setUnauthorizedAlert(null)}
+                />
+            )}
+
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-8 text-white">
                 <div className="flex items-center justify-between">

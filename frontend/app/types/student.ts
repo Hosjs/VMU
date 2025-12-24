@@ -12,6 +12,7 @@ export interface Student {
   hoDem: string;
   ten: string;
   ngaySinh: string;
+  noiSinh?: string;
   gioiTinh: string;
   soGiayToTuyThan: string;
   dienThoai: string;

@@ -8,7 +8,9 @@ export { Pagination } from './Pagination';
 export { Select } from './Select';
 export { Table } from './Table';
 export { Toast } from './Toast';
+export { Alert } from './Alert';
 export type { AutocompleteOption } from './Autocomplete';
+export type { AlertType } from './Alert';
 
 export {
   LoadingSpinner, 

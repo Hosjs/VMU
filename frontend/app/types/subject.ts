@@ -1,5 +1,7 @@
 // filepath: /Applications/XAMPP/xamppfiles/VMU/frontend/app/types/subject.ts
 
+import type { Student } from './student';
+
 /**
  * Interface cho môn học
  */
@@ -30,18 +32,7 @@ export interface SubjectEnrollment {
     trangThai: 'DangHoc' | 'DaHoanThanh' | 'Huy';
     created_at: string;
     updated_at: string;
-    student?: {
-        maHV: string;
-        hoDem: string;
-        ten: string;
-        email: string;
-        dienThoai: string;
-        gioiTinh: string;
-        maNganh: string;
-        nganh?: {
-            tenNganh: string;
-        };
-    };
+    student?: Student;
     subject?: Subject;
 }
 

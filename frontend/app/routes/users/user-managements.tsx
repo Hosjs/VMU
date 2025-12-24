@@ -4,6 +4,7 @@ import { roleService } from '~/services/role.service';
 import { useTable } from '~/hooks/useTable';
 import { useModal } from '~/hooks/useModal';
 import { useForm } from '~/hooks/useForm';
+import { ProtectedRoute } from '~/components/ProtectedRoute';
 import type { User, UserFormData } from '~/types/user';
 import type { Role } from '~/types/role';
 import {
@@ -36,6 +37,17 @@ export function meta() {
 }
 
 export default function UserManagements() {
+  return (
+    <ProtectedRoute
+      requiredPermission="users.view"
+      unauthorizedMessage="Bạn không có quyền xem danh sách người dùng"
+    >
+      <UserManagementsContent />
+    </ProtectedRoute>
+  );
+}
+
+function UserManagementsContent() {
   // ============================================
   // STATE & HOOKS
   // ============================================
@@ -214,13 +226,16 @@ export default function UserManagements() {
   // ============================================
   const handleOpenCreate = () => {
     setSelectedUser(null);
-    createForm.reset(getInitialFormValues());
+    createForm.reset();
     createModal.open();
   };
 
   const handleOpenEdit = (user: User) => {
     setSelectedUser(user);
-    editForm.reset(getInitialFormValues(user));
+    // Set values manually instead of reset with argument
+    Object.keys(getInitialFormValues(user)).forEach((key) => {
+      editForm.setFieldValue(key as keyof UserFormData, getInitialFormValues(user)[key as keyof UserFormData]);
+    });
     editModal.open();
   };
 

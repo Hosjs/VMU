@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { roleService } from '~/services/role.service';
 import type { Role, RoleFormData, PermissionModule, PermissionMap } from '~/types/role';
 import { useAuth } from '~/contexts/AuthContext';
+import { ProtectedRoute } from '~/components/ProtectedRoute';
 import {
   PlusIcon,
   PencilIcon,
@@ -14,6 +15,17 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function RoleManagement() {
+  return (
+    <ProtectedRoute
+      requiredPermission="roles.view"
+      unauthorizedMessage="Bạn không có quyền xem danh sách vai trò"
+    >
+      <RoleManagementContent />
+    </ProtectedRoute>
+  );
+}
+
+function RoleManagementContent() {
   const { hasPermission } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissionModules, setPermissionModules] = useState<PermissionModule[]>([]);

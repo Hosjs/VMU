@@ -36,8 +36,6 @@ Route::prefix('students')->group(function () {
 Route::get('/majors', [MajorController::class, 'index']);
 Route::get('/majors/{id}', [MajorController::class, 'show']);
 
-Route::get('/lecturers', [LecturerController::class, 'index']);
-Route::get('/lecturers/{id}', [LecturerController::class, 'show']);
 
 // Roles Routes (Public - for dropdowns)
 Route::get('/roles', [RoleController::class, 'index']);
@@ -170,11 +168,11 @@ Route::middleware('auth:api')->group(function () {
     });
     // Lecturer Management
     Route::prefix('lecturers')->group(function () {
-        Route::get('/', [LecturerController::class, 'index'])->middleware('permission:lecturers.view');
-        Route::post('/', [LecturerController::class, 'store'])->middleware('permission:lecturers.create');
-        Route::get('/{id}', [LecturerController::class, 'show'])->middleware('permission:lecturers.view');
-        Route::put('/{id}', [LecturerController::class, 'update'])->middleware('permission:lecturers.edit');
-        Route::delete('/{id}', [LecturerController::class, 'destroy'])->middleware('permission:lecturers.delete');
+        Route::get('/', [LecturerController::class, 'index'])->middleware('permission:teachers.view');
+        Route::post('/', [LecturerController::class, 'store'])->middleware('permission:teachers.create');
+        Route::get('/{id}', [LecturerController::class, 'show'])->middleware('permission:teachers.view');
+        Route::put('/{id}', [LecturerController::class, 'update'])->middleware('permission:teachers.edit');
+        Route::delete('/{id}', [LecturerController::class, 'destroy'])->middleware('permission:teachers.delete');
     });
 
 
@@ -192,15 +190,18 @@ Route::middleware('auth:api')->group(function () {
 
     // Teaching Assignments Management
     Route::prefix('teaching-assignments')->group(function () {
-        Route::get('/', [TeachingAssignmentController::class, 'index']);
+        // Routes mà giáo viên có thể truy cập (xem lịch của chính họ)
+        Route::get('/', [TeachingAssignmentController::class, 'index']); // Controller tự filter theo lecturer
         Route::get('/upcoming', [TeachingAssignmentController::class, 'getUpcoming']);
         Route::get('/today', [TeachingAssignmentController::class, 'getToday']);
-        Route::post('/check-conflict', [TeachingAssignmentController::class, 'checkConflict']);
-        Route::get('/lecturer/{lecturerId}/schedule', [TeachingAssignmentController::class, 'lecturerSchedule']);
         Route::get('/{id}', [TeachingAssignmentController::class, 'show']);
-        Route::post('/', [TeachingAssignmentController::class, 'store']);
-        Route::put('/{id}', [TeachingAssignmentController::class, 'update']);
-        Route::delete('/{id}', [TeachingAssignmentController::class, 'destroy']);
+        Route::get('/lecturer/{lecturerId}/schedule', [TeachingAssignmentController::class, 'lecturerSchedule']);
+
+        // Routes chỉ admin/manager mới được dùng (create, update, delete)
+        Route::post('/check-conflict', [TeachingAssignmentController::class, 'checkConflict'])->middleware('permission:teaching_assignments.create');
+        Route::post('/', [TeachingAssignmentController::class, 'store'])->middleware('permission:teaching_assignments.create');
+        Route::put('/{id}', [TeachingAssignmentController::class, 'update'])->middleware('permission:teaching_assignments.edit');
+        Route::delete('/{id}', [TeachingAssignmentController::class, 'destroy'])->middleware('permission:teaching_assignments.delete');
     });
 
     Route::prefix('education-levels')->group(function () {
