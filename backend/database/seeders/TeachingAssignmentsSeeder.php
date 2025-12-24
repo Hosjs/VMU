@@ -13,26 +13,74 @@ class TeachingAssignmentsSeeder extends Seeder
      */
     public function run(): void
     {
-        $data = $this->getTeachingAssignmentsData();
+        // Check if already seeded
+        $existingCount = DB::table('teaching_assignments')->count();
+        if ($existingCount > 0) {
+            $this->command->info("⚠️  Teaching assignments already exist ({$existingCount} records). Skipping...");
+            return;
+        }
 
-        if (empty($data)) {
+        // Get all valid lecturer IDs from database
+        $validLecturerIds = DB::table('lecturers')->pluck('id')->toArray();
+        $validLecturerIdsSet = array_flip($validLecturerIds);
+
+        // Get all valid class IDs from database
+        $validClassIds = DB::table('classes')->pluck('id')->toArray();
+        $validClassIdsSet = array_flip($validClassIds);
+
+        $rawData = $this->getTeachingAssignmentsData();
+
+        if (empty($rawData)) {
             $this->command->warn("⚠️  No teaching assignment data available");
             return;
         }
 
-        $this->command->info("💾 Inserting " . count($data) . " teaching assignments...");
+        $this->command->info("💾 Processing " . count($rawData) . " teaching assignments...");
+
+        // Filter and validate data
+        $validData = [];
+        $skippedCount = 0;
+
+        foreach ($rawData as $item) {
+            $lecturerId = $item['lecturer_id'] ?? null;
+            $classId = $item['class_id'] ?? null;
+
+            // Check if lecturer_id exists
+            if ($lecturerId && !isset($validLecturerIdsSet[$lecturerId])) {
+                $this->command->warn("⚠️  Skipping: lecturer_id {$lecturerId} not found");
+                $skippedCount++;
+                continue;
+            }
+
+            // Check if class_id exists
+            if ($classId && !isset($validClassIdsSet[$classId])) {
+                $this->command->warn("⚠️  Skipping: class_id {$classId} not found");
+                $skippedCount++;
+                continue;
+            }
+
+            $validData[] = $item;
+        }
+
+        if (empty($validData)) {
+            $this->command->error("❌ No valid teaching assignments to insert!");
+            return;
+        }
 
         // Insert in chunks
-        $chunks = array_chunk($data, 50);
+        $chunks = array_chunk($validData, 50);
         $total = 0;
 
         foreach ($chunks as $chunk) {
             DB::table('teaching_assignments')->insert($chunk);
             $total += count($chunk);
-            $this->command->info("✅ Inserted {$total} / " . count($data) . " assignments");
+            $this->command->info("✅ Inserted {$total} / " . count($validData) . " assignments");
         }
 
         $this->command->info("✅ Successfully inserted {$total} teaching assignments");
+        if ($skippedCount > 0) {
+            $this->command->warn("⚠️  Skipped {$skippedCount} invalid records");
+        }
     }
 
     private function getTeachingAssignmentsData(): array

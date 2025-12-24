@@ -13,14 +13,65 @@ class ClassStudentsSeeder extends Seeder
      */
     public function run(): void
     {
-        $timestamp = '2025-11-18 19:04:12';
+        // Check if already seeded
+        $existingCount = DB::table('class_students')->count();
+        if ($existingCount > 0) {
+            $this->command->info("⚠️  Class-students already exist ({$existingCount} records). Skipping...");
+            return;
+        }
 
-        $data = $this->getClassStudentsData($timestamp);
+        $timestamp = now();
 
-        $this->command->info("💾 Inserting " . count($data) . " class_students records...");
+        // Get all valid student IDs from database
+        $validStudentIds = DB::table('students')->pluck('maHV')->toArray();
+        $validStudentIdsSet = array_flip($validStudentIds); // For O(1) lookup
+
+        // Get all valid class IDs from database
+        $validClassIds = DB::table('classes')->pluck('id')->toArray();
+        $validClassIdsSet = array_flip($validClassIds);
+
+        $rawData = $this->getRawClassStudentsData();
+
+        $this->command->info("💾 Processing " . count($rawData) . " class_students records...");
+
+        // Filter and validate data
+        $validData = [];
+        $skippedCount = 0;
+
+        foreach ($rawData as $item) {
+            $classId = $item[0];
+            $studentId = $item[1];
+
+            // Check if class_id exists
+            if (!isset($validClassIdsSet[$classId])) {
+                $this->command->warn("⚠️  Skipping: class_id {$classId} not found");
+                $skippedCount++;
+                continue;
+            }
+
+            // Check if student_id exists
+            if (!isset($validStudentIdsSet[$studentId])) {
+                $this->command->warn("⚠️  Skipping: student_id {$studentId} not found");
+                $skippedCount++;
+                continue;
+            }
+
+            $validData[] = [
+                'class_id' => $classId,
+                'student_id' => $studentId,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+                'deleted_at' => null,
+            ];
+        }
+
+        if (empty($validData)) {
+            $this->command->error("❌ No valid class_students records to insert!");
+            return;
+        }
 
         // Insert in chunks to avoid memory issues
-        $chunks = array_chunk($data, 100);
+        $chunks = array_chunk($validData, 100);
         $total = 0;
 
         foreach ($chunks as $chunk) {
@@ -28,17 +79,20 @@ class ClassStudentsSeeder extends Seeder
             $total += count($chunk);
 
             if ($total % 100 === 0) {
-                $this->command->info("✅ Progress: {$total} / " . count($data) . " records");
+                $this->command->info("✅ Progress: {$total} / " . count($validData) . " records");
             }
         }
 
         $this->command->info("✅ Successfully inserted {$total} class_students records");
+        if ($skippedCount > 0) {
+            $this->command->warn("⚠️  Skipped {$skippedCount} invalid records");
+        }
     }
 
-    private function getClassStudentsData(string $timestamp): array
+    private function getRawClassStudentsData(): array
     {
         // Data structure: [class_id, student_id]
-        $rawData = [
+        return [
             [95, 'CA2421002'], [34, 'CN2211001'], [34, 'CN2211002'], [91, 'CN2421001'],
             [91, 'CN2421002'], [91, 'CN2421003'], [91, 'CN2421005'], [3, 'DA2211001'],
             [3, 'DA2211002'], [3, 'DA2211003'], [3, 'DA2211004'], [3, 'DA2211005'],
@@ -185,23 +239,7 @@ class ClassStudentsSeeder extends Seeder
             [92, 'TD2421002'], [92, 'TD2421003'], [35, 'TĐ2211001'], [35, 'TĐ2211002'],
             [35, 'TĐ2211003'], [43, 'TĐ2221001'], [21, 'TĐ2311001'], [21, 'TĐ2311002'],
             [21, 'TĐ2311003'], [37, 'TT2211001'], [37, 'TT2211002'], [90, 'TT2221001'],
-            [34, 'CN2211001'], [34, 'CN2211001'],
         ];
-
-        // Convert to full records with timestamps
-        $result = [];
-        foreach ($rawData as $index => $item) {
-            $result[] = [
-                'id' => $index + 1,
-                'class_id' => $item[0],
-                'student_id' => $item[1],
-                'created_at' => $timestamp,
-                'updated_at' => $timestamp,
-                'deleted_at' => null,
-            ];
-        }
-
-        return $result;
     }
 }
 

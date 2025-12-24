@@ -15,6 +15,16 @@ class KhoaHocSeeder extends Seeder
         $khoaHocs = [
             [
                 'id' => 1,
+                'ma_khoa_hoc' => '2021.1.1',
+                'nam_hoc' => 2021,
+                'hoc_ky' => 1,
+                'dot' => 1,
+                'ngay_bat_dau' => '2021-01-10',
+                'ngay_ket_thuc' => '2021-05-30',
+                'ghi_chu' => null,
+            ],
+            [
+                'id' => 2,
                 'ma_khoa_hoc' => '2022.1.1',
                 'nam_hoc' => 2022,
                 'hoc_ky' => 1,
@@ -24,7 +34,7 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 2,
+                'id' => 3,
                 'ma_khoa_hoc' => '2022.2.1',
                 'nam_hoc' => 2022,
                 'hoc_ky' => 2,
@@ -34,7 +44,7 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 3,
+                'id' => 4,
                 'ma_khoa_hoc' => '2023.1.1',
                 'nam_hoc' => 2023,
                 'hoc_ky' => 1,
@@ -44,7 +54,17 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 4,
+                'id' => 5,
+                'ma_khoa_hoc' => '2024.1.1',
+                'nam_hoc' => 2024,
+                'hoc_ky' => 1,
+                'dot' => 1,
+                'ngay_bat_dau' => '2024-01-08',
+                'ngay_ket_thuc' => '2024-05-25',
+                'ghi_chu' => null,
+            ],
+            [
+                'id' => 6,
                 'ma_khoa_hoc' => '2025.1.1',
                 'nam_hoc' => 2025,
                 'hoc_ky' => 1,
@@ -54,7 +74,7 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 5,
+                'id' => 7,
                 'ma_khoa_hoc' => '2025.1.2',
                 'nam_hoc' => 2025,
                 'hoc_ky' => 1,
@@ -64,7 +84,7 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 6,
+                'id' => 8,
                 'ma_khoa_hoc' => '2025.2.1',
                 'nam_hoc' => 2025,
                 'hoc_ky' => 2,
@@ -74,7 +94,7 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 7,
+                'id' => 9,
                 'ma_khoa_hoc' => '2025.2.2',
                 'nam_hoc' => 2025,
                 'hoc_ky' => 2,
@@ -84,7 +104,7 @@ class KhoaHocSeeder extends Seeder
                 'ghi_chu' => null,
             ],
             [
-                'id' => 8,
+                'id' => 10,
                 'ma_khoa_hoc' => '2025.3.1',
                 'nam_hoc' => 2025,
                 'hoc_ky' => 3,

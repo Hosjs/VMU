@@ -67,7 +67,16 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 6. LECTURERS
+        // 6. CLASSES
+        // =====================
+        $this->command->info('🎒 Creating Classes...');
+        $this->call([
+            ClassesSeeder::class,       // 150+ classes
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 7. LECTURERS
         // =====================
         $this->command->info('👨‍🏫 Creating Lecturers...');
         $this->call([
@@ -76,7 +85,7 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 7. STUDENTS
+        // 8. STUDENTS
         // =====================
         $this->command->info('🎓 Creating Students...');
         $this->call([
@@ -85,7 +94,7 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 8. STUDENT PERMISSIONS
+        // 9. STUDENT PERMISSIONS
         // =====================
         $this->command->info('📋 Creating Student Permissions...');
         $this->call([
@@ -94,29 +103,34 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 9. CLASSES & STUDENTS RELATIONS (Optional - only if you have data)
+        // 10. CLASS-STUDENT RELATIONS
         // =====================
-        // Uncomment these when you have classes and students data
-        // $this->command->info('🎒 Creating Classes & Students Relations...');
-        // $this->call([
-        //     ClassStudentsSeeder::class,
-        //     SubjectStudentsSeeder::class,
-        //     SubjectEnrollmentsSeeder::class,
-        // ]);
-        // $this->command->newLine();
+        $this->command->info('👥 Creating Class-Student Relations...');
+        $this->call([
+            ClassStudentsSeeder::class, // Assign students to classes
+        ]);
+        $this->command->newLine();
 
         // =====================
-        // 10. TEACHING ASSIGNMENTS (Optional)
+        // 11. SUBJECT ENROLLMENTS
         // =====================
-        // Uncomment when you have teaching assignments
-        // $this->command->info('📅 Creating Teaching Assignments...');
-        // $this->call([
-        //     TeachingAssignmentsSeeder::class,
-        // ]);
-        // $this->command->newLine();
+        $this->command->info('📝 Creating Subject Enrollments...');
+        $this->call([
+            SubjectEnrollmentsSeeder::class, // Student subject enrollments
+        ]);
+        $this->command->newLine();
 
         // =====================
-        // 11. ADMIN USER
+        // 12. TEACHING ASSIGNMENTS
+        // =====================
+        $this->command->info('📅 Creating Teaching Assignments...');
+        $this->call([
+            TeachingAssignmentsSeeder::class, // Lecturer teaching assignments
+        ]);
+        $this->command->newLine();
+
+        // =====================
+        // 13. ADMIN USER
         // =====================
         $this->command->info('👥 Creating Admin User...');
 
