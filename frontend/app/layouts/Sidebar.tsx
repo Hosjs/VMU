@@ -168,12 +168,6 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['semesters.view'], // ❌ Manager không có
         },
         {
-          title: 'Gói đăng ký',
-          path: '/training/registration-packages',
-          icon: <DocumentTextIcon className="w-5 h-5" />,
-          requiredPermissions: ['registration_packages.view'], // ❌ Manager không có
-        },
-        {
           title: 'Đăng ký học phần',
           path: '/training/course-registrations',
           icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
@@ -202,12 +196,6 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           path: '/academic/grades',
           icon: <PresentationChartBarIcon className="w-5 h-5" />,
           requiredPermissions: ['grades.view'], // ✅ Manager có (chỉ xem)
-        },
-        {
-          title: 'Học phí',
-          path: '/financial/tuition-fees',
-          icon: <CurrencyDollarIcon className="w-5 h-5" />,
-          requiredPermissions: ['tuition_fees.view'], // ❌ Manager không có
         },
       ],
     },
