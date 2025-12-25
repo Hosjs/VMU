@@ -58,6 +58,8 @@ class Cors
             'http://127.0.0.1:3000',
             'http://127.0.0.1:4173',
             'http://127.0.0.1',
+            'https://www.sdtvimaru.com',
+            'https://sdtvimaru.com',
         ];
 
         // Add production URLs from environment if available
