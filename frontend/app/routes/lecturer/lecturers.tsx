@@ -14,7 +14,8 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { Button, Input, Select, Table, Badge, Card, Pagination, Modal } from '~/components/ui';
+import { Button, Input, Select, Table, Badge, Card, Pagination, Modal, Toast } from '~/components/ui';
+import type { ToastType } from '~/components/ui/Toast';
 import {
   HOC_HAM_OPTIONS,
   TRINH_DO_CHUYEN_MON_OPTIONS,
@@ -35,6 +36,7 @@ export default function Lecturers() {
   // ============================================
   const [selectedLecturer, setSelectedLecturer] = useState<Lecturer | null>(null);
   const [nganhOptions, setNganhOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const createModal = useModal();
   const editModal = useModal();
@@ -109,8 +111,10 @@ export default function Lecturers() {
 
         if (selectedLecturer) {
           await lecturerService.update(selectedLecturer.id, cleanedValues);
+          setToast({ message: '✅ Cập nhật giảng viên thành công!', type: 'success' });
         } else {
           await lecturerService.create(cleanedValues);
+          setToast({ message: '✅ Thêm giảng viên thành công!', type: 'success' });
         }
         form.reset();
         createModal.close();
@@ -119,7 +123,8 @@ export default function Lecturers() {
       } catch (error: any) {
         console.error('Error saving lecturer:', error);
         console.error('Error details:', error.data);
-        alert(error.message || 'Có lỗi xảy ra');
+        const errorMessage = error.data?.message || error.message || 'Có lỗi xảy ra';
+        setToast({ message: `❌ ${errorMessage}`, type: 'error' });
       }
     },
   });
@@ -153,18 +158,17 @@ export default function Lecturers() {
 
     try {
       await lecturerService.delete(selectedLecturer.id);
+      setToast({ message: '✅ Xóa giảng viên thành công!', type: 'success' });
       deleteModal.close();
       setSelectedLecturer(null);
       refresh();
     } catch (error: any) {
       console.error('Error deleting lecturer:', error);
-      alert(error.message || 'Có lỗi xảy ra khi xóa');
+      const errorMessage = error.data?.message || error.message || 'Có lỗi xảy ra khi xóa';
+      setToast({ message: `❌ ${errorMessage}`, type: 'error' });
     }
   };
 
-  // ============================================
-  // TABLE CONFIGURATION
-  // ============================================
   const columns = useMemo(() => [
     {
       key: 'stt',
@@ -564,6 +568,15 @@ export default function Lecturers() {
           </div>
         </div>
       </Modal>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
