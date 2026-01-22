@@ -93,17 +93,24 @@ class GradeManagementController extends Controller
         try {
             \Log::info('getAllClassesWithInfo called');
 
+            // First, check what type of data is in major_id column
+            $sampleClass = DB::table('classes')->whereNotNull('major_id')->first();
+            \Log::info('Sample class major_id:', ['major_id' => $sampleClass->major_id ?? 'null']);
+
             $classes = DB::table('classes as c')
                 ->leftJoin('majors as m', function($join) {
-                    $join->on('c.major_id', '=', DB::raw('m.maNganh COLLATE utf8mb4_unicode_ci'));
+                    // Try both join conditions: by ID and by maNganh
+                    $join->on('c.major_id', '=', 'm.id')
+                         ->orOn('c.major_id', '=', 'm.maNganh');
                 })
                 ->whereNull('c.deleted_at')
-                ->whereNull('m.deleted_in')
                 ->select(
                     'c.id',
                     'c.class_name as tenLop',
                     'c.khoaHoc_id as khoaHoc',
                     'c.trangThai',
+                    'c.major_id',
+                    'm.id as major_db_id',
                     'm.tenNganh',
                     'm.maNganh',
                     DB::raw('(SELECT COUNT(*) FROM students WHERE idLop = c.id AND deleted_at IS NULL) as studentCount')
@@ -112,7 +119,11 @@ class GradeManagementController extends Controller
                 ->orderBy('c.class_name')
                 ->get();
 
-            \Log::info('All classes loaded', ['count' => $classes->count()]);
+            \Log::info('All classes loaded', [
+                'count' => $classes->count(),
+                'with_major' => $classes->whereNotNull('tenNganh')->count(),
+                'without_major' => $classes->whereNull('tenNganh')->count(),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -204,22 +215,20 @@ class GradeManagementController extends Controller
             // Get subject filter if provided
             $subjectId = $request->query('subject_id');
 
-            // Get class info with major - FIX: Sử dụng bảng classes và fix collation
+            // Get class info with major - ✅ FIX: Join đúng major_id với m.id
             $class = DB::table('classes as c')
-                ->leftJoin('majors as m', function($join) {
-                    $join->on('c.major_id', '=', DB::raw('m.maNganh COLLATE utf8mb4_unicode_ci'));
-                })
+                ->leftJoin('majors as m', 'c.major_id', '=', 'm.id')
                 ->where('c.id', $classId)
                 ->whereNull('m.deleted_in')
                 ->whereNull('c.deleted_at')
                 ->select(
                     'c.*',
                     'c.class_name as tenLop',
-                    'c.major_id as maNganhHoc',
+                    'c.major_id',
                     'c.lecurer_id as homeroomTeacherId',
                     'm.tenNganh',
                     'm.maNganh',
-                    'm.id as major_id'
+                    'm.id as major_numeric_id'
                 )
                 ->first();
 
@@ -269,6 +278,9 @@ class GradeManagementController extends Controller
                             'sub.maMon',
                             'sub.tenMon',
                             'sub.soTinChi',
+                            'ss.x1',
+                            'ss.x2',
+                            'ss.x3',
                             'ss.x',
                             'ss.y',
                             'ss.z',
@@ -318,6 +330,9 @@ class GradeManagementController extends Controller
                             'sub.maMon',
                             'sub.tenMon',
                             'sub.soTinChi',
+                            'ss.x1',
+                            'ss.x2',
+                            'ss.x3',
                             'ss.x',
                             'ss.y',
                             'ss.z',
@@ -331,22 +346,23 @@ class GradeManagementController extends Controller
             }
 
             // Get available subjects for this major from major_subjects
+            // ✅ FIX: Sử dụng major_id thay vì maNganh để join
             $subjects = DB::table('subjects as s')
                 ->join('major_subjects as ms', 's.id', '=', 'ms.subject_id')
-                ->join('majors as m', 'ms.major_id', '=', 'm.id')
-                ->where('m.maNganh', $class->maNganh)
-                ->whereNull('m.deleted_in')
+                ->where('ms.major_id', $class->major_id)
+                ->whereNull('ms.deleted_at')
                 ->select('s.id', 's.maMon', 's.tenMon', 's.soTinChi')
                 ->groupBy('s.id', 's.maMon', 's.tenMon', 's.soTinChi')
                 ->orderBy('s.tenMon')
                 ->get();
 
             // Log để debug
-            \Log::info('Major info:', [
+            \Log::info('Loading subjects for class', [
+                'class_id' => $classId,
                 'maNganh' => $class->maNganh,
-                'major_id' => $class->major_id ?? 'NOT SET',
+                'major_id' => $class->major_id,
                 'subjects_count' => $subjects->count(),
-                'subjects_ids' => $subjects->pluck('id')->toArray()
+                'subjects' => $subjects->pluck('tenMon', 'id')->toArray()
             ]);
 
             return response()->json([
@@ -442,9 +458,10 @@ class GradeManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|string|exists:students,maHV',
             'subject_id' => 'required|integer|exists:subjects,id',
-            'x' => 'nullable|numeric|min:0|max:10',
+            'x1' => 'nullable|numeric|min:0|max:10',
+            'x2' => 'nullable|numeric|min:0|max:10',
+            'x3' => 'nullable|numeric|min:0|max:10',
             'y' => 'nullable|numeric|min:0|max:10',
-            'z' => 'nullable|numeric|min:0|max:10',
             'class_id' => 'required|integer|exists:classes,id',
         ]);
 
@@ -472,55 +489,53 @@ class GradeManagementController extends Controller
             $user = auth('api')->user();
             $permissions = $this->getGradePermissions($user, $class, $request->subject_id);
 
-            // Get existing grade
-            $existingGrade = DB::table('subject_students')
-                ->where('student_id', $request->student_id)
-                ->where('subject_id', $request->subject_id)
-                ->first();
-
             // Prepare data to update
             $updateData = [];
 
-            // Check X permission
-            if ($request->has('x') && $request->x !== null) {
+            // Check X1, X2, X3 permissions (only teachers can edit)
+            if ($request->has('x1') && $request->x1 !== null) {
                 if (!$permissions['canEditX']) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => 'Bạn không có quyền nhập điểm X. Chỉ giáo viên dạy môn mới được nhập điểm X.',
+                        'message' => 'Bạn không có quyền nhập điểm X1. Chỉ giáo viên dạy môn mới được nhập.',
                     ], 403);
                 }
-                $updateData['x'] = $request->x;
-            } else if ($existingGrade) {
-                $updateData['x'] = $existingGrade->x;
+                $updateData['x1'] = $request->x1;
             }
 
-            // Check Y permission
-            if ($request->has('y') && $request->y !== null) {
-                if (!$permissions['canEditY']) {
+            if ($request->has('x2') && $request->x2 !== null) {
+                if (!$permissions['canEditX']) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => 'Bạn không có quyền nhập điểm Y. Chỉ giáo viên chủ nhiệm mới được nhập điểm Y.',
+                        'message' => 'Bạn không có quyền nhập điểm X2. Chỉ giáo viên dạy môn mới được nhập.',
+                    ], 403);
+                }
+                $updateData['x2'] = $request->x2;
+            }
+
+            if ($request->has('x3') && $request->x3 !== null) {
+                if (!$permissions['canEditX']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn không có quyền nhập điểm X3. Chỉ giáo viên dạy môn mới được nhập.',
+                    ], 403);
+                }
+                $updateData['x3'] = $request->x3;
+            }
+
+            // Check Y permission (only admin can edit)
+            if ($request->has('y') && $request->y !== null) {
+                if (!$permissions['canEditZ']) { // Admin has canEditZ = true
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn không có quyền nhập điểm Y. Chỉ Admin mới được nhập điểm Y.',
                     ], 403);
                 }
                 $updateData['y'] = $request->y;
-            } else if ($existingGrade) {
-                $updateData['y'] = $existingGrade->y;
-            }
-
-            // Check Z permission
-            if ($request->has('z') && $request->z !== null) {
-                if (!$permissions['canEditZ']) {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Bạn không có quyền nhập điểm Z.',
-                    ], 403);
-                }
-                $updateData['z'] = $request->z;
-            } else if ($existingGrade) {
-                $updateData['z'] = $existingGrade->z;
             }
 
             $grade = SubjectStudent::updateOrCreate(
@@ -531,20 +546,8 @@ class GradeManagementController extends Controller
                 $updateData
             );
 
-            // ✅ Auto-calculate Z if both X and Y are present (for non-admin users)
-            // Admin can manually set Z, but teachers get auto-calculated Z
-            if (!$permissions['canEditZ']) {
-                // Refresh to get latest values
-                $grade->refresh();
-
-                if ($grade->x !== null && $grade->y !== null) {
-                    $autoZ = ($grade->x + $grade->y) / 2;
-                    $grade->z = round($autoZ, 2);
-                    $grade->save();
-                }
-            }
-
-            // Refresh grade to get final values
+            // Model will auto-calculate X (average of X1, X2, X3) and Z via boot method
+            // Refresh to get calculated values
             $grade->refresh();
 
             // Calculate final grade based on formula: X*10% + Y*20% + Z*70%
@@ -560,6 +563,9 @@ class GradeManagementController extends Controller
                 'message' => 'Cập nhật điểm thành công',
                 'data' => [
                     'id' => $grade->id,
+                    'x1' => $grade->x1,
+                    'x2' => $grade->x2,
+                    'x3' => $grade->x3,
                     'x' => $grade->x,
                     'y' => $grade->y,
                     'z' => $grade->z,

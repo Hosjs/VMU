@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lecturer;
+use App\Helpers\UserHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,15 @@ class LecturerController extends Controller
                 'maNganh' => $request->maNganh,
                 'ghiChu' => $request->ghiChu,
             ]);
+
+            // Tự động tạo user cho giảng viên
+            $email = UserHelper::generateEmailFromName($lecturer->hoTen);
+            UserHelper::createUserAccount(
+                fullName: $lecturer->hoTen,
+                email: $email,
+                lecturerId: $lecturer->id,
+                roleId: 2 // Role ID 2 cho giảng viên
+            );
 
             $lecturer->load(['major']);
 

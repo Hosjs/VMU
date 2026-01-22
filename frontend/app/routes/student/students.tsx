@@ -27,6 +27,44 @@ export default function Students() {
   // HELPER FUNCTIONS
   // ============================================
   /**
+   * Tạo email tự động từ họ tên
+   * Loại bỏ dấu tiếng Việt và chuyển thành email
+   */
+  const generateEmailFromName = (hoDem: string, ten: string): string => {
+    const fullName = `${hoDem} ${ten}`.trim();
+
+    // Chuyển về chữ thường và loại bỏ dấu
+    const removeVietnameseTones = (str: string): string => {
+      str = str.toLowerCase();
+      const vietnameseMap: Record<string, string> = {
+        'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+        'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+        'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+        'đ': 'd',
+        'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+        'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+        'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+        'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+        'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+        'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+        'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+        'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+        'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+      };
+
+      return str.split('').map(char => vietnameseMap[char] || char).join('');
+    };
+
+    const email = removeVietnameseTones(fullName);
+    // Loại bỏ ký tự đặc biệt, chỉ giữ chữ và số
+    const cleanEmail = email.replace(/[^a-z0-9\s]/g, '');
+    // Thay khoảng trắng bằng dấu chấm
+    const finalEmail = cleanEmail.replace(/\s+/g, '.').trim();
+
+    return `${finalEmail}@st.vimaru.edu.vn`;
+  };
+
+  /**
    * Format date string to yyyy-MM-dd for API compatibility
    * Handles: ISO datetime, yyyy-MM-dd, null/undefined
    */
@@ -152,10 +190,7 @@ export default function Students() {
     if (!values.maHV?.trim()) errors.maHV = 'Mã học viên là bắt buộc';
     if (!values.hoDem?.trim()) errors.hoDem = 'Họ đệm là bắt buộc';
     if (!values.ten?.trim()) errors.ten = 'Tên là bắt buộc';
-    if (!values.email?.trim()) errors.email = 'Email là bắt buộc';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
-      errors.email = 'Email không hợp lệ';
-    }
+    // Email sẽ được tự động tạo, không cần validate
     if (!values.dienThoai?.trim()) errors.dienThoai = 'Số điện thoại là bắt buộc';
     if (!values.soGiayToTuyThan?.trim()) errors.soGiayToTuyThan = 'Số CMND/CCCD là bắt buộc';
     if (!values.maNganh?.trim()) errors.maNganh = 'Ngành học là bắt buộc';
@@ -172,9 +207,13 @@ export default function Students() {
     validate: validateForm,
     onSubmit: async (values) => {
       try {
+        // Tự động tạo email từ họ tên
+        const email = generateEmailFromName(values.hoDem || '', values.ten || '');
+
         // Format dates before sending to API
         const payload = {
           ...values,
+          email, // Thêm email tự động tạo
           ngaySinh: formatDateToYYYYMMDD(values.ngaySinh),
           ngayNhapHoc: formatDateToYYYYMMDD(values.ngayNhapHoc),
         };
@@ -735,15 +774,6 @@ export default function Students() {
               placeholder="Nhập số điện thoại"
             />
 
-            <Input
-              label="Email"
-              type="email"
-              value={createForm.values.email || ''}
-              onChange={(e) => createForm.handleChange('email', e.target.value)}
-              onBlur={() => createForm.handleBlur('email')}
-              error={createForm.errors.email}
-              placeholder="Nhập email"
-            />
 
             <Input
               label="CMND/CCCD"
@@ -889,15 +919,6 @@ export default function Students() {
               placeholder="Nhập số điện thoại"
             />
 
-            <Input
-              label="Email"
-              type="email"
-              value={editForm.values.email || ''}
-              onChange={(e) => editForm.handleChange('email', e.target.value)}
-              onBlur={() => editForm.handleBlur('email')}
-              error={editForm.errors.email}
-              placeholder="Nhập email"
-            />
 
             <Input
               label="CMND/CCCD"

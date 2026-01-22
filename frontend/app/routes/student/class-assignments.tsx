@@ -97,7 +97,6 @@ export default function ClassAssignments() {
       const options: SelectOption[] = [
         { value: '', label: '-- Chọn ngành --' },
         ...majors
-          .filter(m => m.daoTaoThacSy)
           .map(major => {
             // ✅ Sử dụng ma (accessor) hoặc maNganh (field gốc)
             const maNganh = major.ma || (major as any).maNganh || '';

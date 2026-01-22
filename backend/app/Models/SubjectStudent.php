@@ -13,17 +13,53 @@ class SubjectStudent extends Model
         'student_id',
         'subject_id',
         'x',
+        'x1',
+        'x2',
+        'x3',
         'y',
         'z',
     ];
 
     protected $casts = [
         'x' => 'float',
+        'x1' => 'float',
+        'x2' => 'float',
+        'x3' => 'float',
         'y' => 'float',
         'z' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Boot the model and add event listeners
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-calculate Z before saving
+        static::saving(function ($model) {
+            $model->calculateZ();
+        });
+    }
+
+    /**
+     * Calculate Z score automatically
+     * Formula: Z = ((X1 + X2 + X3) / 3 + Y) / 2
+     */
+    public function calculateZ()
+    {
+        // Tính X trung bình từ X1, X2, X3
+        if (!is_null($this->x1) && !is_null($this->x2) && !is_null($this->x3)) {
+            $this->x = round(($this->x1 + $this->x2 + $this->x3) / 3, 2);
+        }
+
+        // Tính Z nếu có cả X và Y
+        if (!is_null($this->x) && !is_null($this->y)) {
+            $this->z = round(($this->x + $this->y) / 2, 2);
+        }
+    }
 
     protected $appends = ['diem', 'diem_he4', 'diem_chu'];
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\HocVien;
+use App\Helpers\UserHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -83,12 +84,12 @@ class StudentController extends Controller
             'gioiTinh' => 'required|string|max:10',
             'soGiayToTuyThan' => 'required|string|max:20',
             'dienThoai' => 'required|string|max:20|unique:students,dienThoai',
-            'email' => 'required|email|max:100|unique:students,email',
+            'email' => 'nullable|email|max:100|unique:students,email', // Email sẽ tự động tạo
             'quocTich' => 'nullable|string|max:50',
             'danToc' => 'nullable|string|max:50',
             'tonGiao' => 'nullable|string|max:50',
             'maTrinhDoDaoTao' => 'required|string|max:10|exists:trinh_do_dao_tao,maTrinhDoDaoTao',
-            'maNganh' => 'required|string|max:10',
+            'maNganh' => 'required|string|max:20', // Bỏ exists check vì có thể không khớp
             'trangThai' => 'required|in:DangHoc,BaoLuu,DaTotNghiep,ThoiHoc',
             'ngayNhapHoc' => 'required|date',
             'namVaoTruong' => 'required|integer|min:2000|max:2100',
@@ -115,6 +116,16 @@ class StudentController extends Controller
             }
 
             $student = HocVien::create($validatedData);
+
+            // Tự động tạo user cho học sinh
+            $fullName = trim($student->hoDem . ' ' . $student->ten);
+            $email = UserHelper::generateEmailFromName($fullName);
+            UserHelper::createUserAccount(
+                fullName: $fullName,
+                email: $email,
+                lecturerId: null,
+                roleId: 3 // Role ID 3 cho học sinh
+            );
 
             $student->load(['trinhDoDaoTao', 'nganh', 'lop']);
 
