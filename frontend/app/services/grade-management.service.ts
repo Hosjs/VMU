@@ -33,9 +33,12 @@ interface StudentGrade {
         maMon: string;
         tenMon: string;
         soTinChi: number;
-        x: number;
-        y: number;
-        z: number;
+        x1: number | null;
+        x2: number | null;
+        x3: number | null;
+        x: number | null;
+        y: number | null;
+        z: number | null;
         created_at: string;
         updated_at: string;
     }>;

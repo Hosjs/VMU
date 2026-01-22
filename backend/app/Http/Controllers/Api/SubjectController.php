@@ -188,13 +188,13 @@ class SubjectController extends Controller
                 ], 400);
             }
 
-            $query = Subject::whereHas('majors', function($q) use ($majorId) {
-                $q->where('major_id', $majorId);
-            })->with(['majors' => function($q) use ($majorId) {
-                $q->where('major_id', $majorId);
-            }]);
+            $query = Subject::whereIn('id', function($subQuery) use ($majorId) {
+                $subQuery->select('subject_id')
+                    ->from('major_subjects')
+                    ->where('major_id', $majorId)
+                    ->whereNull('deleted_at');
+            });
 
-            // Đếm số lượng sinh viên theo cả major_id và namHoc
             if ($namHoc) {
                 $query->withCount(['enrollments as enrolled_students_count' => function($q) use ($namHoc, $majorId) {
                     $q->where('namHoc', $namHoc)
@@ -208,11 +208,20 @@ class SubjectController extends Controller
 
             $subjects = $query->orderBy('tenMon')->get();
 
+            \Log::info('getSubjectsByMajorAndYear', [
+                'major_id' => $majorId,
+                'nam_hoc' => $namHoc,
+                'subjects_count' => $subjects->count(),
+                'subject_ids' => $subjects->pluck('id')->toArray(),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'data' => $subjects,
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error in getSubjectsByMajorAndYear: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching subjects',
@@ -461,11 +470,20 @@ class SubjectController extends Controller
                 ->where('namHoc', $namHoc)
                 ->pluck('maHV');
 
-            // Filter by namVaoTruong, maNganh (same major), and not enrolled yet
-            $query = HocVien::where('namVaoTruong', $namHoc)
-                ->where('maNganh', $major->maNganh)
+            // ✅ FIX: Filter by maNganh and trangThai, not by namVaoTruong
+            // Students can enroll in courses regardless of their enrollment year
+            $query = HocVien::where('maNganh', $major->maNganh)
+                ->where('trangThai', 'DangHoc')  // Only active students
                 ->whereNotIn('maHV', $enrolledStudentIds)
                 ->with(['nganh', 'trinhDoDaoTao']);
+
+            \Log::info('getAvailableStudents query', [
+                'subject_id' => $subjectId,
+                'nam_hoc' => $namHoc,
+                'major_id' => $majorId,
+                'major_maNganh' => $major->maNganh,
+                'enrolled_count' => $enrolledStudentIds->count(),
+            ]);
 
             if ($request->filled('search')) {
                 $search = $request->search;
@@ -479,6 +497,11 @@ class SubjectController extends Controller
 
             $perPage = $request->get('per_page', 20);
             $students = $query->orderBy('hoDem')->paginate($perPage);
+
+            \Log::info('getAvailableStudents result', [
+                'total_found' => $students->total(),
+                'sample_ids' => $students->pluck('maHV')->take(5)->toArray(),
+            ]);
 
             return response()->json([
                 'success' => true,

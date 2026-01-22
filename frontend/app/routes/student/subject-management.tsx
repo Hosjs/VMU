@@ -111,7 +111,6 @@ export default function SubjectManagement() {
       const options: SelectOption[] = [
         { value: '', label: '-- Chọn ngành --' },
         ...majors
-          .filter(m => m.daoTaoThacSy)
           .map(major => ({
             value: major.id.toString(),
             label: `${major.ma} - ${major.tenNganhHoc}`,
@@ -128,9 +127,13 @@ export default function SubjectManagement() {
 
     try {
       setIsLoadingSubjects(true);
+      console.log('🔍 Loading subjects for major:', selectedMajorId, 'year:', namHoc);
       const data = await subjectService.getSubjectsByMajorAndYear(selectedMajorId, namHoc);
+      console.log('✅ Received subjects data:', data);
       setSubjects(data);
+      console.log('✅ State updated, subjects count:', data.length);
     } catch (err) {
+      console.error('❌ Error loading subjects:', err);
       setToast({ message: '❌ Lỗi khi tải danh sách môn học', type: 'error' });
     } finally {
       setIsLoadingSubjects(false);
@@ -635,7 +638,12 @@ export default function SubjectManagement() {
       ) : subjects.length === 0 ? (
         <Card>
           <div className="p-8 text-center text-gray-500">
-            {selectedMajorId ? 'Không có môn học nào' : 'Vui lòng chọn năm học và ngành để xem danh sách môn học'}
+            {selectedMajorId ? (
+              <>
+                <p>Không có môn học nào</p>
+                <p className="text-xs mt-2">Debug: selectedMajorId={selectedMajorId}, namHoc={namHoc}, subjects.length={subjects.length}</p>
+              </>
+            ) : 'Vui lòng chọn năm học và ngành để xem danh sách môn học'}
           </div>
         </Card>
       ) : (

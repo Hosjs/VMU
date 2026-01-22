@@ -240,10 +240,9 @@ export const studentService = {
       const options = majors.map((major: any) => {
         const tenNganh = major.tenNganh || major.ten_nganh || '';
         const maNganh = major.maNganh || major.ma_nganh || '';
-        const id = major.id;
 
         return {
-          value: id.toString(),
+          value: maNganh, // Sử dụng maNganh thay vì id
           label: `${tenNganh} (${maNganh})`
         };
       }).filter((opt: { value: string; label: string }) => opt.value && opt.value.trim() !== '');

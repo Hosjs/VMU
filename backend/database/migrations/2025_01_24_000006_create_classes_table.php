@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('class_name', 255);
             $table->string('maTrinhDoDaoTao', 10);
-            $table->string('major_id', 10);
+            $table->unsignedBigInteger('major_id'); // ✅ FIX: Changed to unsignedBigInteger
             $table->integer('khoaHoc_id');
             $table->unsignedBigInteger('lecurer_id')->nullable();
             $table->enum('trangThai', ['DangHoc', 'DaTotNghiep', 'GiaiThe'])->default('DangHoc');
@@ -29,8 +29,9 @@ return new class extends Migration
                 ->on('trinh_do_dao_tao')
                 ->onDelete('restrict');
 
-            $table->foreign('major_id', 'lop_manganhhoc_foreign')
-                ->references('maNganh')
+            // ✅ FIX: major_id now references majors.id (integer) instead of majors.maNganh (string)
+            $table->foreign('major_id', 'lop_major_id_foreign')
+                ->references('id')
                 ->on('majors')
                 ->onDelete('restrict');
 
