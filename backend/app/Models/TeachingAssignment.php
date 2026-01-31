@@ -31,11 +31,31 @@ class TeachingAssignment extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
         'student_count' => 'integer',
         'credits' => 'integer',
     ];
+
+    /**
+     * Format start_time as H:i for API responses
+     */
+    protected function startTime(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn ($value) => $value ? date('H:i', strtotime($value)) : null,
+            set: fn ($value) => $value,
+        );
+    }
+
+    /**
+     * Format end_time as H:i for API responses
+     */
+    protected function endTime(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn ($value) => $value ? date('H:i', strtotime($value)) : null,
+            set: fn ($value) => $value,
+        );
+    }
 
     /**
      * Relationship: Assignment belongs to Lecturer
@@ -88,11 +108,18 @@ class TeachingAssignment extends Model
 
     /**
      * Scope: Filter by date range
+     * Get assignments that OVERLAP with the given date range
      */
     public function scopeDateRange($query, $startDate, $endDate)
     {
         if ($startDate && $endDate) {
-            return $query->whereBetween('start_date', [$startDate, $endDate]);
+            // Assignment overlaps with range if:
+            // 1. Assignment starts before range ends AND
+            // 2. Assignment ends after range starts
+            return $query->where(function($q) use ($startDate, $endDate) {
+                $q->where('start_date', '<=', $endDate)
+                  ->where('end_date', '>=', $startDate);
+            });
         }
         return $query;
     }

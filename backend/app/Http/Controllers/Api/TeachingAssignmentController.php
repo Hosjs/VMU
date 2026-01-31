@@ -156,14 +156,19 @@ class TeachingAssignmentController extends Controller
             'credits' => 'nullable|integer|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'day_of_week' => 'required|in:saturday,sunday',
+            'day_of_week' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'end_time' => 'required|date_format:H:i',
             'room' => 'nullable|string|max:50',
             'class_name' => 'nullable|string|max:100',
             'student_count' => 'nullable|integer|min:0',
-            'status' => 'nullable|in:scheduled,ongoing,completed,cancelled',
+            'status' => 'nullable|in:in_progress,cancelled,in_exam,paid',
             'notes' => 'nullable|string',
+        ], [
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'end_time.after' => 'Giờ kết thúc phải sau giờ bắt đầu.',
+            'start_time.date_format' => 'Định dạng giờ bắt đầu không hợp lệ (HH:MM).',
+            'end_time.date_format' => 'Định dạng giờ kết thúc không hợp lệ (HH:MM).',
         ]);
 
         if ($validator->fails()) {
@@ -215,17 +220,27 @@ class TeachingAssignmentController extends Controller
             'credits' => 'nullable|integer|min:0',
             'start_date' => 'sometimes|required|date',
             'end_date' => 'sometimes|required|date|after_or_equal:start_date',
-            'day_of_week' => 'sometimes|required|in:saturday,sunday',
+            'day_of_week' => 'sometimes|required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'start_time' => 'sometimes|required|date_format:H:i',
-            'end_time' => 'sometimes|required|date_format:H:i|after:start_time',
+            'end_time' => 'sometimes|required|date_format:H:i',
             'room' => 'nullable|string|max:50',
             'class_name' => 'nullable|string|max:100',
             'student_count' => 'nullable|integer|min:0',
-            'status' => 'nullable|in:scheduled,ongoing,completed,cancelled',
+            'status' => 'nullable|in:in_progress,cancelled,in_exam,paid',
             'notes' => 'nullable|string',
+        ], [
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'start_time.date_format' => 'Định dạng giờ bắt đầu không hợp lệ (HH:MM).',
+            'end_time.date_format' => 'Định dạng giờ kết thúc không hợp lệ (HH:MM).',
         ]);
 
         if ($validator->fails()) {
+            \Log::error('Teaching Assignment Update Validation Failed', [
+                'assignment_id' => $id,
+                'request_data' => $request->all(),
+                'errors' => $validator->errors()->toArray()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -309,7 +324,7 @@ class TeachingAssignmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'lecturer_id' => 'required|exists:lecturers,id',
-            'day_of_week' => 'required|in:saturday,sunday',
+            'day_of_week' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
             'start_date' => 'required|date',

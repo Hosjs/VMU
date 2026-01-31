@@ -77,6 +77,11 @@ export const ROUTE_PERMISSIONS: Record<string, RoutePermissionConfig> = {
     permission: 'teaching_assignments.view',
     unauthorizedMessage: 'Bạn không có quyền xem lịch giảng dạy',
   },
+  'lecturer/calendar': {
+    path: '/lecturer/calendar',
+    permission: 'teaching_assignments.view',
+    unauthorizedMessage: 'Bạn không có quyền xem lịch giảng viên',
+  },
   'teachers/salaries': {
     path: '/teachers/salaries',
     permission: 'teacher_salaries.view',

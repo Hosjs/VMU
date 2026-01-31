@@ -120,10 +120,10 @@ export default function SchedulesPage() {
   // Get status badge variant
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      scheduled: { label: 'Đã lên lịch', variant: 'info' as const },
-      ongoing: { label: 'Đang diễn ra', variant: 'success' as const },
-      completed: { label: 'Hoàn thành', variant: 'secondary' as const },
+      in_progress: { label: 'Đang diễn ra', variant: 'warning' as const },
       cancelled: { label: 'Đã hủy', variant: 'danger' as const },
+      in_exam: { label: 'Đang thi', variant: 'info' as const },
+      paid: { label: 'Đã thanh toán', variant: 'success' as const },
     };
     return statusMap[status as keyof typeof statusMap] || { label: status, variant: 'default' as const };
   };
@@ -241,11 +241,11 @@ export default function SchedulesPage() {
   // Statistics
   const statistics = useMemo(() => {
     const total = meta.total || 0;
-    const scheduled = assignments.filter(a => a.status === 'scheduled').length;
-    const ongoing = assignments.filter(a => a.status === 'ongoing').length;
-    const completed = assignments.filter(a => a.status === 'completed').length;
+    const inProgress = assignments.filter(a => a.status === 'in_progress').length;
+    const inExam = assignments.filter(a => a.status === 'in_exam').length;
+    const paid = assignments.filter(a => a.status === 'paid').length;
 
-    return { total, scheduled, ongoing, completed };
+    return { total, inProgress, inExam, paid };
   }, [assignments, meta.total]);
 
   return (
@@ -340,8 +340,20 @@ export default function SchedulesPage() {
               <ClockIcon className="w-6 h-6 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Đã lên lịch</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.scheduled}</p>
+              <p className="text-sm text-gray-600">Đang diễn ra</p>
+              <p className="text-2xl font-bold text-gray-900">{statistics.inProgress}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <AcademicCapIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Đang thi</p>
+              <p className="text-2xl font-bold text-gray-900">{statistics.inExam}</p>
             </div>
           </div>
         </Card>
@@ -349,23 +361,11 @@ export default function SchedulesPage() {
         <Card>
           <div className="flex items-center gap-4">
             <div className="p-3 bg-green-100 rounded-lg">
-              <AcademicCapIcon className="w-6 h-6 text-green-600" />
+              <UserGroupIcon className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Đang diễn ra</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.ongoing}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <UserGroupIcon className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Hoàn thành</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.completed}</p>
+              <p className="text-sm text-gray-600">Đã thanh toán</p>
+              <p className="text-2xl font-bold text-gray-900">{statistics.paid}</p>
             </div>
           </div>
         </Card>
@@ -395,10 +395,10 @@ export default function SchedulesPage() {
               onChange={(e) => handleFilterChange('status', e.target.value)}
               options={[
                 { value: '', label: 'Tất cả trạng thái' },
-                { value: 'scheduled', label: 'Đã lên lịch' },
-                { value: 'ongoing', label: 'Đang diễn ra' },
-                { value: 'completed', label: 'Hoàn thành' },
+                { value: 'in_progress', label: 'Đang diễn ra' },
                 { value: 'cancelled', label: 'Đã hủy' },
+                { value: 'in_exam', label: 'Đang thi' },
+                { value: 'paid', label: 'Đã thanh toán' },
               ]}
             />
 

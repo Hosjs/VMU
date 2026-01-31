@@ -5,14 +5,22 @@
  */
 export interface Major {
     id: number;
-    ma: string;
-    tenNganhHoc: string;
+    // Database columns
+    maNganh?: string;
+    tenNganh?: string;
+    thoi_gian_dao_tao?: number;
+    ghiChu?: string;
+
+    // Accessor aliases (from Model appends)
+    ma?: string;
+    tenNganhHoc?: string;
     mo_ta?: string;
     thoiGianDaoTao?: number;
     daoTaoThacSy?: boolean;
     daoTaoTienSy?: boolean;
     thoiGianDaoTaoThacSy?: number;
     thoiGianDaoTaoTienSy?: number;
+
     parent_id?: number | null;
     parent?: Major | null;
     children?: Major[];

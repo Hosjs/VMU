@@ -76,7 +76,6 @@ export const AVAILABLE_PERMISSIONS: PermissionMap = {
   // SẢN PHẨM & KHO
   products: ['view', 'create', 'edit', 'delete', 'view_cost', 'edit_price'],
   categories: ['view', 'create', 'edit', 'delete'],
-  warehouses: ['view', 'create', 'edit', 'delete', 'view_stock', 'adjust_stock'],
   stock_transfers: ['view', 'create', 'edit', 'delete', 'approve', 'receive'],
   stock_movements: ['view', 'export'],
   providers: ['view', 'create', 'edit', 'delete'],
@@ -340,7 +339,6 @@ export function formatPermission(permission: string): string {
     invoices: 'hóa đơn',
     payments: 'thanh toán',
     settlements: 'đối soát',
-    warehouses: 'kho',
     stocks: 'tồn kho',
     providers: 'nhà cung cấp',
     reports: 'báo cáo',
@@ -382,7 +380,6 @@ export function getModuleLabel(module: string): string {
     invoices: 'Hóa đơn',
     payments: 'Thanh toán',
     settlements: 'Đối soát',
-    warehouses: 'Kho',
     stocks: 'Tồn kho',
     providers: 'Nhà cung cấp',
     reports: 'Báo cáo',
