@@ -1,8 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { teachingAssignmentService } from '~/services/teaching-assignment.service';
+import { teachingSessionService } from '~/services/teaching-session.service';
 import { lecturerService } from '~/services/lecturer.service';
 import { useAsync } from '~/hooks/useAsync';
+import { useModal } from '~/hooks/useModal';
 import type { TeachingAssignment } from '~/types/teaching-assignment';
+import type { TeachingSession } from '~/types/teaching-session';
 import type { Lecturer } from '~/types/lecturer';
 import type { PaginatedResponse } from '~/types/common';
 import { formatters } from '~/utils/formatters';
@@ -13,10 +16,15 @@ import {
   ClockIcon,
   AcademicCapIcon,
   MapPinIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Card } from '~/components/ui/Card';
 import { Select } from '~/components/ui/Select';
+import { Modal } from '~/components/ui/Modal';
+import { Input } from '~/components/ui/Input';
+import { Toast } from '~/components/ui/Toast';
+import type { ToastType } from '~/components/ui/Toast';
 
 export function meta() {
   return [
@@ -31,6 +39,13 @@ export default function LecturerCalendarPage() {
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedLecturerId, setSelectedLecturerId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  // Reschedule modal state
+  const rescheduleModal = useModal();
+  const [sessionToReschedule, setSessionToReschedule] = useState<TeachingSession | null>(null);
+  const [newDate, setNewDate] = useState<string>('');
+  const [isRescheduling, setIsRescheduling] = useState(false);
 
   // Load lecturers
   const lecturersAsync = useAsync(
@@ -38,15 +53,15 @@ export default function LecturerCalendarPage() {
     { immediate: true }
   );
 
-  // State for schedule data
-  const [scheduleData, setScheduleData] = useState<PaginatedResponse<TeachingAssignment> | null>(null);
+  // State for schedule data (now using sessions)
+  const [sessionsData, setSessionsData] = useState<PaginatedResponse<TeachingSession> | null>(null);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
 
   // Load schedule when lecturer or month changes
   useEffect(() => {
     const loadSchedule = async () => {
       if (!selectedLecturerId) {
-        setScheduleData(null);
+        setSessionsData(null);
         return;
       }
 
@@ -57,7 +72,7 @@ export default function LecturerCalendarPage() {
         const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
         const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
-        console.log('📅 Loading calendar for:', {
+        console.log('📅 Loading sessions for:', {
           lecturerId: selectedLecturerId,
           month: selectedMonth,
           year: selectedYear,
@@ -65,24 +80,19 @@ export default function LecturerCalendarPage() {
           endDate,
         });
 
-        // Fetch assignments for this lecturer and month
-        const result = await teachingAssignmentService.getList({
-          page: 1,
-          per_page: 1000, // Get all assignments
-          filters: {
-            lecturer_id: selectedLecturerId,
-            start_date: startDate,
-            end_date: endDate,
-          }
-        });
+        // Fetch sessions for this lecturer and month
+        const result = await teachingSessionService.getLecturerSessions(
+          selectedLecturerId,
+          startDate,
+          endDate
+        );
 
-        console.log('📊 Received data:', result);
-        console.log('📋 Assignments count:', result.data?.length || 0);
+        console.log('📊 Received sessions:', result.data?.length || 0);
 
-        setScheduleData(result);
+        setSessionsData(result);
       } catch (error) {
-        console.error('❌ Error loading schedule:', error);
-        setScheduleData(null);
+        console.error('❌ Error loading sessions:', error);
+        setSessionsData(null);
       } finally {
         setIsLoadingSchedule(false);
       }
@@ -91,117 +101,57 @@ export default function LecturerCalendarPage() {
     loadSchedule();
   }, [selectedLecturerId, selectedMonth, selectedYear]);
 
-  // Get days in month
+  // Get days in month - ONLY current month days
   const daysInMonth = useMemo(() => {
     const firstDay = new Date(selectedYear, selectedMonth - 1, 1);
     const lastDay = new Date(selectedYear, selectedMonth, 0);
     const daysArray: Date[] = [];
 
-    // Add previous month days to fill the first week
-    const firstDayOfWeek = firstDay.getDay();
-    const daysToAdd = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Monday = 0
-    for (let i = daysToAdd; i > 0; i--) {
-      const day = new Date(selectedYear, selectedMonth - 1, -i + 1);
-      daysArray.push(day);
-    }
-
-    // Add current month days
+    // Only add current month days (no prev/next month padding)
     for (let i = 1; i <= lastDay.getDate(); i++) {
       daysArray.push(new Date(selectedYear, selectedMonth - 1, i));
     }
 
-    // Add next month days to complete the grid
-    const remainingDays = 42 - daysArray.length; // 6 weeks * 7 days
-    for (let i = 1; i <= remainingDays; i++) {
-      daysArray.push(new Date(selectedYear, selectedMonth, i));
-    }
 
     return daysArray;
   }, [selectedMonth, selectedYear]);
 
-  // Get assignments by date
-  const assignmentsByDate = useMemo(() => {
-    const map: Record<string, TeachingAssignment[]> = {};
-    const assignments = scheduleData?.data || [];
+  // Get sessions by date - MUCH SIMPLER with sessions!
+  const sessionsByDate = useMemo(() => {
+    const map: Record<string, TeachingSession[]> = {};
+    const sessions = sessionsData?.data || [];
 
-    if (assignments && assignments.length > 0) {
-      console.log('📅 Processing assignments:', assignments.length);
+    console.log('🔍 sessionsByDate memo running', {
+      sessionsDataExists: !!sessionsData,
+      sessionsCount: sessions.length,
+      selectedMonth,
+      selectedYear,
+    });
 
-      assignments.forEach((assignment: TeachingAssignment) => {
-        console.log('📋 Assignment:', {
-          id: assignment.id,
-          course: assignment.course_name,
-          day_of_week: assignment.day_of_week,
-          start_date: assignment.start_date,
-          end_date: assignment.end_date,
-        });
+    if (sessions && sessions.length > 0) {
+      console.log('📅 Processing sessions:', sessions.length);
 
-        // ✅ Parse date WITHOUT timezone offset (treat as local date)
-        // Extract YYYY-MM-DD from ISO string
-        const startDateStr = assignment.start_date.split('T')[0]; // "2026-01-23"
-        const endDateStr = assignment.end_date.split('T')[0];     // "2026-02-08"
+      sessions.forEach((session: TeachingSession) => {
+        // Session already has exact date!
+        const dateStr = session.session_date.split('T')[0]; // "2026-01-20"
 
-        const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
-        const [endYear, endMonth, endDay] = endDateStr.split('-').map(Number);
-
-        const start = new Date(startYear, startMonth - 1, startDay);
-        const end = new Date(endYear, endMonth - 1, endDay);
-
-        console.log('📅 Parsed dates:', {
-          start: start.toISOString().split('T')[0],
-          end: end.toISOString().split('T')[0],
-          startDay: start.getDay(),
-          endDay: end.getDay()
-        });
-
-        // Map day_of_week to JS day number
-        const dayMapping: Record<string, number> = {
-          'sunday': 0,
-          'monday': 1,
-          'tuesday': 2,
-          'wednesday': 3,
-          'thursday': 4,
-          'friday': 5,
-          'saturday': 6,
-        };
-
-        const targetDay = dayMapping[assignment.day_of_week];
-
-        if (targetDay === undefined) {
-          console.warn('⚠️ Unknown day_of_week:', assignment.day_of_week);
-          return;
+        if (!map[dateStr]) {
+          map[dateStr] = [];
         }
+        map[dateStr].push(session);
 
-        // For each day in the assignment range
-        let currentDate = new Date(start);
-        while (currentDate <= end) {
-          const dayOfWeek = currentDate.getDay();
-
-          // Only add if day matches
-          if (dayOfWeek === targetDay) {
-            const year = currentDate.getFullYear();
-            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-            const day = String(currentDate.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-
-            if (!map[dateStr]) {
-              map[dateStr] = [];
-            }
-            map[dateStr].push(assignment);
-            console.log('✅ Added assignment to date:', dateStr, 'day:', assignment.day_of_week, 'dayOfWeek:', dayOfWeek);
-          }
-
-          // Move to next day
-          currentDate = new Date(currentDate);
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
+        // Backend returns snake_case
+        const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
+        console.log('✅ Added session to date:', dateStr, 'course:', teachingAssignment?.course_name);
       });
 
-      console.log('📅 Assignments by date:', map);
-      console.log('📅 Dates with assignments:', Object.keys(map));
+      console.log('📅 Sessions by date:', Object.keys(map).length, 'dates');
+      console.log('📅 Dates:', Object.keys(map).sort());
+    } else {
+      console.log('⚠️ No sessions data to process');
     }
     return map;
-  }, [scheduleData]);
+  }, [sessionsData, selectedMonth, selectedYear]);
 
   // Navigate months
   const goToPreviousMonth = () => {
@@ -244,25 +194,61 @@ export default function LecturerCalendarPage() {
            date.getFullYear() === today.getFullYear();
   };
 
-  // Check if date is in current month
-  const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === selectedMonth - 1;
-  };
-
-  // Get assignments for a date
-  const getAssignmentsForDate = (date: Date): TeachingAssignment[] => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-    return assignmentsByDate[dateStr] || [];
-  };
-
-  // Get assignments for selected date
-  const selectedDateAssignments = useMemo(() => {
+  // Get sessions for selected date
+  const selectedDateSessions = useMemo(() => {
     if (!selectedDate) return [];
-    return assignmentsByDate[selectedDate] || [];
-  }, [selectedDate, assignmentsByDate]);
+    return sessionsByDate[selectedDate] || [];
+  }, [selectedDate, sessionsByDate]);
+
+  // Handle reschedule
+  const handleRescheduleClick = (session: TeachingSession) => {
+    setSessionToReschedule(session);
+    setNewDate('');
+    rescheduleModal.open();
+  };
+
+  const handleRescheduleSubmit = async () => {
+    if (!sessionToReschedule || !newDate) {
+      setToast({ message: 'Vui lòng chọn ngày mới', type: 'error' });
+      return;
+    }
+
+    setIsRescheduling(true);
+    try {
+      console.log('🔄 Rescheduling session:', {
+        sessionId: sessionToReschedule.id,
+        oldDate: sessionToReschedule.session_date,
+        newDate: newDate,
+      });
+
+      // Update the session with new date
+      await teachingSessionService.update(sessionToReschedule.id, {
+        session_date: newDate,
+        status: 'rescheduled',
+      } as any);
+
+      setToast({ message: 'Đã đổi lịch thành công', type: 'success' });
+      rescheduleModal.close();
+
+      // Reload sessions
+      const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+      const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+      const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      const result = await teachingSessionService.getLecturerSessions(
+        selectedLecturerId!,
+        startDate,
+        endDate
+      );
+      setSessionsData(result);
+      setSelectedDate(null);
+    } catch (error: any) {
+      console.error('❌ Error rescheduling:', error);
+      setToast({ message: error.message || 'Có lỗi xảy ra khi đổi lịch', type: 'error' });
+    } finally {
+      setIsRescheduling(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -353,61 +339,86 @@ export default function LecturerCalendarPage() {
                   ))}
                 </div>
 
-                {/* Calendar days */}
+                {/* Calendar days - organized by weeks */}
                 <div className="grid grid-cols-7">
+                  {/* Empty cells for days before first day of month */}
+                  {(() => {
+                    const firstDayOfMonth = new Date(selectedYear, selectedMonth - 1, 1);
+                    const firstDayOfWeek = firstDayOfMonth.getDay();
+                    // Convert Sunday=0 to Monday=0 system
+                    const emptyCells = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                    return Array.from({ length: emptyCells }).map((_, index) => (
+                      <div key={`empty-${index}`} className="min-h-[80px] border-r border-b bg-gray-50/30"></div>
+                    ));
+                  })()}
+
+                  {/* Actual days of the month */}
                   {daysInMonth.map((date, index) => {
                     const year = date.getFullYear();
                     const month = String(date.getMonth() + 1).padStart(2, '0');
                     const day = String(date.getDate()).padStart(2, '0');
                     const dateStr = `${year}-${month}-${day}`;
 
-                    const assignments = getAssignmentsForDate(date);
-                    const hasAssignments = assignments.length > 0;
+                    const sessions = sessionsByDate[dateStr] || [];
+                    const hasSessions = sessions.length > 0;
                     const isTodayDate = isToday(date);
-                    const isInCurrentMonth = isCurrentMonth(date);
+
+                    // Debug log for first few days
+                    if (index < 5) {
+                      console.log(`📆 Date ${dateStr}:`, {
+                        hasSessions,
+                        sessionsCount: sessions.length,
+                        sessions: sessions.map(s => ({
+                          id: s.id,
+                          date: s.session_date,
+                          course: s.teachingAssignment?.course_name
+                        }))
+                      });
+                    }
 
                     return (
                       <div
                         key={index}
-                        className={`min-h-[70px] border-r border-b last:border-r-0 p-1.5 cursor-pointer transition-all duration-200 ${
-                          !isInCurrentMonth ? 'bg-gray-50/50' : 'bg-white hover:bg-blue-50/30'
-                        } ${
+                        className={`min-h-[80px] border-r border-b p-2 cursor-pointer transition-all duration-200 bg-white hover:bg-blue-50/30 ${
                           selectedDate === dateStr ? 'ring-2 ring-blue-400 bg-blue-50/50' : ''
                         }`}
                         onClick={() => setSelectedDate(dateStr)}
                       >
                         <div className="flex flex-col h-full">
-                          <div className={`text-xs font-semibold mb-0.5 inline-flex items-center justify-center ${
+                          <div className={`text-sm font-semibold mb-1 inline-flex items-center justify-center ${
                             isTodayDate 
-                              ? 'bg-blue-500 text-white w-6 h-6 rounded-full' 
-                              : hasAssignments 
-                                ? 'bg-red-500 text-white w-6 h-6 rounded-full'
-                                : !isInCurrentMonth 
-                                  ? 'text-gray-400' 
-                                  : 'text-gray-700'
+                              ? 'bg-blue-500 text-white w-7 h-7 rounded-full' 
+                              : hasSessions 
+                                ? 'bg-red-500 text-white w-7 h-7 rounded-full'
+                                : 'text-gray-700'
                           }`}>
                             {date.getDate()}
                           </div>
 
-                          {hasAssignments && (
-                            <div className="space-y-0.5 flex-1 overflow-hidden">
-                              {assignments.slice(0, 1).map((assignment, idx) => (
-                                <div
-                                  key={idx}
-                                  className="text-[10px] bg-red-50 border border-red-200 rounded px-1 py-0.5 truncate"
-                                  title={`${assignment.course_name} - ${formatters.formatTime(assignment.start_time)}-${formatters.formatTime(assignment.end_time)}`}
-                                >
-                                  <div className="font-medium text-red-900 truncate">
-                                    {assignment.course_name}
+                          {hasSessions && (
+                            <div className="space-y-1 flex-1 overflow-hidden">
+                              {sessions.slice(0, 2).map((session, idx) => {
+                                // Backend returns snake_case
+                                const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
+                                const courseName = teachingAssignment?.course_name || 'Không rõ';
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="text-[10px] bg-red-50 border border-red-200 rounded px-1.5 py-0.5 truncate"
+                                    title={`${courseName} - ${formatters.formatTime(session.start_time)}-${formatters.formatTime(session.end_time)}`}
+                                  >
+                                    <div className="font-medium text-red-900 truncate">
+                                      {courseName}
+                                    </div>
+                                    <div className="text-red-700 truncate">
+                                      {formatters.formatTime(session.start_time)}
+                                    </div>
                                   </div>
-                                  <div className="text-red-700 truncate">
-                                    {formatters.formatTime(assignment.start_time)}
-                                  </div>
-                                </div>
-                              ))}
-                              {assignments.length > 1 && (
+                                );
+                              })}
+                              {sessions.length > 2 && (
                                 <div className="text-[10px] text-red-600 font-semibold px-1">
-                                  +{assignments.length - 1} lớp
+                                  +{sessions.length - 2} buổi
                                 </div>
                               )}
                             </div>
@@ -434,76 +445,92 @@ export default function LecturerCalendarPage() {
           </Card>
 
           {/* Selected Date Details */}
-          {selectedDate && selectedDateAssignments.length > 0 && (
+          {selectedDate && selectedDateSessions.length > 0 && (
             <Card>
               <div className="p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                   Chi tiết lịch giảng dạy - {formatters.formatDate(selectedDate)}
                 </h3>
                 <div className="space-y-4">
-                  {selectedDateAssignments.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="border rounded-lg p-4 hover:border-blue-300 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-900 mb-2">
-                            {assignment.course_name}
-                          </h4>
-                          <div className="space-y-2 text-sm">
-                            {assignment.course_code && (
-                              <div className="flex items-center gap-2 text-gray-600">
-                                <AcademicCapIcon className="w-4 h-4" />
-                                <span>Mã HP: {assignment.course_code}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-gray-600">
-                              <ClockIcon className="w-4 h-4" />
-                              <span>
-                                {formatters.formatTime(assignment.start_time)} - {formatters.formatTime(assignment.end_time)}
+                  {selectedDateSessions.map((session) => {
+                    // Backend returns snake_case, so we need to access it correctly
+                    const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
+                    const courseName = teachingAssignment?.course_name || 'Không rõ';
+                    const courseCode = teachingAssignment?.course_code;
+
+                    return (
+                      <div
+                        key={session.id}
+                        className="border rounded-lg p-4 hover:border-blue-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-bold text-gray-900">
+                                {courseName}
+                              </h4>
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                                Buổi #{session.session_number}
                               </span>
                             </div>
-                            {assignment.room && (
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              {courseCode && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <AcademicCapIcon className="w-4 h-4 flex-shrink-0" />
+                                  <span>Mã HP: {courseCode}</span>
+                                </div>
+                              )}
                               <div className="flex items-center gap-2 text-gray-600">
-                                <MapPinIcon className="w-4 h-4" />
-                                <span>Phòng: {assignment.room}</span>
+                                <ClockIcon className="w-4 h-4 flex-shrink-0" />
+                                <span>
+                                  {formatters.formatTime(session.start_time)} - {formatters.formatTime(session.end_time)}
+                                </span>
                               </div>
-                            )}
-                            {assignment.class_name && (
-                              <div className="text-gray-600">
-                                Lớp: {assignment.class_name}
-                              </div>
-                            )}
-                            {assignment.student_count > 0 && (
-                              <div className="text-gray-600">
-                                Số sinh viên: {assignment.student_count}
-                              </div>
-                            )}
-                            {assignment.notes && (
-                              <div className="text-gray-600">
-                                Ghi chú: {assignment.notes}
-                              </div>
-                            )}
+                              {session.room && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                                  <span>Phòng: {session.room}</span>
+                                </div>
+                              )}
+                              {session.notes && (
+                                <div className="text-gray-600 col-span-2">
+                                  Ghi chú: {session.notes}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              session.status === 'scheduled' 
+                                ? 'bg-blue-100 text-blue-800'
+                                : session.status === 'in_progress'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : session.status === 'completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : session.status === 'cancelled'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {session.status === 'scheduled' && 'Đã lên lịch'}
+                              {session.status === 'in_progress' && 'Đang diễn ra'}
+                              {session.status === 'completed' && 'Đã hoàn thành'}
+                              {session.status === 'cancelled' && 'Đã hủy'}
+                              {session.status === 'rescheduled' && 'Đã đổi lịch'}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRescheduleClick(session)}
+                              className="flex items-center gap-1"
+                            >
+                              <ArrowPathIcon className="w-4 h-4" />
+                              Đổi lịch
+                            </Button>
                           </div>
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          assignment.status === 'in_progress' 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : assignment.status === 'cancelled'
-                              ? 'bg-red-100 text-red-800'
-                              : assignment.status === 'in_exam'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-green-100 text-green-800'
-                        }`}>
-                          {assignment.status === 'in_progress' && 'Đang diễn ra'}
-                          {assignment.status === 'cancelled' && 'Đã hủy'}
-                          {assignment.status === 'in_exam' && 'Đang thi'}
-                          {assignment.status === 'paid' && 'Đã thanh toán'}
-                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </Card>
@@ -517,7 +544,7 @@ export default function LecturerCalendarPage() {
           )}
 
           {/* Empty state */}
-          {!isLoadingSchedule && scheduleData?.data && scheduleData.data.length === 0 && (
+          {!isLoadingSchedule && sessionsData?.data && sessionsData.data.length === 0 && (
             <Card>
               <div className="p-8 text-center text-gray-500">
                 Không có lịch giảng dạy trong tháng này
@@ -534,6 +561,190 @@ export default function LecturerCalendarPage() {
             Vui lòng chọn giảng viên để xem lịch giảng dạy
           </div>
         </Card>
+      )}
+
+      {/* Reschedule Modal */}
+      <Modal
+        isOpen={rescheduleModal.isOpen}
+        onClose={rescheduleModal.close}
+        title="Đổi lịch buổi học"
+      >
+        {sessionToReschedule && (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-semibold text-gray-900">
+                  {((sessionToReschedule as any).teaching_assignment || sessionToReschedule.teachingAssignment)?.course_name || 'Không rõ'}
+                </h4>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                  Buổi #{sessionToReschedule.session_number}
+                </span>
+              </div>
+              <div className="text-sm text-gray-600 space-y-1">
+                <div>
+                  <span className="font-medium">Ngày hiện tại:</span> {formatters.formatDate(sessionToReschedule.session_date)}
+                </div>
+                <div>
+                  <span className="font-medium">Thời gian:</span> {formatters.formatTime(sessionToReschedule.start_time)} - {formatters.formatTime(sessionToReschedule.end_time)}
+                </div>
+                {sessionToReschedule.room && (
+                  <div>
+                    <span className="font-medium">Phòng:</span> {sessionToReschedule.room}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Input
+              label="Chọn ngày mới"
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              required
+            />
+
+            <div className="text-xs text-gray-500">
+              💡 Chỉ buổi học này sẽ được đổi lịch, các buổi khác không bị ảnh hưởng
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={rescheduleModal.close}
+                disabled={isRescheduling}
+              >
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleRescheduleSubmit}
+                disabled={isRescheduling || !newDate}
+              >
+                {isRescheduling ? 'Đang xử lý...' : 'Xác nhận đổi lịch'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Teaching History Tracking Table */}
+      {selectedLecturerId && sessionsData?.data && sessionsData.data.length > 0 && (
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-blue-600" />
+              Bảng theo dõi buổi học trong tháng
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="text-left p-3 font-semibold text-gray-700">STT</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Buổi</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Môn học</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Mã HP</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Ngày học</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Thời gian</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Phòng</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessionsData.data.map((session, index) => {
+                    // Backend returns snake_case, so we need to access it correctly
+                    const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
+                    const courseName = teachingAssignment?.course_name || 'Không rõ';
+                    const courseCode = teachingAssignment?.course_code;
+
+                    return (
+                      <tr key={session.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="p-3 text-gray-600">{index + 1}</td>
+                        <td className="p-3">
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                            #{session.session_number}
+                          </span>
+                        </td>
+                        <td className="p-3 font-medium text-gray-900">{courseName}</td>
+                        <td className="p-3 text-gray-600">{courseCode || '-'}</td>
+                        <td className="p-3 text-gray-600">
+                          {formatters.formatDate(session.session_date)}
+                        </td>
+                        <td className="p-3 text-gray-600">
+                          <div className="text-xs">
+                            {formatters.formatTime(session.start_time)} - {formatters.formatTime(session.end_time)}
+                          </div>
+                        </td>
+                        <td className="p-3 text-gray-600">{session.room || '-'}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            session.status === 'scheduled' 
+                              ? 'bg-blue-100 text-blue-800'
+                              : session.status === 'in_progress'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : session.status === 'completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : session.status === 'cancelled'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {session.status === 'scheduled' && 'Đã lên lịch'}
+                            {session.status === 'in_progress' && 'Đang diễn ra'}
+                            {session.status === 'completed' && 'Hoàn thành'}
+                            {session.status === 'cancelled' && 'Đã hủy'}
+                            {session.status === 'rescheduled' && 'Đã đổi lịch'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Summary */}
+            <div className="mt-4 pt-4 border-t bg-gray-50 rounded-lg p-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                <div>
+                  <div className="text-gray-600">Tổng buổi học</div>
+                  <div className="text-xl font-bold text-gray-900">{sessionsData.data.length}</div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Đã lên lịch</div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {sessionsData.data.filter(s => s.status === 'scheduled').length}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Đang diễn ra</div>
+                  <div className="text-xl font-bold text-yellow-600">
+                    {sessionsData.data.filter(s => s.status === 'in_progress').length}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Hoàn thành</div>
+                  <div className="text-xl font-bold text-green-600">
+                    {sessionsData.data.filter(s => s.status === 'completed').length}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Đã đổi lịch</div>
+                  <div className="text-xl font-bold text-purple-600">
+                    {sessionsData.data.filter(s => s.status === 'rescheduled').length}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

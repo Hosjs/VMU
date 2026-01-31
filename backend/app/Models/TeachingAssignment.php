@@ -74,6 +74,14 @@ class TeachingAssignment extends Model
     }
 
     /**
+     * Relationship: Assignment has many Sessions
+     */
+    public function sessions()
+    {
+        return $this->hasMany(TeachingSession::class);
+    }
+
+    /**
      * Scope: Filter by lecturer
      */
     public function scopeByLecturer($query, $lecturerId)

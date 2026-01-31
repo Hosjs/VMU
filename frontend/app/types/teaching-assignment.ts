@@ -1,5 +1,7 @@
 import type { Lecturer } from './lecturer';
 
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
 export interface TeachingAssignment {
   id: number;
   lecturer_id: number;
@@ -8,14 +10,14 @@ export interface TeachingAssignment {
   credits: number;
   start_date: string;
   end_date: string;
-  day_of_week: 'saturday' | 'sunday';
+  day_of_week: DayOfWeek;
   start_time: string;
   end_time: string;
   room?: string;
   class_name?: string;
   class_id?: number | string;  // Add class_id for linking to student list
   student_count: number;
-  status: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
+  status: 'in_progress' | 'cancelled' | 'in_exam' | 'paid';
   notes?: string;
   created_at?: string;
   updated_at?: string;
@@ -23,7 +25,7 @@ export interface TeachingAssignment {
 }
 
 export interface DaySchedule {
-  day_of_week: 'saturday' | 'sunday';
+  day_of_week: DayOfWeek;
   start_time: string;
   end_time: string;
   room?: string;
@@ -39,14 +41,14 @@ export interface TeachingAssignmentFormData {
   days_schedule: DaySchedule[];
   class_name?: string;
   student_count?: number;
-  status?: 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
+  status?: 'in_progress' | 'cancelled' | 'in_exam' | 'paid';
   notes?: string;
 }
 
 export interface TeachingAssignmentFilters {
   lecturer_id?: number;
   status?: string;
-  day_of_week?: 'saturday' | 'sunday';
+  day_of_week?: DayOfWeek;
   start_date?: string;
   end_date?: string;
   search?: string;
@@ -57,16 +59,16 @@ export const DayOfWeekLabels: Record<'saturday' | 'sunday', string> = {
   sunday: 'Chủ nhật',
 };
 
-export const StatusLabels: Record<'scheduled' | 'ongoing' | 'completed' | 'cancelled', string> = {
-  scheduled: 'Đã lên lịch',
-  ongoing: 'Đang diễn ra',
-  completed: 'Đã hoàn thành',
+export const StatusLabels: Record<'in_progress' | 'cancelled' | 'in_exam' | 'paid', string> = {
+  in_progress: 'Đang diễn ra',
   cancelled: 'Đã hủy',
+  in_exam: 'Đang thi',
+  paid: 'Đã thanh toán',
 };
 
-export const StatusColors: Record<'scheduled' | 'ongoing' | 'completed' | 'cancelled', 'info' | 'success' | 'warning' | 'danger'> = {
-  scheduled: 'info',
-  ongoing: 'warning',
-  completed: 'success',
+export const StatusColors: Record<'in_progress' | 'cancelled' | 'in_exam' | 'paid', 'info' | 'success' | 'warning' | 'danger'> = {
+  in_progress: 'warning',
   cancelled: 'danger',
+  in_exam: 'info',
+  paid: 'success',
 };
