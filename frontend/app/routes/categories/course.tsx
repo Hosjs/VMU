@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { roomService } from '~/services/room.service';
+import { majorService } from '~/services/major.service';
 import { useTable } from '~/hooks/useTable';
 import { useForm } from '~/hooks/useForm';
 import type { Room } from '~/types/room';
+import type { Major } from '~/types/major';
 import type { TableQueryParams, PaginatedResponse } from '~/types/common';
 import {
     AcademicCapIcon,
@@ -20,12 +22,28 @@ import { Pagination } from '~/components/ui/Pagination';
 
 export function meta() {
     return [
-        { title: "Danh sách phòng học - VMU Training" },
-        { name: "description", content: "Quản lý thông tin phòng học/lớp học" },
+        { title: "Danh sách lớp học - VMU Training" },
+        { name: "description", content: "Quản lý thông tin lớp học theo ngành và khóa học" },
     ];
 }
 
 export default function RoomPage() {
+    // State for majors list
+    const [majors, setMajors] = useState<Major[]>([]);
+
+    // Load majors on component mount
+    useEffect(() => {
+        const loadMajors = async () => {
+            try {
+                const majorsList = await majorService.getAllMajors();
+                setMajors(majorsList);
+            } catch (error) {
+                console.error('Error loading majors:', error);
+            }
+        };
+        loadMajors();
+    }, []);
+
     // ============================================
     // FORM for search
     // ============================================
@@ -105,6 +123,53 @@ export default function RoomPage() {
     });
 
     // ============================================
+    // HELPERS
+    // ============================================
+    const getMajorName = (room: Room): string => {
+        // Prioritize major_name from API join
+        if (room.major_name) {
+            return room.major_name;
+        }
+
+        // Fallback to local mapping if needed
+        const majorId = room.major_id || room.maNganhHoc;
+        if (!majorId) return '-';
+
+        // Try to find major by ID or code
+        const major = majors.find(m =>
+            m.id.toString() === majorId.toString() ||
+            m.ma === majorId ||
+            m.maNganh === majorId
+        );
+
+        if (major) {
+            return major.tenNganhHoc || major.tenNganh || majorId;
+        }
+
+        return majorId;
+    };
+
+    const getAcademicYear = (room: Room): string => {
+        // Prioritize nam_hoc from API join
+        if (room.nam_hoc) {
+            // Display single year (e.g., 2024)
+            return room.nam_hoc.toString();
+        }
+
+        // Fallback for old data
+        const year = room.khoaHoc_id || room.khoaHoc;
+        if (!year) return '-';
+
+        // If year looks like a full year (>= 2000), use it
+        if (year >= 2000) {
+            return year.toString();
+        }
+
+        // Otherwise it's probably a course ID, show as is
+        return `Khóa ${year}`;
+    };
+
+    // ============================================
     // TABLE COLUMNS CONFIGURATION
     // ============================================
     const columns = useMemo(() => [
@@ -135,29 +200,29 @@ export default function RoomPage() {
             sortable: true,
             render: (item: Room) => (
                 <div className="text-sm font-medium text-gray-900">
-                    {item.tenLop || '-'}
+                    {item.tenLop || item.class_name || '-'}
                 </div>
             ),
         },
         {
             key: 'khoaHoc',
-            label: 'Khóa học',
+            label: 'Năm học',
             sortable: true,
-            width: '100px',
+            width: '120px',
             render: (item: Room) => (
                 <Badge variant="info">
-                    {item.khoaHoc}
+                    {getAcademicYear(item)}
                 </Badge>
             ),
         },
         {
             key: 'maNganhHoc',
-            label: 'Mã ngành',
-            width: '120px',
+            label: 'Ngành học',
+            width: '200px',
             render: (item: Room) => (
-                <span className="text-sm text-gray-600">
-          {item.maNganhHoc || '-'}
-        </span>
+                <div className="text-sm text-gray-700 font-medium">
+                    {getMajorName(item)}
+                </div>
             ),
         },
         {
@@ -194,7 +259,7 @@ export default function RoomPage() {
                 </div>
             ),
         },
-    ], [table.meta.current_page, table.meta.per_page]);
+    ], [table.meta.current_page, table.meta.per_page, majors]);
 
     // ============================================
     // HANDLERS
@@ -220,8 +285,8 @@ export default function RoomPage() {
                         <AcademicCapIcon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Danh sách học phần</h1>
-                        <p className="text-sm text-gray-500">Quản lý thông tin học phần</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Danh sách lớp học</h1>
+                        <p className="text-sm text-gray-500">Quản lý thông tin lớp học theo ngành và năm học</p>
                     </div>
                 </div>
 
@@ -247,13 +312,13 @@ export default function RoomPage() {
                         {/* Search Input */}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Tìm kiếm phòng học
+                                Tìm kiếm lớp học
                             </label>
                             <div className="relative">
                                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                 <Input
                                     type="text"
-                                    placeholder="Tìm theo tên lớp, GVCN, mã ngành, khóa học..."
+                                    placeholder="Tìm theo tên lớp, GVCN, ngành học, năm học..."
                                     value={searchForm.values.search}
                                     onChange={(e) => searchForm.handleChange('search', e.target.value)}
                                     onKeyDown={(e) => {
@@ -310,7 +375,7 @@ export default function RoomPage() {
                 <div className="p-4 space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-gray-900">
-                            Danh sách phòng học
+                            Danh sách lớp học
                         </h2>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                             <span>Hiển thị:</span>
@@ -336,8 +401,8 @@ export default function RoomPage() {
                         isLoading={table.isLoading}
                         emptyMessage={
                             searchForm.values.search
-                                ? `Không tìm thấy phòng học nào với từ khóa "${searchForm.values.search}"`
-                                : 'Chưa có dữ liệu phòng học'
+                                ? `Không tìm thấy lớp học nào với từ khóa "${searchForm.values.search}"`
+                                : 'Chưa có dữ liệu lớp học'
                         }
                         onSort={table.handleSort}
                         sortBy={table.sortBy}

@@ -204,6 +204,25 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/{id}', [TeachingAssignmentController::class, 'destroy'])->middleware('permission:teaching_assignments.delete');
     });
 
+    // Teaching Sessions Management (quản lý từng buổi học)
+    Route::prefix('teaching-sessions')->group(function () {
+        // Public routes - xem danh sách sessions
+        Route::get('/', [App\Http\Controllers\Api\TeachingSessionController::class, 'index']);
+        Route::get('/{id}', [App\Http\Controllers\Api\TeachingSessionController::class, 'show']);
+
+        // Protected routes - CRUD sessions
+        Route::post('/', [App\Http\Controllers\Api\TeachingSessionController::class, 'store'])
+            ->middleware('permission:teaching_assignments.create');
+        Route::put('/{id}', [App\Http\Controllers\Api\TeachingSessionController::class, 'update'])
+            ->middleware('permission:teaching_assignments.edit');
+        Route::delete('/{id}', [App\Http\Controllers\Api\TeachingSessionController::class, 'destroy'])
+            ->middleware('permission:teaching_assignments.delete');
+
+        // Generate sessions từ assignment
+        Route::post('/generate/{assignmentId}', [App\Http\Controllers\Api\TeachingSessionController::class, 'generateSessions'])
+            ->middleware('permission:teaching_assignments.create');
+    });
+
     Route::prefix('education-levels')->group(function () {
         Route::post('/', [EducationLevelController::class, 'store'])->middleware('permission:education_levels.create');
         Route::put('/{id}', [EducationLevelController::class, 'update'])->middleware('permission:education_levels.edit');

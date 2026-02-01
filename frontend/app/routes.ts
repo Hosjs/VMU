@@ -20,6 +20,7 @@ export default [
     //lecturer routes
     route("lecturers", "routes/lecturer/lecturers.tsx"),
     route("lecturer/assignments", "routes/lecturer/assignments.tsx"),
+    route("lecturer/calendar", "routes/lecturer/calendar.tsx"),
     route("lecturer/class-students/:classId", "routes/lecturer/class-students.$classId.tsx"),
     route("teachers/salaries", "routes/lecturer/teacher-salaries.tsx"),
 

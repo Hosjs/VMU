@@ -16,33 +16,44 @@ class ClassController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = DB::table('classes');
+            // Join với khoa_hoc và majors để lấy thông tin đầy đủ
+            $query = DB::table('classes')
+                ->leftJoin('khoa_hoc', 'classes.khoaHoc_id', '=', 'khoa_hoc.id')
+                ->leftJoin('majors', 'classes.major_id', '=', 'majors.id')
+                ->select(
+                    'classes.*',
+                    'khoa_hoc.nam_hoc',
+                    'khoa_hoc.ma_khoa_hoc',
+                    'majors.maNganh as major_code',
+                    'majors.tenNganh as major_name'
+                );
 
             // Search
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
-                    $q->where('class_name', 'like', "%{$search}%")
-                      ->orWhere('khoaHoc_id', 'like', "%{$search}%")
-                      ->orWhere('major_id', 'like', "%{$search}%");
+                    $q->where('classes.class_name', 'like', "%{$search}%")
+                      ->orWhere('majors.tenNganhHoc', 'like', "%{$search}%")
+                      ->orWhere('majors.ma', 'like', "%{$search}%")
+                      ->orWhere('khoa_hoc.nam_hoc', 'like', "%{$search}%");
                 });
             }
 
             // Filter by trình độ đào tạo
             if ($request->has('maTrinhDoDaoTao')) {
-                $query->where('maTrinhDoDaoTao', $request->maTrinhDoDaoTao);
+                $query->where('classes.maTrinhDoDaoTao', $request->maTrinhDoDaoTao);
             }
 
             // Filter by ngành học
             if ($request->has('maNganhHoc') || $request->has('major_id')) {
                 $majorId = $request->maNganhHoc ?? $request->major_id;
-                $query->where('major_id', $majorId);
+                $query->where('classes.major_id', $majorId);
             }
 
             // Filter by khóa học
             if ($request->has('khoaHoc') || $request->has('khoaHoc_id')) {
                 $khoaHoc = $request->khoaHoc ?? $request->khoaHoc_id;
-                $query->where('khoaHoc_id', $khoaHoc);
+                $query->where('classes.khoaHoc_id', $khoaHoc);
             }
 
             // Sorting - đảm bảo sort đúng với tên cột trong database
@@ -51,18 +62,31 @@ class ClassController extends Controller
 
             // Map tên cột cũ sang tên cột mới
             $columnMapping = [
-                'tenLop' => 'class_name',
-                'maNganhHoc' => 'major_id',
-                'khoaHoc' => 'khoaHoc_id',
+                'tenLop' => 'classes.class_name',
+                'maNganhHoc' => 'classes.major_id',
+                'khoaHoc' => 'khoa_hoc.nam_hoc',
+                'id' => 'classes.id',
+                'class_name' => 'classes.class_name',
+                'major_id' => 'classes.major_id',
+                'khoaHoc_id' => 'classes.khoaHoc_id',
             ];
 
-            $sortColumn = $columnMapping[$sortBy] ?? $sortBy;
+            // Get sort column, add table prefix if not already present
+            if (isset($columnMapping[$sortBy])) {
+                $sortColumn = $columnMapping[$sortBy];
+            } else {
+                // If column doesn't have a table prefix, add classes.
+                $sortColumn = strpos($sortBy, '.') !== false ? $sortBy : "classes.{$sortBy}";
+            }
+
             $query->orderBy($sortColumn, $sortDirection);
+
+            // Count before pagination
+            $total = $query->count();
 
             // Pagination
             $perPage = $request->per_page ?? 20;
             $page = $request->page ?? 1;
-            $total = $query->count();
             $lastPage = ceil($total / $perPage);
 
             $data = $query
@@ -78,9 +102,13 @@ class ClassController extends Controller
                     'tenLop' => $item->class_name, // alias
                     'maTrinhDoDaoTao' => $item->maTrinhDoDaoTao,
                     'major_id' => $item->major_id,
-                    'maNganhHoc' => $item->major_id, // alias
+                    'maNganhHoc' => $item->major_code, // alias - use major code
                     'khoaHoc_id' => $item->khoaHoc_id,
                     'khoaHoc' => $item->khoaHoc_id, // alias
+                    'nam_hoc' => $item->nam_hoc, // ✅ Year from khoa_hoc table
+                    'ma_khoa_hoc' => $item->ma_khoa_hoc,
+                    'major_code' => $item->major_code, // ✅ Major code
+                    'major_name' => $item->major_name, // ✅ Major name
                     'lecurer_id' => $item->lecurer_id,
                     'idGiaoVienChuNhiem' => $item->lecurer_id, // alias
                     'trangThai' => $item->trangThai,

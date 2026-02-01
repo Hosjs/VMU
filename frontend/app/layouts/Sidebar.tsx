@@ -102,7 +102,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['majors.view'],
         },
         {
-          title: 'Khoá học',
+          title: 'Lớp học',
           path: '/courses',
           icon: <BookOpenIcon className="w-5 h-5" />,
           requiredPermissions: ['courses.view'],
@@ -150,7 +150,13 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['teaching_assignments.view'], // ✅ Manager có
         },
         {
-          title: 'Lương giảng viên',
+          title: 'Lịch giảng viên',
+          path: '/lecturer/calendar',
+          icon: <CalendarDaysIcon className="w-5 h-5" />,
+          requiredPermissions: ['teaching_assignments.view'], // ✅ Manager có
+        },
+        {
+          title: 'Tiền công giảng dạy',
           path: '/teachers/salaries',
           icon: <BanknotesIcon className="w-5 h-5" />,
           requiredPermissions: ['teacher_salaries.view'], // ❌ Manager không có

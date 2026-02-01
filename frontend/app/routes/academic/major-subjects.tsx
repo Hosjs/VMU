@@ -145,7 +145,11 @@ export default function MajorSubjectsPage() {
   // Prepare major code options
   const majorCodeOptions = useMemo(() => {
     if (!majorsAsync.data) return [];
-    const uniqueCodes = Array.from(new Set(majorsAsync.data.map((m: Major) => m.ma)));
+    const uniqueCodes = Array.from(new Set(
+      majorsAsync.data
+        .map((m: Major) => m.ma)
+        .filter((code): code is string => code !== undefined && code !== null)
+    ));
     return uniqueCodes.map(code => ({
       value: code,
       label: code,

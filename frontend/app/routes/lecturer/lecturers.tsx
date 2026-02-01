@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { lecturerService } from '~/services/lecturer.service';
-import { studentService } from '~/services/student.service';
+
+import { majorService } from '~/services/major.service';
 import { useTable } from '~/hooks/useTable';
 import { useModal } from '~/hooks/useModal';
 import { useForm } from '~/hooks/useForm';
@@ -14,8 +15,9 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { Button, Input, Select, Table, Badge, Card, Pagination, Modal, Toast } from '~/components/ui';
+import { Button, Input, Select, Table, Badge, Card, Pagination, Modal, Toast, Autocomplete } from '~/components/ui';
 import type { ToastType } from '~/components/ui/Toast';
+import type { AutocompleteOption } from '~/components/ui/Autocomplete';
 import {
   HOC_HAM_OPTIONS,
   TRINH_DO_CHUYEN_MON_OPTIONS,
@@ -35,7 +37,7 @@ export default function Lecturers() {
   // STATE & MODALS
   // ============================================
   const [selectedLecturer, setSelectedLecturer] = useState<Lecturer | null>(null);
-  const [nganhOptions, setNganhOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
+  const [nganhOptions, setNganhOptions] = useState<AutocompleteOption[]>([]);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const createModal = useModal();
@@ -76,14 +78,27 @@ export default function Lecturers() {
 
   const loadFilterOptions = async () => {
     try {
-      // Load ngành học từ API majors
-      const majorsData = await studentService.getMajorsList();
-      setNganhOptions([
-        { value: '', label: 'Tất cả' },
-        ...majorsData,
-      ]);
+      // Load ngành học từ majorService và map theo ID
+      const majorsData = await majorService.getAllMajors();
+      console.log('📚 Loaded majors data:', majorsData.length, 'majors');
+      console.log('📚 First major sample:', majorsData[0]);
+
+      const options: AutocompleteOption[] = majorsData.map(major => {
+        const code = major.maNganh || major.ma || '';
+        const name = major.tenNganh || major.tenNganhHoc || '';
+
+        return {
+          value: major.id, // ✅ Use ID (number)
+          label: `${name} (${code})`,
+          searchText: `${name} ${code}`, // For better search
+        };
+      });
+
+      console.log('📚 Total autocomplete options:', options.length);
+      console.log('📚 Sample options:', options.slice(0, 3));
+      setNganhOptions(options);
     } catch (err) {
-      console.error('Error loading filter options:', err);
+      console.error('❌ Error loading filter options:', err);
     }
   };
 
@@ -100,19 +115,58 @@ export default function Lecturers() {
     },
     onSubmit: async (values) => {
       try {
-     // Clean up empty string values to null for proper validation
-        const cleanedValues = {
-          ...values,
-          maNganh: values.maNganh ? Number(values.maNganh) : null,
-          trinhDoChuyenMon: values.trinhDoChuyenMon || undefined,
-          hocHam: values.hocHam || undefined,
-          ghiChu: values.ghiChu || undefined,
+        console.log('📝 Form values before cleaning:', values);
+        console.log('📝 maNganh value:', values.maNganh, 'Type:', typeof values.maNganh);
+
+        // Clean up empty string values to null for proper validation
+        const cleanedValues: any = {
+          hoTen: values.hoTen,
         };
 
+        // Only add optional fields if they have values
+        if (values.trinhDoChuyenMon) {
+          cleanedValues.trinhDoChuyenMon = values.trinhDoChuyenMon;
+        }
+
+        if (values.hocHam) {
+          cleanedValues.hocHam = values.hocHam;
+        }
+
+        if (values.ghiChu) {
+          cleanedValues.ghiChu = values.ghiChu;
+        }
+
+        // Handle maNganh: convert to number or omit if empty
+        if (values.maNganh) {
+          const maNganhNumber = Number(values.maNganh);
+          cleanedValues.maNganh = maNganhNumber;
+          console.log('✅ Setting maNganh:', maNganhNumber, 'Type:', typeof maNganhNumber);
+          console.log('✅ Is valid number?', !isNaN(maNganhNumber));
+
+          // ⚠️ VALIDATION: Check if maNganh looks like a code instead of ID
+          if (maNganhNumber > 1000) {
+            console.error('🚨 WARNING: maNganh value is too large! Looks like a CODE, not an ID!');
+            console.error('🚨 Expected: 1-58 (ID), Got:', maNganhNumber);
+            console.error('🚨 This will fail backend validation!');
+            console.error('🚨 Available options:', nganhOptions.slice(0, 5));
+            setToast({
+              message: '❌ Lỗi: Giá trị ngành học không hợp lệ. Vui lòng reload trang!',
+              type: 'error'
+            });
+            return; // Prevent submission
+          }
+        } else {
+          console.log('⚠️  maNganh is empty/null, not sending');
+        }
+
+        console.log('📤 Final payload to API:', JSON.stringify(cleanedValues, null, 2));
+
         if (selectedLecturer) {
+          console.log('🔄 Updating lecturer ID:', selectedLecturer.id);
           await lecturerService.update(selectedLecturer.id, cleanedValues);
           setToast({ message: '✅ Cập nhật giảng viên thành công!', type: 'success' });
         } else {
+          console.log('➕ Creating new lecturer');
           await lecturerService.create(cleanedValues);
           setToast({ message: '✅ Thêm giảng viên thành công!', type: 'success' });
         }
@@ -121,8 +175,8 @@ export default function Lecturers() {
         editModal.close();
         refresh();
       } catch (error: any) {
-        console.error('Error saving lecturer:', error);
-        console.error('Error details:', error.data);
+        console.error('❌ Error saving lecturer:', error);
+        console.error('❌ Error details:', error.data);
         const errorMessage = error.data?.message || error.message || 'Có lỗi xảy ra';
         setToast({ message: `❌ ${errorMessage}`, type: 'error' });
       }
@@ -140,6 +194,9 @@ export default function Lecturers() {
 
   const handleEdit = (lecturer: Lecturer) => {
     setSelectedLecturer(lecturer);
+    console.log('Editing lecturer:', lecturer);
+    console.log('Current maNganh:', lecturer.maNganh, 'Type:', typeof lecturer.maNganh);
+
     form.setFieldValue('hoTen', lecturer.hoTen);
     form.setFieldValue('trinhDoChuyenMon', lecturer.trinhDoChuyenMon || '');
     form.setFieldValue('hocHam', lecturer.hocHam || '');
@@ -339,11 +396,15 @@ export default function Lecturers() {
             />
           </div>
 
-          {/* Ngành học */}
-          <Select
+          {/* Ngành học - Autocomplete thay vì Select */}
+          <Autocomplete
             label="Ngành học"
-            value={filters.maNganh?.toString() || ''}
-            onChange={(e) => handleFilter('maNganh', e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="Tìm kiếm ngành học để lọc..."
+            value={filters.maNganh || ''}
+            onChange={(value) => {
+              handleFilter('maNganh', value ? Number(value) : undefined);
+              console.log('🔍 Filter - Autocomplete changed:', value);
+            }}
             options={nganhOptions}
           />
 
@@ -447,12 +508,14 @@ export default function Lecturers() {
             />
           </div>
 
-          <Select
+          <Autocomplete
             label="Ngành học"
-            value={form.values.maNganh?.toString() || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              form.setFieldValue('maNganh', value && value !== '' ? Number(value) : null);
+            placeholder="Tìm kiếm ngành học theo tên hoặc mã..."
+            value={form.values.maNganh || ''}
+            onChange={(value) => {
+              const numValue = value ? Number(value) : null;
+              form.setFieldValue('maNganh', numValue);
+              console.log('🔄 Create - Autocomplete changed:', value, '→ Saved as:', numValue);
             }}
             options={nganhOptions}
           />
@@ -512,12 +575,14 @@ export default function Lecturers() {
             />
           </div>
 
-          <Select
+          <Autocomplete
             label="Ngành học"
-            value={form.values.maNganh?.toString() || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              form.setFieldValue('maNganh', value && value !== '' ? Number(value) : null);
+            placeholder="Tìm kiếm ngành học theo tên hoặc mã..."
+            value={form.values.maNganh || ''}
+            onChange={(value) => {
+              const numValue = value ? Number(value) : null;
+              form.setFieldValue('maNganh', numValue);
+              console.log('🔄 Edit - Autocomplete changed:', value, '→ Saved as:', numValue);
             }}
             options={nganhOptions}
           />

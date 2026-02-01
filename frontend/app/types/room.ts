@@ -17,6 +17,12 @@ export interface Room {
   khoaHoc?: number;
   idGiaoVienChuNhiem?: number;
 
+  // Thông tin từ bảng liên kết
+  nam_hoc?: number; // Year from khoa_hoc table
+  ma_khoa_hoc?: string; // Course code from khoa_hoc table
+  major_code?: string; // Major code from majors table
+  major_name?: string; // Major name from majors table
+
   // Các cột chung
   maTrinhDoDaoTao?: string;
   giaoVienChuNhiem?: string;
