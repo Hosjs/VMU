@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TeachingAssignmentsSeeder extends Seeder
 {
@@ -20,186 +21,107 @@ class TeachingAssignmentsSeeder extends Seeder
             return;
         }
 
-        // Get all valid lecturer IDs from database
-        $validLecturerIds = DB::table('lecturers')->pluck('id')->toArray();
-        $validLecturerIdsSet = array_flip($validLecturerIds);
+        $this->command->info("📚 Creating demo teaching assignments for calendar testing...");
 
-        // Get all valid class IDs from database
-        $validClassIds = DB::table('classes')->pluck('id')->toArray();
-        $validClassIdsSet = array_flip($validClassIds);
+        // Get valid IDs from database
+        $lecturers = DB::table('lecturers')->select('id')->get();
+        $classes = DB::table('classes')->select('id')->get();
 
-        $rawData = $this->getTeachingAssignmentsData();
-
-        if (empty($rawData)) {
-            $this->command->warn("⚠️  No teaching assignment data available");
+        if ($lecturers->isEmpty() || $classes->isEmpty()) {
+            $this->command->error("❌ Missing required data! Please seed lecturers and classes first.");
             return;
         }
 
-        $this->command->info("💾 Processing " . count($rawData) . " teaching assignments...");
-
-        // Filter and validate data
-        $validData = [];
-        $skippedCount = 0;
-
-        foreach ($rawData as $item) {
-            $lecturerId = $item['lecturer_id'] ?? null;
-            $classId = $item['class_id'] ?? null;
-
-            // Check if lecturer_id exists
-            if ($lecturerId && !isset($validLecturerIdsSet[$lecturerId])) {
-                $this->command->warn("⚠️  Skipping: lecturer_id {$lecturerId} not found");
-                $skippedCount++;
-                continue;
-            }
-
-            // Check if class_id exists
-            if ($classId && !isset($validClassIdsSet[$classId])) {
-                $this->command->warn("⚠️  Skipping: class_id {$classId} not found");
-                $skippedCount++;
-                continue;
-            }
-
-            $validData[] = $item;
-        }
-
-        if (empty($validData)) {
-            $this->command->error("❌ No valid teaching assignments to insert!");
-            return;
-        }
-
-        // Insert in chunks
-        $chunks = array_chunk($validData, 50);
-        $total = 0;
-
-        foreach ($chunks as $chunk) {
-            DB::table('teaching_assignments')->insert($chunk);
-            $total += count($chunk);
-            $this->command->info("✅ Inserted {$total} / " . count($validData) . " assignments");
-        }
-
-        $this->command->info("✅ Successfully inserted {$total} teaching assignments");
-        if ($skippedCount > 0) {
-            $this->command->warn("⚠️  Skipped {$skippedCount} invalid records");
-        }
-    }
-
-    private function getTeachingAssignmentsData(): array
-    {
-        // Sample teaching assignments
-        // In production, you can add more records or import from external source
-        return [
-            [
-                'id' => 4,
-                'lecturer_id' => 256,
-                'lop_id' => 34,
-                'class_id' => 34,
-                'course_code' => '513 ITKB',
-                'course_name' => 'Hệ cơ sở tri thức nâng cao',
-                'credits' => 2,
-                'start_date' => '2025-11-15',
-                'end_date' => '2026-01-18',
-                'day_of_week' => 'saturday',
-                'start_time' => '08:00:00',
-                'end_time' => '12:00:00',
-                'room' => 'A101',
-                'class_name' => null,
-                'student_count' => 20,
-                'status' => 'scheduled',
-                'notes' => null,
-                'created_at' => '2025-11-10 18:47:48',
-                'updated_at' => '2025-11-10 18:47:48',
-                'deleted_at' => null,
-            ],
-            [
-                'id' => 5,
-                'lecturer_id' => 256,
-                'lop_id' => 34,
-                'class_id' => 34,
-                'course_code' => '513 ITKB',
-                'course_name' => 'Hệ cơ sở tri thức nâng cao',
-                'credits' => 2,
-                'start_date' => '2025-11-15',
-                'end_date' => '2026-01-18',
-                'day_of_week' => 'sunday',
-                'start_time' => '08:00:00',
-                'end_time' => '12:00:00',
-                'room' => 'A101',
-                'class_name' => null,
-                'student_count' => 20,
-                'status' => 'scheduled',
-                'notes' => null,
-                'created_at' => '2025-11-10 18:47:48',
-                'updated_at' => '2025-11-11 18:39:36',
-                'deleted_at' => null,
-            ],
-            [
-                'id' => 6,
-                'lecturer_id' => 12,
-                'lop_id' => null,
-                'class_id' => null,
-                'course_code' => '502 HPTA',
-                'course_name' => 'Tiếng Anh',
-                'credits' => 3,
-                'start_date' => '2025-11-15',
-                'end_date' => '2026-02-22',
-                'day_of_week' => 'saturday',
-                'start_time' => '08:00:00',
-                'end_time' => '17:00:00',
-                'room' => 'A101',
-                'class_name' => 'âcsc',
-                'student_count' => 13,
-                'status' => 'scheduled',
-                'notes' => null,
-                'created_at' => '2025-11-10 19:50:19',
-                'updated_at' => '2025-11-11 18:39:36',
-                'deleted_at' => null,
-            ],
-            [
-                'id' => 7,
-                'lecturer_id' => 21,
-                'lop_id' => null,
-                'class_id' => null,
-                'course_code' => '508 TTCF',
-                'course_name' => 'Lý thuyết và ứng dụng CFD trong lĩnh vực đóng tàu',
-                'credits' => 2,
-                'start_date' => '2025-11-15',
-                'end_date' => '2025-11-16',
-                'day_of_week' => 'saturday',
-                'start_time' => '08:00:00',
-                'end_time' => '17:00:00',
-                'room' => 'ádasd',
-                'class_name' => 'HS123',
-                'student_count' => 3,
-                'status' => 'scheduled',
-                'notes' => null,
-                'created_at' => '2025-11-11 18:57:00',
-                'updated_at' => '2025-11-11 18:57:00',
-                'deleted_at' => null,
-            ],
-            [
-                'id' => 13,
-                'lecturer_id' => 351,
-                'lop_id' => null,
-                'class_id' => null,
-                'course_code' => '529 ITHC',
-                'course_name' => 'Tương tác người- máy nâng cao',
-                'credits' => 2,
-                'start_date' => '2025-12-04',
-                'end_date' => '2026-01-11',
-                'day_of_week' => 'saturday',
-                'start_time' => '08:00:00',
-                'end_time' => '12:00:00',
-                'room' => 'A101',
-                'class_name' => 'TTNM01',
-                'student_count' => 0,
-                'status' => 'scheduled',
-                'notes' => null,
-                'created_at' => '2025-12-08 19:08:25',
-                'updated_at' => '2025-12-08 19:08:25',
-                'deleted_at' => null,
-            ],
-            // Add more teaching assignments as needed
+        // Sample courses for demo
+        $courses = [
+            ['code' => 'CNTT1', 'name' => 'Lập trình căn bản', 'credits' => 3],
+            ['code' => 'CNTT2', 'name' => 'Cơ sở dữ liệu', 'credits' => 3],
+            ['code' => 'CNTT3', 'name' => 'Lập trình Web', 'credits' => 4],
+            ['code' => 'TOAN1', 'name' => 'Toán cao cấp 1', 'credits' => 3],
+            ['code' => 'TOAN2', 'name' => 'Toán rời rạc', 'credits' => 3],
+            ['code' => 'ANH1', 'name' => 'Tiếng Anh 1', 'credits' => 2],
+            ['code' => 'ANH2', 'name' => 'Tiếng Anh 2', 'credits' => 2],
+            ['code' => 'VL1', 'name' => 'Vật lý đại cương', 'credits' => 3],
+            ['code' => 'GDTC1', 'name' => 'Giáo dục thể chất 1', 'credits' => 1],
+            ['code' => 'KTCT', 'name' => 'Kinh tế chính trị', 'credits' => 2],
         ];
+
+        // Valid enum values after migration 2026_01_26_000001
+        $daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        $statuses = ['in_progress', 'in_exam', 'paid']; // Only valid enum values
+
+        $assignments = [];
+        $now = Carbon::now();
+
+        // Create 10-15 teaching assignments spread across Jan-Mar 2026
+        for ($i = 0; $i < min(15, count($courses)); $i++) {
+            $course = $courses[$i % count($courses)];
+
+            // Random selections
+            $lecturer = $lecturers->random();
+            $class = $classes->random();
+
+            // Spread across different months (Jan, Feb, Mar 2026)
+            $monthOffset = $i % 3;
+            $startDay = rand(1, 10);
+            $startDate = Carbon::create(2026, 1 + $monthOffset, $startDay);
+            $endDate = $startDate->copy()->addWeeks(rand(6, 10));
+
+            // Determine status based on dates
+            $status = 'in_progress'; // Default status
+            if ($endDate < $now) {
+                // Past courses: either in_exam or paid
+                $status = ($i % 2 === 0) ? 'in_exam' : 'paid';
+            }
+
+            // Random time slots
+            $startHour = rand(7, 14);
+            $duration = rand(2, 4);
+
+            $assignments[] = [
+                'lecturer_id' => $lecturer->id,
+                'class_id' => $class->id,
+                'lop_id' => null, // Old field, not used
+                'course_code' => $course['code'],
+                'course_name' => $course['name'],
+                'credits' => $course['credits'],
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'day_of_week' => $daysOfWeek[array_rand($daysOfWeek)],
+                'start_time' => sprintf('%02d:00:00', $startHour),
+                'end_time' => sprintf('%02d:00:00', $startHour + $duration),
+                'room' => 'P' . rand(101, 305),
+                'class_name' => 'Lớp ' . $course['code'],
+                'student_count' => rand(15, 45),
+                'status' => $status,
+                'notes' => "Demo assignment for calendar testing",
+                'created_at' => $now,
+                'updated_at' => $now,
+                'deleted_at' => null,
+            ];
+
+            $this->command->info("✅ Prepared: {$course['name']} - {$startDate->format('M Y')} ({$status})");
+        }
+
+        // Insert all assignments
+        if (!empty($assignments)) {
+            $chunks = array_chunk($assignments, 50);
+            $total = 0;
+
+            foreach ($chunks as $chunk) {
+                try {
+                    DB::table('teaching_assignments')->insert($chunk);
+                    $total += count($chunk);
+                } catch (\Exception $e) {
+                    $this->command->error("❌ Error inserting chunk: " . $e->getMessage());
+                }
+            }
+
+            $this->command->info("✅ Successfully inserted {$total} teaching assignments");
+            $this->command->info("ℹ️  Next step: Run 'php artisan sessions:generate' to create teaching sessions");
+        } else {
+            $this->command->error("❌ No valid teaching assignments to insert!");
+        }
     }
 }
 

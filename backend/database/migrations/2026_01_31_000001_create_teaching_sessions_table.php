@@ -17,16 +17,13 @@ return new class extends Migration
         Schema::create('teaching_sessions', function (Blueprint $table) {
             $table->id();
 
-            // Foreign key to teaching_assignments (parent course)
-            $table->foreignId('teaching_assignment_id')
-                ->constrained('teaching_assignments')
-                ->onDelete('cascade');
+            // Foreign keys defined in Model
+            $table->unsignedBigInteger('teaching_assignment_id')
+                ->comment('ID khóa học cha');
 
             // Session details - có thể override từ parent
-            $table->foreignId('lecturer_id')
+            $table->unsignedBigInteger('lecturer_id')
                 ->nullable()
-                ->constrained('lecturers')
-                ->onDelete('set null')
                 ->comment('Giảng viên (có thể khác với parent nếu thay giảng viên)');
 
             // Date and time

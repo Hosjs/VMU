@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('class_name', 255);
             $table->string('maTrinhDoDaoTao', 10);
-            $table->unsignedBigInteger('major_id'); // ✅ FIX: Changed to unsignedBigInteger
+            $table->unsignedBigInteger('major_id');
             $table->integer('khoaHoc_id');
             $table->unsignedBigInteger('lecurer_id')->nullable();
             $table->enum('trangThai', ['DangHoc', 'DaTotNghiep', 'GiaiThe'])->default('DangHoc');
@@ -23,37 +23,19 @@ return new class extends Migration
             $table->softDeletes();
             $table->unsignedBigInteger('createdBy')->nullable();
 
-            // Foreign keys
-            $table->foreign('maTrinhDoDaoTao', 'lop_matrinhdodaotao_foreign')
-                ->references('maTrinhDoDaoTao')
-                ->on('trinh_do_dao_tao')
-                ->onDelete('restrict');
+            // ✅ Foreign keys are now defined in Model relationships
+            // No FK constraints in migration = easier maintenance & better performance
 
-            // ✅ FIX: major_id now references majors.id (integer) instead of majors.maNganh (string)
-            $table->foreign('major_id', 'lop_major_id_foreign')
-                ->references('id')
-                ->on('majors')
-                ->onDelete('restrict');
-
-            $table->foreign('khoaHoc_id', 'lop_khoahoc_foreign')
-                ->references('id')
-                ->on('khoa_hoc')
-                ->onDelete('restrict');
-
-            $table->foreign('createdBy', 'lop_createdby_foreign')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-
-            // Indexes
-            $table->index('khoaHoc_id', 'lop_khoahoc_index');
-            $table->index('trangThai', 'lop_trangthai_index');
+            // Indexes only (for query performance)
+            $table->index('major_id');
+            $table->index('khoaHoc_id');
+            $table->index('trangThai');
+            $table->index('maTrinhDoDaoTao');
+            $table->index('lecurer_id');
+            $table->index('createdBy');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('classes');

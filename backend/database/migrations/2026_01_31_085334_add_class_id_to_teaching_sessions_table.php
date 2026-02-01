@@ -18,13 +18,7 @@ return new class extends Migration
                 ->after('lecturer_id')
                 ->comment('Lớp học (có thể khác với parent nếu cần)');
 
-            // Add foreign key constraint
-            $table->foreign('class_id')
-                ->references('id')
-                ->on('classes')
-                ->onDelete('set null');
-
-            // Add index
+            // Index (FK defined in Model)
             $table->index('class_id');
         });
     }
@@ -35,7 +29,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('teaching_sessions', function (Blueprint $table) {
-            $table->dropForeign(['class_id']);
+            // Drop index and column only (no FK was created in up())
             $table->dropIndex(['class_id']);
             $table->dropColumn('class_id');
         });

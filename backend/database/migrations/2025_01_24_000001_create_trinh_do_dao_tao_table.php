@@ -20,13 +20,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->unsignedBigInteger('createdBy')->nullable();
 
-            // Foreign key
-            $table->foreign('createdBy', 'trinh_do_dao_tao_createdby_foreign')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-
-            // Index
+            // Index (FK defined in Model)
             $table->index('createdBy');
         });
     }

@@ -18,18 +18,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Foreign keys
-            $table->foreign('class_id', 'cs_class_fk')
-                ->references('id')
-                ->on('classes')
-                ->onDelete('cascade');
-
-            $table->foreign('student_id', 'cs_student_fk')
-                ->references('maHV')
-                ->on('students')
-                ->onDelete('cascade');
-
-            // Indexes
+            // Indexes (FKs defined in Model)
             $table->index('class_id');
             $table->index('student_id');
         });

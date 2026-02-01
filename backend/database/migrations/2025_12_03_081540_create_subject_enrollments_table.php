@@ -22,10 +22,10 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('maHV')->references('maHV')->on('students')->onDelete('cascade');
-            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
-            $table->foreign('major_id')->references('id')->on('majors')->onDelete('cascade');
-
+            // Indexes (FKs defined in Model)
+            $table->index('maHV');
+            $table->index('subject_id');
+            $table->index('major_id');
             $table->unique(['maHV', 'subject_id', 'namHoc']);
         });
     }

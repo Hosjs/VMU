@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('lecturer_payments', function (Blueprint $table) {
             $table->id();
 
-            // Thông tin giảng viên và lớp
-            $table->foreignId('lecturer_id')->constrained('lecturers')->onDelete('cascade')->comment('ID giảng viên');
-            $table->foreignId('teaching_assignment_id')->nullable()->constrained('teaching_assignments')->onDelete('set null')->comment('ID lịch giảng dạy');
+            // Thông tin giảng viên và lớp (FKs defined in Model)
+            $table->unsignedBigInteger('lecturer_id')->comment('ID giảng viên');
+            $table->unsignedBigInteger('teaching_assignment_id')->nullable()->comment('ID lịch giảng dạy');
             $table->unsignedBigInteger('lop_id')->nullable()->comment('ID lớp');
 
             // Thông tin học kỳ và môn học
@@ -70,16 +70,15 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Indexes
+            // Indexes (FKs defined in Model)
             $table->index(['lecturer_id', 'semester_code', 'payment_status']);
             $table->index(['payment_status', 'payment_date']);
             $table->index('semester_code');
-
-            // Foreign keys
-            $table->foreign('lop_id')->references('id')->on('classes')->onDelete('set null');
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+            $table->index('teaching_assignment_id');
+            $table->index('lop_id');
+            $table->index('created_by');
+            $table->index('updated_by');
+            $table->index('approved_by');
         });
     }
 

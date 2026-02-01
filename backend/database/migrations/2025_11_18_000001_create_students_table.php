@@ -33,30 +33,11 @@ return new class extends Migration
             $table->softDeletes();
             $table->unsignedBigInteger('createdBy')->nullable();
 
-            // Foreign keys
-            $table->foreign('maTrinhDoDaoTao', 'hoc_vien_matrinhdodaotao_foreign')
-                ->references('maTrinhDoDaoTao')
-                ->on('trinh_do_dao_tao')
-                ->onDelete('restrict');
-
-            $table->foreign('maNganh', 'hoc_vien_manganh_foreign')
-                ->references('maNganh')
-                ->on('majors')
-                ->onDelete('restrict');
-
-            $table->foreign('idLop', 'hoc_vien_idlop_foreign')
-                ->references('id')
-                ->on('classes')
-                ->onDelete('set null');
-
-            $table->foreign('createdBy', 'hoc_vien_createdby_foreign')
-                ->references('id')
-                ->on('users')
-                ->onDelete('set null');
-
-            // Indexes
+            // Indexes (FKs defined in Model)
             $table->index('maTrinhDoDaoTao', 'hoc_vien_matrinhdodaotao_index');
             $table->index('maNganh', 'hoc_vien_manganh_index');
+            $table->index('idLop', 'hoc_vien_idlop_index');
+            $table->index('createdBy', 'hoc_vien_createdby_index');
             $table->index('namVaoTruong', 'hoc_vien_namvaotruong_index');
             $table->index('trangThai', 'hoc_vien_trangthai_index');
         });

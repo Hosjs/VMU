@@ -20,6 +20,15 @@ return new class extends Migration
         echo "\n🔄 Generating sessions from existing assignments...\n\n";
 
         $assignments = TeachingAssignment::all();
+
+        // Safety check: Skip if no assignments exist (e.g., fresh migration on empty DB)
+        if ($assignments->isEmpty()) {
+            echo "⚠️  No teaching assignments found. Skipping session generation.\n";
+            echo "ℹ️  Run 'php artisan db:seed' to create demo data.\n";
+            echo "ℹ️  Then run 'php artisan sessions:generate' to create sessions.\n\n";
+            return;
+        }
+
         $totalSessions = 0;
 
         foreach ($assignments as $assignment) {

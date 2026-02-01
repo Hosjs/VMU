@@ -19,8 +19,9 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
 
-            $table->foreign('major_id')->references('id')->on('majors')->onDelete('cascade');
-            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
+            // Indexes (FKs defined in Model)
+            $table->index('major_id');
+            $table->index('subject_id');
 
             // Đảm bảo không trùng lặp môn học trong cùng 1 ngành
             $table->unique(['major_id', 'subject_id']);
