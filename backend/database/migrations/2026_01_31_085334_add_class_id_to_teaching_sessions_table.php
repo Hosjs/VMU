@@ -18,13 +18,7 @@ return new class extends Migration
                 ->after('lecturer_id')
                 ->comment('Lớp học (có thể khác với parent nếu cần)');
 
-            // Add foreign key constraint
-            $table->foreign('class_id')
-                ->references('id')
-                ->on('classes')
-                ->onDelete('set null');
-
-            // Add index
+            // Index (FK defined in Model)
             $table->index('class_id');
         });
     }

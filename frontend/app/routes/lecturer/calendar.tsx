@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { teachingAssignmentService } from '~/services/teaching-assignment.service';
+import { useNavigate } from 'react-router';
 import { teachingSessionService } from '~/services/teaching-session.service';
 import { lecturerService } from '~/services/lecturer.service';
 import { useAsync } from '~/hooks/useAsync';
 import { useModal } from '~/hooks/useModal';
-import type { TeachingAssignment } from '~/types/teaching-assignment';
 import type { TeachingSession } from '~/types/teaching-session';
 import type { Lecturer } from '~/types/lecturer';
 import type { PaginatedResponse } from '~/types/common';
@@ -17,6 +16,7 @@ import {
   AcademicCapIcon,
   MapPinIcon,
   ArrowPathIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Card } from '~/components/ui/Card';
@@ -34,6 +34,7 @@ export function meta() {
 }
 
 export default function LecturerCalendarPage() {
+  const navigate = useNavigate();
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1); // 1-12
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -132,6 +133,13 @@ export default function LecturerCalendarPage() {
       console.log('📅 Processing sessions:', sessions.length);
 
       sessions.forEach((session: TeachingSession) => {
+        // ⚠️ IMPORTANT: Skip "rescheduled" sessions - they shouldn't appear on original date
+        // These will be auto-updated to "completed" when past due
+        if (session.status === 'rescheduled') {
+          console.log('⏭️ Skipping rescheduled session:', session.id, 'on', session.session_date);
+          return;
+        }
+
         // Session already has exact date!
         const dateStr = session.session_date.split('T')[0]; // "2026-01-20"
 
@@ -142,7 +150,7 @@ export default function LecturerCalendarPage() {
 
         // Backend returns snake_case
         const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
-        console.log('✅ Added session to date:', dateStr, 'course:', teachingAssignment?.course_name);
+        console.log('✅ Added session to date:', dateStr, 'course:', teachingAssignment?.course_name, 'status:', session.status);
       });
 
       console.log('📅 Sessions by date:', Object.keys(map).length, 'dates');
@@ -734,6 +742,66 @@ export default function LecturerCalendarPage() {
                 </div>
               </div>
             </div>
+
+            {/* Payment Section - Show assignments ready for payment */}
+            {(() => {
+              // Get unique teaching assignments and check their status
+              const assignmentsMap = new Map<number, any>();
+              sessionsData.data.forEach(session => {
+                const assignment = (session as any).teaching_assignment || session.teachingAssignment;
+                if (assignment && !assignmentsMap.has(assignment.id)) {
+                  assignmentsMap.set(assignment.id, assignment);
+                }
+              });
+
+              const assignmentsInExam = Array.from(assignmentsMap.values()).filter(
+                (assignment: any) => assignment.status === 'in_exam'
+              );
+
+              if (assignmentsInExam.length === 0) return null;
+
+              return (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-bold text-gray-900 flex items-center gap-2">
+                      <BanknotesIcon className="w-5 h-5 text-green-600" />
+                      Khóa học sẵn sàng thanh toán
+                    </h4>
+                  </div>
+                  <div className="space-y-3">
+                    {assignmentsInExam.map((assignment: any) => (
+                      <div
+                        key={assignment.id}
+                        className="bg-green-50 border border-green-200 rounded-lg p-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-gray-900 mb-1">
+                              {assignment.course_name}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Mã HP: {assignment.course_code} | Lớp: {assignment.class_name || 'N/A'}
+                            </div>
+                            <div className="text-xs text-green-700 mt-1">
+                              ✅ Tất cả buổi học đã hoàn thành - Đang trong kỳ thi
+                            </div>
+                          </div>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => navigate('/teachers/salaries')}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                          >
+                            <BanknotesIcon className="w-4 h-4" />
+                            Thanh toán giảng dạy
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </Card>
       )}

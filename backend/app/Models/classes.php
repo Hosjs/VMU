@@ -79,14 +79,21 @@ class classes extends Model
         return $this->belongsTo(TrinhDoDaoTao::class, 'maTrinhDoDaoTao', 'maTrinhDoDaoTao');
     }
 
+    /**
+     * @deprecated Use major() instead
+     */
     public function nganhHoc()
     {
-        return $this->belongsTo(NganhHoc::class, 'major_id', 'maNganh');
+        return $this->major();
     }
 
+    /**
+     * Relationship to Major (Ngành học)
+     * ✅ Fixed: Now references majors.id (not maNganh)
+     */
     public function major()
     {
-        return $this->belongsTo(Major::class, 'major_id', 'maNganh');
+        return $this->belongsTo(Major::class, 'major_id', 'id');
     }
 
     public function hocViens()

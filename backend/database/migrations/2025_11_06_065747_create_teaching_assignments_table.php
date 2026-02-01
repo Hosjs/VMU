@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('teaching_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lecturer_id')->constrained('lecturers')->onDelete('cascade');
+            $table->unsignedBigInteger('lecturer_id'); // FK defined in Model
             $table->unsignedBigInteger('lop_id')->nullable(); // ID của bảng lop (cũ)
             $table->unsignedBigInteger('class_id')->nullable(); // ID của bảng classes
             $table->string('course_code', 255)->nullable(); // Mã học phần

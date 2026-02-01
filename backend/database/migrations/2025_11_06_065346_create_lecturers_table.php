@@ -27,8 +27,8 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
 
-            // Foreign key
-            $table->foreign('maNganh')->references('id')->on('majors')->onDelete('set null');
+            // Index (FK defined in Model)
+            $table->index('maNganh');
         });
     }
 

@@ -21,9 +21,9 @@ return new class extends Migration
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrent()->useCurrentOnUpdate();
 
-            // Foreign keys
-            $table->foreign('student_id')->references('maHV')->on('students')->onDelete('cascade');
-            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
+            // Indexes (FKs defined in Model)
+            $table->index('student_id');
+            $table->index('subject_id');
 
             // Unique constraint
             $table->unique(['student_id', 'subject_id']);

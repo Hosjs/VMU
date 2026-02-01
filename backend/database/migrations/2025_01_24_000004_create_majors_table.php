@@ -22,14 +22,7 @@ return new class extends Migration
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('deleted_in')->nullable();
 
-            // Foreign key
-            $table->foreign('parent_id', 'fk_major_parent')
-                ->references('id')
-                ->on('majors')
-                ->onDelete('set null')
-                ->onUpdate('cascade');
-
-            // Indexes
+            // Indexes (FK defined in Model)
             $table->index('parent_id', 'idx_parent');
         });
     }
