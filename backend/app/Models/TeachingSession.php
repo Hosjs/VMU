@@ -32,6 +32,11 @@ class TeachingSession extends Model
         'actual_end_time' => 'datetime',
     ];
 
+    /**
+     * Include relationships in JSON with snake_case
+     */
+    protected $with = ['teachingAssignment', 'lecturer'];
+
     public function teachingAssignment()
     {
         return $this->belongsTo(TeachingAssignment::class);

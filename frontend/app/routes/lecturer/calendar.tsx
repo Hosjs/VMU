@@ -140,6 +140,19 @@ export default function LecturerCalendarPage() {
           return;
         }
 
+        // Backend returns snake_case
+        const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
+
+        // ⚠️ Skip sessions without teaching_assignment (orphaned sessions)
+        if (!teachingAssignment) {
+          console.warn('⚠️ Session has no teaching_assignment:', {
+            sessionId: session.id,
+            assignmentId: session.teaching_assignment_id,
+            date: session.session_date,
+          });
+          return;
+        }
+
         // Session already has exact date!
         const dateStr = session.session_date.split('T')[0]; // "2026-01-20"
 
@@ -148,8 +161,6 @@ export default function LecturerCalendarPage() {
         }
         map[dateStr].push(session);
 
-        // Backend returns snake_case
-        const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
         console.log('✅ Added session to date:', dateStr, 'course:', teachingAssignment?.course_name, 'status:', session.status);
       });
 
@@ -298,6 +309,16 @@ export default function LecturerCalendarPage() {
 
       {selectedLecturerId && (
         <>
+          {/* Warning for orphaned sessions */}
+          {(() => {
+            const orphanedSessions = sessionsData?.data?.filter(s => {
+              const assignment = (s as any).teaching_assignment || s.teachingAssignment;
+              return !assignment;
+            }) || [];
+
+            if (orphanedSessions.length === 0) return null;
+          })()}
+
           {/* Calendar Controls */}
           <Card>
             <div className="p-4">
@@ -408,17 +429,26 @@ export default function LecturerCalendarPage() {
                               {sessions.slice(0, 2).map((session, idx) => {
                                 // Backend returns snake_case
                                 const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
-                                const courseName = teachingAssignment?.course_name || 'Không rõ';
+                                const courseName = teachingAssignment?.course_name || '⚠️ Không có dữ liệu';
+                                const isOrphaned = !teachingAssignment;
+
                                 return (
                                   <div
                                     key={idx}
-                                    className="text-[10px] bg-red-50 border border-red-200 rounded px-1.5 py-0.5 truncate"
-                                    title={`${courseName} - ${formatters.formatTime(session.start_time)}-${formatters.formatTime(session.end_time)}`}
+                                    className={`text-[10px] border rounded px-1.5 py-0.5 truncate ${
+                                      isOrphaned 
+                                        ? 'bg-yellow-50 border-yellow-300 text-yellow-900'
+                                        : 'bg-red-50 border-red-200'
+                                    }`}
+                                    title={isOrphaned
+                                      ? '⚠️ Session không có assignment - Cần kiểm tra!'
+                                      : `${courseName} - ${formatters.formatTime(session.start_time)}-${formatters.formatTime(session.end_time)}`
+                                    }
                                   >
-                                    <div className="font-medium text-red-900 truncate">
+                                    <div className={`font-medium truncate ${isOrphaned ? 'text-yellow-900' : 'text-red-900'}`}>
                                       {courseName}
                                     </div>
-                                    <div className="text-red-700 truncate">
+                                    <div className={`truncate ${isOrphaned ? 'text-yellow-700' : 'text-red-700'}`}>
                                       {formatters.formatTime(session.start_time)}
                                     </div>
                                   </div>
@@ -463,14 +493,24 @@ export default function LecturerCalendarPage() {
                   {selectedDateSessions.map((session) => {
                     // Backend returns snake_case, so we need to access it correctly
                     const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
-                    const courseName = teachingAssignment?.course_name || 'Không rõ';
+                    const courseName = teachingAssignment?.course_name || '⚠️ Không có dữ liệu khóa học';
                     const courseCode = teachingAssignment?.course_code;
+                    const isOrphaned = !teachingAssignment;
 
                     return (
                       <div
                         key={session.id}
-                        className="border rounded-lg p-4 hover:border-blue-300 transition-colors"
+                        className={`border rounded-lg p-4 transition-colors ${
+                          isOrphaned 
+                            ? 'border-yellow-300 bg-yellow-50 hover:border-yellow-400' 
+                            : 'hover:border-blue-300'
+                        }`}
                       >
+                        {isOrphaned && (
+                          <div className="mb-3 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-900">
+                            ⚠️ <strong>Cảnh báo:</strong> Buổi học này không liên kết với khóa học. Assignment ID: {session.teaching_assignment_id}
+                          </div>
+                        )}
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -661,18 +701,30 @@ export default function LecturerCalendarPage() {
                   {sessionsData.data.map((session, index) => {
                     // Backend returns snake_case, so we need to access it correctly
                     const teachingAssignment = (session as any).teaching_assignment || session.teachingAssignment;
-                    const courseName = teachingAssignment?.course_name || 'Không rõ';
+                    const courseName = teachingAssignment?.course_name || '⚠️ Không có dữ liệu';
                     const courseCode = teachingAssignment?.course_code;
+                    const isOrphaned = !teachingAssignment;
 
                     return (
-                      <tr key={session.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <tr key={session.id} className={`border-b transition-colors ${
+                        isOrphaned ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50'
+                      }`}>
                         <td className="p-3 text-gray-600">{index + 1}</td>
                         <td className="p-3">
                           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                             #{session.session_number}
                           </span>
                         </td>
-                        <td className="p-3 font-medium text-gray-900">{courseName}</td>
+                        <td className="p-3">
+                          <span className={`font-medium ${isOrphaned ? 'text-yellow-900' : 'text-gray-900'}`}>
+                            {courseName}
+                          </span>
+                          {isOrphaned && (
+                            <span className="ml-2 text-xs text-yellow-600">
+                              (Assignment ID: {session.teaching_assignment_id})
+                            </span>
+                          )}
+                        </td>
                         <td className="p-3 text-gray-600">{courseCode || '-'}</td>
                         <td className="p-3 text-gray-600">
                           {formatters.formatDate(session.session_date)}
