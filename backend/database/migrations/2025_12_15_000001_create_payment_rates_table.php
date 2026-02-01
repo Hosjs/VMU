@@ -24,11 +24,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            // Indexes (FKs defined in Model)
             $table->index(['subject_type', 'education_level', 'is_active']);
             $table->index('semester_code');
-
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
+            $table->index('created_by');
+            $table->index('updated_by');
         });
     }
 
