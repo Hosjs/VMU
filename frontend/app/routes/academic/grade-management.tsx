@@ -907,43 +907,7 @@ export default function GradeManagementPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {/* Permission Notice */}
-              <Card>
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-2">Quyền nhập điểm của bạn:</h3>
-                      <div className="space-y-1 text-sm">
-                        {gradePermissions.canEditX && gradePermissions.canEditY && gradePermissions.canEditZ ? (
-                          <p className="text-green-700 font-medium">✅ Admin: Bạn có thể nhập tất cả các loại điểm (X1, X2, X3, Y)</p>
-                        ) : (
-                          <>
-                            {gradePermissions.isSubjectTeacher && (
-                              <p className="text-blue-700">
-                                <span className="font-medium">👨‍🏫 Giáo viên môn học:</span> Bạn chỉ được nhập <strong>Điểm X1, X2, X3</strong> (Điểm quá trình)
-                              </p>
-                            )}
-                            {!gradePermissions.canEditX && !gradePermissions.canEditZ && (
-                              <p className="text-orange-700 font-medium">⚠️ Bạn không có quyền nhập điểm cho lớp này</p>
-                            )}
-                            <p className="text-gray-600 italic mt-2">
-                              💡 <strong>Lưu ý:</strong> Điểm X = TB(X1, X2, X3), Điểm Z = (X + Y) / 2 (tự động tính)
-                            </p>
-                            <p className="text-gray-600 italic">
-                              💡 Chỉ Admin mới có thể nhập Điểm Y
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+
 
               {/* Hiển thị số lượng học viên */}
               <Card>
