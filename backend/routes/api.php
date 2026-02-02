@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\GradeManagementController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\LecturerPaymentController;
 use App\Http\Controllers\Api\PaymentRateController;
+use App\Http\Controllers\Api\AcademicYearController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -35,6 +36,12 @@ Route::prefix('students')->group(function () {
 
 Route::get('/majors', [MajorController::class, 'index']);
 Route::get('/majors/{id}', [MajorController::class, 'show']);
+
+// Academic Years Routes (Public - for year selection)
+Route::get('/academic-years', [AcademicYearController::class, 'index']);
+Route::get('/academic-years/active', [AcademicYearController::class, 'getActiveYears']);
+Route::post('/academic-years', [AcademicYearController::class, 'store']);
+Route::delete('/academic-years/{id}', [AcademicYearController::class, 'destroy']);
 
 
 // Roles Routes (Public - for dropdowns)

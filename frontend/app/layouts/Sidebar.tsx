@@ -102,7 +102,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['majors.view'],
         },
         {
-          title: 'Lớp học',
+          title: 'Kỳ học',
           path: '/courses',
           icon: <BookOpenIcon className="w-5 h-5" />,
           requiredPermissions: ['courses.view'],

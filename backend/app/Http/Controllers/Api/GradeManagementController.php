@@ -26,13 +26,13 @@ class GradeManagementController extends Controller
                 )
                 ->get()
                 ->map(function ($major) {
-                    // Lấy các năm từ bảng classes (sử dụng khoaHoc_id)
+                    // ✅ FIX: classes.major_id stores maNganh (as number), not majors.id
                     $years = [];
 
                     try {
-                        // Lấy các khoaHoc_id từ bảng classes
+                        // Lấy các khoaHoc_id từ bảng classes where major_id matches maNganh
                         $years = DB::table('classes')
-                            ->where('major_id', $major->maNganh)
+                            ->whereRaw('CAST(major_id AS CHAR) = ?', [$major->maNganh])
                             ->whereNotNull('khoaHoc_id')
                             ->whereNull('deleted_at')
                             ->distinct()
@@ -93,17 +93,14 @@ class GradeManagementController extends Controller
         try {
             \Log::info('getAllClassesWithInfo called');
 
-            // First, check what type of data is in major_id column
-            $sampleClass = DB::table('classes')->whereNotNull('major_id')->first();
-            \Log::info('Sample class major_id:', ['major_id' => $sampleClass->major_id ?? 'null']);
-
+            // ✅ FIX: classes.major_id stores maNganh code (as number), not majors.id
+            // So we need to join c.major_id with m.maNganh (converting types)
             $classes = DB::table('classes as c')
                 ->leftJoin('majors as m', function($join) {
-                    // Try both join conditions: by ID and by maNganh
-                    $join->on('c.major_id', '=', 'm.id')
-                         ->orOn('c.major_id', '=', 'm.maNganh');
+                    $join->on(DB::raw('CAST(c.major_id AS CHAR)'), '=', 'm.maNganh');
                 })
                 ->whereNull('c.deleted_at')
+                ->whereNull('m.deleted_in')
                 ->select(
                     'c.id',
                     'c.class_name as tenLop',
@@ -165,12 +162,12 @@ class GradeManagementController extends Controller
                 'khoaHoc' => $request->khoaHoc,
             ]);
 
-            // FIX: Thêm COLLATE để fix collation mismatch
+            // ✅ FIX: classes.major_id stores maNganh code, so join with m.maNganh
             $classes = DB::table('classes as c')
-                ->leftJoin('majors as m', function($join) {
-                    $join->on('c.major_id', '=', DB::raw('m.maNganh COLLATE utf8mb4_unicode_ci'));
+                ->join('majors as m', function($join) {
+                    $join->on(DB::raw('CAST(c.major_id AS CHAR)'), '=', 'm.maNganh');
                 })
-                ->where('c.major_id', $request->maNganh)
+                ->where('m.maNganh', $request->maNganh)
                 ->where('c.khoaHoc_id', $request->khoaHoc)
                 ->whereNull('m.deleted_in')
                 ->whereNull('c.deleted_at')
@@ -215,9 +212,11 @@ class GradeManagementController extends Controller
             // Get subject filter if provided
             $subjectId = $request->query('subject_id');
 
-            // Get class info with major - ✅ FIX: Join đúng major_id với m.id
+            // Get class info with major - ✅ FIX: classes.major_id stores maNganh, not majors.id
             $class = DB::table('classes as c')
-                ->leftJoin('majors as m', 'c.major_id', '=', 'm.id')
+                ->leftJoin('majors as m', function($join) {
+                    $join->on(DB::raw('CAST(c.major_id AS CHAR)'), '=', 'm.maNganh');
+                })
                 ->where('c.id', $classId)
                 ->whereNull('m.deleted_in')
                 ->whereNull('c.deleted_at')
@@ -244,10 +243,14 @@ class GradeManagementController extends Controller
             $gradePermissions = $this->getGradePermissions($user, $class, $subjectId);
 
             if ($subjectId) {
+                // ✅ FIX: Query from subject_enrollments (enrollment/registration data)
+                // subject_enrollments.major_id = majors.id (e.g., 4)
+                // NOT classes.major_id (e.g., 8480201)
+                // Use major_numeric_id which is majors.id!
                 $studentsQuery = DB::table('subject_enrollments as se')
                     ->join('students as s', 'se.maHV', '=', 's.maHV')
                     ->where('se.subject_id', $subjectId)
-                    ->where('se.major_id', $class->major_id)
+                    ->where('se.major_id', $class->major_numeric_id)  // ✅ Use major_numeric_id (majors.id)!
                     ->whereNull('se.deleted_at')
                     ->whereNull('s.deleted_at')
                     ->select(
@@ -267,10 +270,10 @@ class GradeManagementController extends Controller
                 $students = $studentsQuery->get()->map(function ($student) use ($subjectId) {
                     $student->hoTen = trim($student->hoDem . ' ' . $student->ten);
 
-                    // LEFT JOIN to get grades (may be null if no grades yet)
+                    // Get grades for this student and subject
                     $student->grades = DB::table('subject_students as ss')
                         ->join('subjects as sub', 'ss.subject_id', '=', 'sub.id')
-                        ->where('ss.student_id', $student->maHV)
+                        ->where('ss.student_id', $student->maHV)  // ✅ FIX: Use student_id field
                         ->where('ss.subject_id', $subjectId)
                         ->select(
                             'ss.id as grade_id',
@@ -323,7 +326,7 @@ class GradeManagementController extends Controller
                     // Get all grades for this student
                     $student->grades = DB::table('subject_students as ss')
                         ->join('subjects as sub', 'ss.subject_id', '=', 'sub.id')
-                        ->where('ss.student_id', $student->maHV)
+                        ->where('ss.student_id', $student->maHV)  // ✅ FIX: Use student_id field
                         ->select(
                             'ss.id as grade_id',
                             'ss.subject_id',
@@ -346,10 +349,10 @@ class GradeManagementController extends Controller
             }
 
             // Get available subjects for this major from major_subjects
-            // ✅ FIX: Sử dụng major_id thay vì maNganh để join
+            // ✅ FIX: major_subjects.major_id references majors.id (numeric), not maNganh
             $subjects = DB::table('subjects as s')
                 ->join('major_subjects as ms', 's.id', '=', 'ms.subject_id')
-                ->where('ms.major_id', $class->major_id)
+                ->where('ms.major_id', $class->major_numeric_id)  // Use major_numeric_id (majors.id)
                 ->whereNull('ms.deleted_at')
                 ->select('s.id', 's.maMon', 's.tenMon', 's.soTinChi')
                 ->groupBy('s.id', 's.maMon', 's.tenMon', 's.soTinChi')
@@ -361,6 +364,7 @@ class GradeManagementController extends Controller
                 'class_id' => $classId,
                 'maNganh' => $class->maNganh,
                 'major_id' => $class->major_id,
+                'major_numeric_id' => $class->major_numeric_id,
                 'subjects_count' => $subjects->count(),
                 'subjects' => $subjects->pluck('tenMon', 'id')->toArray()
             ]);

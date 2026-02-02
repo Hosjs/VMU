@@ -80,14 +80,15 @@ export default function GradeManagementPage() {
   const location = useLocation();
 
   // Parse URL paths manually since we're using splat route
-  const pathParts = location.pathname.replace('/academic/grades', '').split('/').filter(Boolean);
+  const params = useMemo(() => {
+    const pathParts = location.pathname.replace('/academic/grades', '').split('/').filter(Boolean);
 
-  // Extract params from path
-  const params = {
-    majorId: pathParts[0] || undefined,
-    classId: pathParts[1] || undefined,
-    subjectId: pathParts[2] || undefined,
-  };
+    return {
+      majorId: pathParts[0] || undefined,
+      classId: pathParts[1] || undefined,
+      subjectId: pathParts[2] || undefined,
+    };
+  }, [location.pathname]);
 
   // Determine current step from URL params
   const step = useMemo(() => {
