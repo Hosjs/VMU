@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router';
 import { useTable } from '~/hooks/useTable';
 import { useModal } from '~/hooks/useModal';
 import { useForm } from '~/hooks/useForm';
@@ -122,6 +123,8 @@ export default function TeacherSalaries() {
   // ============================================
   // STATE & MODALS
   // ============================================
+  const location = useLocation();
+
   interface SubjectOption extends SelectOption {
     tenMonHoc?: string;
   }
@@ -139,6 +142,34 @@ export default function TeacherSalaries() {
     theory_sessions: number;
     practical_sessions: number;
     total_sessions: number;
+  }
+
+  interface TeachingSession {
+    id: number;
+    teaching_assignment_id: number;
+    session_date: string;
+    is_practical: boolean;
+    status: string;
+    start_time?: string;
+    end_time?: string;
+  }
+
+  interface TeachingAssignment {
+    id: number;
+    lecturer_id: number;
+    subject_id: number;
+    class_id: number;
+    semester_code?: string;
+    subject?: {
+      maMonHoc: string;
+      tenMonHoc: string;
+      soTinChi: number;
+    };
+    class?: {
+      tenLop: string;
+      trinhDo: string;
+      siSo: number;
+    };
   }
 
   const [selectedPayment, setSelectedPayment] = useState<LecturerPayment | null>(null);
@@ -267,7 +298,12 @@ export default function TeacherSalaries() {
 
       // result is already the array, not wrapped in {success, data}
       if (result && Array.isArray(result) && result.length > 0) {
-        const subjects = result.map((item: any) => ({
+        const subjects = result.map((item: {
+          value: string;
+          label: string;
+          subject_name: string;
+          subject_code: string;
+        }) => ({
           value: item.value,
           label: item.label,
           tenMonHoc: item.subject_name,
@@ -324,6 +360,72 @@ export default function TeacherSalaries() {
     }
   };
 
+  const loadAssignmentDataForAutoFill = async (assignmentId: number) => {
+    try {
+      console.log('🔄 Loading assignment data for ID:', assignmentId);
+
+      // Fetch assignment details
+      const assignment = await apiService.get<TeachingAssignment>(`/teaching-assignments/${assignmentId}`);
+      console.log('📦 Assignment data:', assignment);
+
+      if (assignment) {
+        // Fetch teaching sessions for this assignment using get with query params
+        const sessionsData = await apiService.get<{ data: TeachingSession[] }>('/teaching-sessions', {
+          teaching_assignment_id: assignmentId,
+          per_page: 1000,
+        });
+
+        const sessions: TeachingSession[] = sessionsData?.data || [];
+        console.log('📚 Sessions found:', sessions.length);
+
+        // Count theory and practical sessions
+        const theorySessions = sessions.filter((s: TeachingSession) => !s.is_practical).length;
+        const practicalSessions = sessions.filter((s: TeachingSession) => s.is_practical).length;
+
+        // Get date range
+        const sessionDates: Date[] = sessions.map((s: TeachingSession) => new Date(s.session_date));
+        const startDate = sessionDates.length > 0
+          ? new Date(Math.min(...sessionDates.map((d: Date) => d.getTime())))
+          : new Date();
+        const endDate = sessionDates.length > 0
+          ? new Date(Math.max(...sessionDates.map((d: Date) => d.getTime())))
+          : new Date();
+
+        // Format dates to YYYY-MM-DD
+        const formatDate = (date: Date): string => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+
+        // Auto-fill form
+        form.setValues({
+          ...form.values,
+          lecturer_id: assignment.lecturer_id,
+          semester_code: assignment.semester_code || '',
+          subject_name: assignment.subject?.tenMonHoc || '',
+          subject_code: assignment.subject?.maMonHoc || '',
+          education_level: assignment.class?.trinhDo || '',
+          credits: assignment.subject?.soTinChi || 0,
+          class_name: assignment.class?.tenLop || '',
+          student_count: assignment.class?.siSo || 0,
+          start_date: formatDate(startDate),
+          end_date: formatDate(endDate),
+          completion_date: formatDate(endDate),
+          theory_sessions: theorySessions,
+          practical_sessions: practicalSessions,
+          total_sessions: sessions.length,
+        });
+
+        console.log('✅ Form auto-filled successfully');
+      }
+    } catch (err) {
+      console.error('❌ Error loading assignment data for auto-fill:', err);
+      alert('Không thể tải dữ liệu phân công. Vui lòng thử lại.');
+    }
+  };
+
   // ============================================
   // FORM HANDLING
   // ============================================
@@ -366,9 +468,9 @@ export default function TeacherSalaries() {
         createModal.close();
         editModal.close();
         refresh();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error saving payment:', error);
-        alert(error.message || 'Có lỗi xảy ra');
+        alert(error instanceof Error ? error.message : 'Có lỗi xảy ra');
       }
     },
   });
@@ -408,6 +510,30 @@ export default function TeacherSalaries() {
       setTeachingAssignmentOptions([]);
     }
   }, [form.values.lecturer_id, form.values.semester_code]);
+
+  // Handle auto-fill from location state (when navigating from calendar page)
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.autoFillAssignment) {
+      const autoFill = state.autoFillAssignment;
+      console.log('📝 Auto-filling form with assignment:', autoFill);
+
+      // Open create modal
+      setSelectedPayment(null);
+      createModal.open();
+
+      // Auto-fill lecturer
+      if (autoFill.lecturerId) {
+        form.setFieldValue('lecturer_id', autoFill.lecturerId);
+      }
+
+      // Load assignment data and auto-fill
+      loadAssignmentDataForAutoFill(autoFill.assignmentId);
+
+      // Clear the state to prevent re-filling on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // ============================================
   // HANDLERS
@@ -474,9 +600,9 @@ export default function TeacherSalaries() {
 
       deleteModal.close();
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting payment:', error);
-      alert(error.message || 'Có lỗi xảy ra khi xóa');
+      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa');
     }
   };
 
@@ -495,9 +621,9 @@ export default function TeacherSalaries() {
       await apiService.post(`/lecturer-payments/${payment.id}/approve`, {});
 
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error approving payment:', error);
-      alert(error.message || 'Có lỗi xảy ra khi duyệt');
+      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi duyệt');
     }
   };
 
@@ -524,9 +650,9 @@ export default function TeacherSalaries() {
 
       rejectModal.close();
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error rejecting payment:', error);
-      alert(error.message || 'Có lỗi xảy ra khi từ chối');
+      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi từ chối');
     }
   };
 
@@ -549,9 +675,9 @@ export default function TeacherSalaries() {
       });
 
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error marking as paid:', error);
-      alert(error.message || 'Có lỗi xảy ra');
+      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra');
     }
   };
 
@@ -881,9 +1007,9 @@ export default function TeacherSalaries() {
                         form.setFieldValue('student_count', selected.student_count);
                         form.setFieldValue('start_date', selected.start_date);
                         form.setFieldValue('end_date', selected.end_date);
-                        form.setFieldValue('theory_sessions', selected.theory_sessions);
-                        form.setFieldValue('practical_sessions', selected.practical_sessions);
-                        form.setFieldValue('total_sessions', selected.total_sessions);
+                        form.setFieldValue('theory_sessions', Math.round(selected.theory_sessions));
+                        form.setFieldValue('practical_sessions', Math.round(selected.practical_sessions));
+                        form.setFieldValue('total_sessions', Math.round(selected.total_sessions));
                       }
                     }}
                   />
@@ -952,16 +1078,6 @@ export default function TeacherSalaries() {
               onBlur={() => form.handleBlur('class_name')}
               error={form.errors.class_name}
             />
-
-            <Input
-              type="number"
-              label="Số học viên"
-              value={form.values.student_count}
-              onChange={(e) => form.handleChange('student_count', Number(e.target.value))}
-              onBlur={() => form.handleBlur('student_count')}
-              error={form.errors.student_count}
-            />
-
             <Input
               type="number"
               label="Số tín chỉ"
@@ -1021,7 +1137,7 @@ export default function TeacherSalaries() {
 
             <Input
               type="number"
-              label="Số buổi thực hành"
+              label="Số buổi khác"
               value={form.values.practical_sessions}
               onChange={(e) => form.handleChange('practical_sessions', Number(e.target.value))}
               onBlur={() => form.handleBlur('practical_sessions')}

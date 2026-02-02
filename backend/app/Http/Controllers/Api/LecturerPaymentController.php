@@ -809,8 +809,8 @@ class LecturerPaymentController extends Controller
                     if ($assignment->start_date && $assignment->end_date) {
                         $startDate = \Carbon\Carbon::parse($assignment->start_date);
                         $endDate = \Carbon\Carbon::parse($assignment->end_date);
-                        $weeks = max(1, $startDate->diffInWeeks($endDate));
-                        $totalSessions = $weeks; // Assume 1 session per week
+                        $weeks = max(1, ceil($startDate->diffInWeeks($endDate)));
+                        $totalSessions = (int) $weeks; // Ensure integer
                     } else {
                         $totalSessions = 15; // Default 15 sessions
                     }
@@ -827,9 +827,9 @@ class LecturerPaymentController extends Controller
                         'student_count' => $assignment->student_count ?? 0,
                         'start_date' => $assignment->start_date ? $assignment->start_date->format('Y-m-d') : '',
                         'end_date' => $assignment->end_date ? $assignment->end_date->format('Y-m-d') : '',
-                        'theory_sessions' => $totalSessions,
+                        'theory_sessions' => (int) $totalSessions,
                         'practical_sessions' => 0,
-                        'total_sessions' => $totalSessions,
+                        'total_sessions' => (int) $totalSessions,
                     ];
                 })
                 ->filter() // Remove null values

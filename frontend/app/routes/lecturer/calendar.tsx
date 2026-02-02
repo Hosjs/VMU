@@ -798,17 +798,22 @@ export default function LecturerCalendarPage() {
             {/* Payment Section - Show assignments ready for payment */}
             {(() => {
               // Get unique teaching assignments and check their status
+              // Use Set to track which assignment IDs we've already added to avoid duplicates
               const assignmentsMap = new Map<number, any>();
+
               sessionsData.data.forEach(session => {
                 const assignment = (session as any).teaching_assignment || session.teachingAssignment;
-                if (assignment && !assignmentsMap.has(assignment.id)) {
+
+                // Only add if:
+                // 1. Assignment exists (not orphaned)
+                // 2. We haven't added this assignment yet (by ID)
+                // 3. Assignment status is 'in_exam'
+                if (assignment && assignment.status === 'in_exam' && !assignmentsMap.has(assignment.id)) {
                   assignmentsMap.set(assignment.id, assignment);
                 }
               });
 
-              const assignmentsInExam = Array.from(assignmentsMap.values()).filter(
-                (assignment: any) => assignment.status === 'in_exam'
-              );
+              const assignmentsInExam = Array.from(assignmentsMap.values());
 
               if (assignmentsInExam.length === 0) return null;
 
@@ -817,39 +822,63 @@ export default function LecturerCalendarPage() {
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-md font-bold text-gray-900 flex items-center gap-2">
                       <BanknotesIcon className="w-5 h-5 text-green-600" />
-                      Khóa học sẵn sàng thanh toán
+                      Khóa học sẵn sàng thanh toán ({assignmentsInExam.length})
                     </h4>
                   </div>
                   <div className="space-y-3">
-                    {assignmentsInExam.map((assignment: any) => (
-                      <div
-                        key={assignment.id}
-                        className="bg-green-50 border border-green-200 rounded-lg p-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold text-gray-900 mb-1">
-                              {assignment.course_name}
+                    {assignmentsInExam.map((assignment: any) => {
+                      // Count sessions for this assignment
+                      const sessionCount = sessionsData.data.filter(
+                        s => s.teaching_assignment_id === assignment.id
+                      ).length;
+
+                      return (
+                        <div
+                          key={assignment.id}
+                          className="bg-green-50 border border-green-200 rounded-lg p-4"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="font-semibold text-gray-900 mb-1">
+                                {assignment.course_name}
+                              </div>
+                              <div className="text-sm text-gray-600 mb-1">
+                                Mã HP: {assignment.course_code} | Lớp: {assignment.class_name || 'N/A'}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs">
+                                <span className="text-green-700">
+                                  ✅ Tất cả buổi học đã hoàn thành - Đang trong kỳ thi
+                                </span>
+                                <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                  {sessionCount} buổi học
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600">
-                              Mã HP: {assignment.course_code} | Lớp: {assignment.class_name || 'N/A'}
-                            </div>
-                            <div className="text-xs text-green-700 mt-1">
-                              ✅ Tất cả buổi học đã hoàn thành - Đang trong kỳ thi
-                            </div>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => navigate('/teachers/salaries', {
+                                state: {
+                                  autoFillAssignment: {
+                                    assignmentId: assignment.id,
+                                    lecturerId: assignment.lecturer_id,
+                                    subjectId: assignment.subject_id,
+                                    classId: assignment.class_id,
+                                    courseName: assignment.course_name,
+                                    courseCode: assignment.course_code,
+                                    className: assignment.class_name
+                                  }
+                                }
+                              })}
+                              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 ml-4"
+                            >
+                              <BanknotesIcon className="w-4 h-4" />
+                              Thanh toán
+                            </Button>
                           </div>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => navigate('/teachers/salaries')}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                          >
-                            <BanknotesIcon className="w-4 h-4" />
-                            Thanh toán giảng dạy
-                          </Button>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
