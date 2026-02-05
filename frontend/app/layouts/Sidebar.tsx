@@ -22,6 +22,7 @@ import {
   PresentationChartBarIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 
 interface MenuItem {
@@ -120,8 +121,8 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['students.view'], // ✅ Manager có
         },
         {
-          title: 'Phòng học',
-          path: '/rooms',
+          title: 'Quản lý lớp',
+          path: '/class-management',
           icon: <BuildingLibraryIcon className="w-5 h-5" />,
           requiredPermissions: ['classrooms.view'], // ✅ Manager có
         },
@@ -142,24 +143,6 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           path: '/lecturers',
           icon: <AcademicCapIcon className="w-5 h-5" />,
           requiredPermissions: ['teachers.view'], // ✅ Manager có
-        },
-        {
-          title: 'Phân công giảng dạy',
-          path: '/lecturer/assignments',
-          icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
-          requiredPermissions: ['teaching_assignments.view'], // ✅ Manager có
-        },
-        {
-          title: 'Lịch giảng viên',
-          path: '/lecturer/calendar',
-          icon: <CalendarDaysIcon className="w-5 h-5" />,
-          requiredPermissions: ['teaching_assignments.view'], // ✅ Manager có
-        },
-        {
-          title: 'Tiền công giảng dạy',
-          path: '/teachers/salaries',
-          icon: <BanknotesIcon className="w-5 h-5" />,
-          requiredPermissions: ['teacher_salaries.view'], // ❌ Manager không có
         },
       ],
     },
@@ -185,23 +168,17 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
           requiredPermissions: ['study_plans.view'], // ❌ Manager không có
         },
-        {
-          title: 'Thời khóa biểu',
-          path: '/training/schedules',
-          icon: <CalendarDaysIcon className="w-5 h-5" />,
-          requiredPermissions: ['schedules.view'], // ✅ Manager có
-        },
       ],
     },
     {
-      title: 'Học tập & Tài chính',
+      title: 'Học vụ',
       icon: <PresentationChartBarIcon className="w-5 h-5" />,
       items: [
         {
-          title: 'Điểm học tập',
+          title: 'Tra cứu Điểm',
           path: '/academic/grades',
-          icon: <PresentationChartBarIcon className="w-5 h-5" />,
-          requiredPermissions: ['grades.view'], // ✅ Manager có (chỉ xem)
+          icon: <MagnifyingGlassIcon className="w-5 h-5" />,
+          requiredPermissions: ['grades.view'],
         },
       ],
     },

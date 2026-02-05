@@ -9,6 +9,7 @@ import type { PaginatedResponse, TableQueryParams } from '~/types/common';
  */
 export class RoomService {
   private apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  private classManagementPath = `${this.apiUrl}/class-management`;
 
   /**
    * Lấy danh sách lớp học từ bảng classes
@@ -60,8 +61,7 @@ export class RoomService {
    */
   getLopHocThacSy = async (namVao: number = new Date().getFullYear()): Promise<Room[]> => {
     try {
-      // Gọi qua Laravel backend để bypass CORS
-      const response = await fetch(`${this.apiUrl}/rooms/thac-sy?namVao=${namVao}`, {
+      const response = await fetch(`${this.classManagementPath}/thac-sy?namVao=${namVao}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ export class RoomService {
    */
   getChiTiet = async (id: number): Promise<Room | null> => {
     try {
-      const response = await fetch(`${this.apiUrl}/rooms/${id}`, {
+      const response = await fetch(`${this.classManagementPath}/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

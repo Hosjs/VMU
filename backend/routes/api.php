@@ -11,15 +11,13 @@ use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\ClassAssignmentController;
 use App\Http\Controllers\Api\GradeController;
+use App\Http\Controllers\Api\GradeProxyController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TrainingController;
-use App\Http\Controllers\Api\TeachingAssignmentController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\GradeManagementController;
 use App\Http\Controllers\Api\SubjectController;
-use App\Http\Controllers\Api\LecturerPaymentController;
-use App\Http\Controllers\Api\PaymentRateController;
 use App\Http\Controllers\Api\AcademicYearController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,8 +47,11 @@ Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/roles/{id}', [RoleController::class, 'show']);
 
 // Rooms/Classes Routes (Public)
-Route::get('/rooms/thac-sy', [RoomController::class, 'getThacSy']);
-Route::get('/rooms', [RoomController::class, 'index']);
+Route::prefix('class-management')->group(function () {
+    Route::get('/thac-sy', [RoomController::class, 'getThacSy']);
+    Route::get('/', [RoomController::class, 'index']);
+    Route::get('/{id}', [RoomController::class, 'show']);
+});
 
 // Major-Subjects Routes (Public)
 Route::get('/major-subjects', [MajorSubjectController::class, 'index']);
@@ -60,7 +61,14 @@ Route::post('/major-subjects', [MajorSubjectController::class, 'store']);
 Route::post('/major-subjects/bulk-assign', [MajorSubjectController::class, 'bulkAssign']);
 Route::delete('/major-subjects/{id}', [MajorSubjectController::class, 'destroy']);
 
-Route::get("/courses/{id}",[CourseController::class, 'show']);
+// Courses (Kỳ học) Routes (Public)
+Route::get('/courses', [CourseController::class, 'index']);
+Route::get('/courses/simple', [CourseController::class, 'simple']);
+Route::get('/courses/{id}', [CourseController::class, 'show']);
+Route::post('/courses', [CourseController::class, 'store']);
+Route::put('/courses/{id}', [CourseController::class, 'update']);
+Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+Route::post('/courses/create-classes', [CourseController::class, 'createClasses']);
 
 Route::get('/trinh-do-dao-tao', [EducationLevelController::class, 'simple']);
 Route::get('/education-levels', [EducationLevelController::class, 'index']);
@@ -89,6 +97,10 @@ Route::get('/classes/{id}/students', [ClassController::class, 'getStudents']);
 Route::prefix('grades')->group(function () {
     Route::get('/', [GradeController::class, 'getGradesByMaHV']);
     Route::get('/grouped', [GradeController::class, 'getGradesGrouped']);
+
+    // Proxy for external API (bypass CORS)
+    Route::get('/external', [GradeProxyController::class, 'getGradesByMaHV']);
+    Route::get('/external/health', [GradeProxyController::class, 'checkApiHealth']);
 });
 
 // Grade Management Routes (for teachers/admin)
@@ -195,73 +207,9 @@ Route::middleware('auth:api')->group(function () {
             ->middleware('permission:training.view');
     });
 
-    // Teaching Assignments Management
-    Route::prefix('teaching-assignments')->group(function () {
-        // Routes mà giáo viên có thể truy cập (xem lịch của chính họ)
-        Route::get('/', [TeachingAssignmentController::class, 'index']); // Controller tự filter theo lecturer
-        Route::get('/upcoming', [TeachingAssignmentController::class, 'getUpcoming']);
-        Route::get('/today', [TeachingAssignmentController::class, 'getToday']);
-        Route::get('/{id}', [TeachingAssignmentController::class, 'show']);
-        Route::get('/lecturer/{lecturerId}/schedule', [TeachingAssignmentController::class, 'lecturerSchedule']);
-
-        // Routes chỉ admin/manager mới được dùng (create, update, delete)
-        Route::post('/check-conflict', [TeachingAssignmentController::class, 'checkConflict'])->middleware('permission:teaching_assignments.create');
-        Route::post('/', [TeachingAssignmentController::class, 'store'])->middleware('permission:teaching_assignments.create');
-        Route::put('/{id}', [TeachingAssignmentController::class, 'update'])->middleware('permission:teaching_assignments.edit');
-        Route::delete('/{id}', [TeachingAssignmentController::class, 'destroy'])->middleware('permission:teaching_assignments.delete');
-    });
-
-    // Teaching Sessions Management (quản lý từng buổi học)
-    Route::prefix('teaching-sessions')->group(function () {
-        // Public routes - xem danh sách sessions
-        Route::get('/', [App\Http\Controllers\Api\TeachingSessionController::class, 'index']);
-        Route::get('/{id}', [App\Http\Controllers\Api\TeachingSessionController::class, 'show']);
-
-        // Protected routes - CRUD sessions
-        Route::post('/', [App\Http\Controllers\Api\TeachingSessionController::class, 'store'])
-            ->middleware('permission:teaching_assignments.create');
-        Route::put('/{id}', [App\Http\Controllers\Api\TeachingSessionController::class, 'update'])
-            ->middleware('permission:teaching_assignments.edit');
-        Route::delete('/{id}', [App\Http\Controllers\Api\TeachingSessionController::class, 'destroy'])
-            ->middleware('permission:teaching_assignments.delete');
-
-        // Generate sessions từ assignment
-        Route::post('/generate/{assignmentId}', [App\Http\Controllers\Api\TeachingSessionController::class, 'generateSessions'])
-            ->middleware('permission:teaching_assignments.create');
-    });
-
     Route::prefix('education-levels')->group(function () {
         Route::post('/', [EducationLevelController::class, 'store'])->middleware('permission:education_levels.create');
         Route::put('/{id}', [EducationLevelController::class, 'update'])->middleware('permission:education_levels.edit');
         Route::delete('/{id}', [EducationLevelController::class, 'destroy'])->middleware('permission:education_levels.delete');
-    });
-
-    // Lecturer Payments Management
-    Route::prefix('lecturer-payments')->group(function () {
-        Route::get('/', [LecturerPaymentController::class, 'index']);
-        Route::get('/statistics', [LecturerPaymentController::class, 'getStatistics']);
-        Route::get('/available-semesters', [LecturerPaymentController::class, 'getAvailableSemesters']);
-        Route::get('/available-subjects', [LecturerPaymentController::class, 'getAvailableSubjects']);
-        Route::get('/teaching-assignments-for-autofill', [LecturerPaymentController::class, 'getTeachingAssignmentsForAutoFill']);
-        Route::get('/lecturer/{lecturerId}/summary', [LecturerPaymentController::class, 'getLecturerSummary']);
-        Route::post('/calculate-from-assignment', [LecturerPaymentController::class, 'calculateFromAssignment']);
-        Route::get('/{id}', [LecturerPaymentController::class, 'show']);
-        Route::post('/', [LecturerPaymentController::class, 'store']);
-        Route::put('/{id}', [LecturerPaymentController::class, 'update']);
-        Route::delete('/{id}', [LecturerPaymentController::class, 'destroy']);
-        Route::post('/{id}/approve', [LecturerPaymentController::class, 'approve']);
-        Route::post('/{id}/reject', [LecturerPaymentController::class, 'reject']);
-        Route::post('/{id}/mark-as-paid', [LecturerPaymentController::class, 'markAsPaid']);
-    });
-
-    // Payment Rates Management
-    Route::prefix('payment-rates')->group(function () {
-        Route::get('/', [PaymentRateController::class, 'index']);
-        Route::get('/active', [PaymentRateController::class, 'getActiveRates']);
-        Route::get('/{id}', [PaymentRateController::class, 'show']);
-        Route::post('/', [PaymentRateController::class, 'store']);
-        Route::put('/{id}', [PaymentRateController::class, 'update']);
-        Route::delete('/{id}', [PaymentRateController::class, 'destroy']);
-        Route::post('/{id}/toggle-active', [PaymentRateController::class, 'toggleActive']);
     });
 });

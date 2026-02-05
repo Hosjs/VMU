@@ -6,7 +6,6 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Breadcrumb } from './Breadcrumb';
 import { DebugRouteInfo } from '~/components/DebugRouteInfo';
-import { ScheduleNotification } from '~/components/ScheduleNotification';
 
 export default function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -86,9 +85,6 @@ export default function MainLayout() {
           </p>
         </footer>
       </div>
-
-      {/* Schedule Notification - Hiển thị thông báo lịch dạy hôm nay */}
-      <ScheduleNotification />
     </div>
   );
 }

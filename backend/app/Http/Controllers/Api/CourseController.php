@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\KhoaHoc;
+use App\Models\Major;
+use App\Models\Classes;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 class CourseController extends Controller
 {
-    private $externalApiUrl = 'http://203.162.246.113:8088';
-
     /**
      * Lấy danh sách phòng học/lớp học
      * GET /api/rooms
@@ -18,104 +20,307 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         try {
-            $allRooms = [];
+            $query = KhoaHoc::query();
 
-            // Lặp qua tất cả ID từ 3 đến 147 để lấy toàn bộ dữ liệu
-            for ($id = 3; $id <= 147; $id++) {
-                try {
-                    $response = Http::timeout(10)->get("{$this->externalApiUrl}/LopHoc/MaLop", [
-                        'ID' => $id
-                    ]);
-
-                    if ($response->successful()) {
-                        $data = $response->json();
-
-                        // API trả về array, merge vào danh sách tổng
-                        if (is_array($data) && count($data) > 0) {
-                            $allRooms = array_merge($allRooms, $data);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Log lỗi nhưng tiếp tục với ID tiếp theo
-                    Log::warning("Failed to fetch room with ID {$id}: " . $e->getMessage());
-                    continue;
-                }
+            // Search
+            if ($request->has('search') && $request->search) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('ma_khoa_hoc', 'like', "%{$search}%")
+                      ->orWhere('nam_hoc', 'like', "%{$search}%")
+                      ->orWhere('ghi_chu', 'like', "%{$search}%");
+                });
             }
 
-            // Loại bỏ trùng lặp dựa trên ID của room
-            $uniqueRooms = [];
-            $seenIds = [];
+            // Sorting
+            $sortBy = $request->get('sort_by', 'id');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
 
-            foreach ($allRooms as $room) {
-                if (!in_array($room['id'], $seenIds)) {
-                    $uniqueRooms[] = $room;
-                    $seenIds[] = $room['id'];
-                }
-            }
+            // Pagination
+            $perPage = $request->get('per_page', 10);
+            $courses = $query->paginate($perPage);
 
-            return response()->json([
-                'success' => true,
-                'data' => $uniqueRooms,
-                'message' => 'Lấy danh sách phòng học thành công',
-                'total' => count($uniqueRooms)
-            ]);
-
+            // Return Laravel standard pagination format
+            return response()->json($courses);
         } catch (\Exception $e) {
-            Log::error('Room API Error: ' . $e->getMessage());
-
+            Log::error('Error fetching courses: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Đã xảy ra lỗi khi lấy danh sách phòng học',
+                'message' => 'Không thể lấy danh sách kỳ học',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Lấy chi tiết một phòng học
-     * GET /api/rooms/{id}
+     * Lấy chi tiết một kỳ học
+     * GET /api/courses/{id}
      */
     public function show($id)
     {
         try {
-            $response = Http::timeout(10)->get("{$this->externalApiUrl}/LopHoc/MaLop", [
-                'ID' => $id
-            ]);
+            $course = KhoaHoc::find($id);
 
-            if (!$response->successful()) {
+            if (!$course) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Không tìm thấy phòng học',
-                ], 404);
-            }
-
-            $data = $response->json();
-
-            // API trả về array, lấy phần tử đầu tiên
-            $room = is_array($data) && count($data) > 0 ? $data[0] : null;
-
-            if (!$room) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không tìm thấy phòng học',
+                    'message' => 'Không tìm thấy kỳ học',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $room,
-                'message' => 'Lấy thông tin phòng học thành công'
+                'data' => $course,
             ]);
-
         } catch (\Exception $e) {
-            Log::error('Room Detail API Error: ' . $e->getMessage());
-
+            Log::error('Error fetching course: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Đã xảy ra lỗi khi lấy thông tin phòng học',
+                'message' => 'Không thể lấy thông tin kỳ học',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Tạo kỳ học mới
+     * POST /api/courses
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'nam_hoc' => 'required|integer|min:2020|max:2100',
+                'hoc_ky' => 'required|integer|between:1,3',
+                'dot' => 'required|integer|between:1,5',
+                'ngay_bat_dau' => 'nullable|date',
+                'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
+                'ghi_chu' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Generate ma_khoa_hoc: {nam_hoc}.{hoc_ky}.{dot}
+            $maKhoaHoc = "{$request->nam_hoc}.{$request->hoc_ky}.{$request->dot}";
+
+            // Check if already exists
+            $exists = KhoaHoc::where('ma_khoa_hoc', $maKhoaHoc)->exists();
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Kỳ học {$maKhoaHoc} đã tồn tại",
+                ], 422);
+            }
+
+            $course = KhoaHoc::create([
+                'ma_khoa_hoc' => $maKhoaHoc,
+                'nam_hoc' => $request->nam_hoc,
+                'hoc_ky' => $request->hoc_ky,
+                'dot' => $request->dot,
+                'ngay_bat_dau' => $request->ngay_bat_dau,
+                'ngay_ket_thuc' => $request->ngay_ket_thuc,
+                'ghi_chu' => $request->ghi_chu,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tạo kỳ học thành công',
+                'data' => $course,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating course: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể tạo kỳ học',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cập nhật kỳ học
+     * PUT /api/courses/{id}
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $course = KhoaHoc::find($id);
+
+            if (!$course) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy kỳ học',
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'ngay_bat_dau' => 'nullable|date',
+                'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
+                'ghi_chu' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $course->update($request->only(['ngay_bat_dau', 'ngay_ket_thuc', 'ghi_chu']));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật kỳ học thành công',
+                'data' => $course,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating course: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể cập nhật kỳ học',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Xóa kỳ học
+     * DELETE /api/courses/{id}
+     */
+    public function destroy($id)
+    {
+        try {
+            $course = KhoaHoc::find($id);
+
+            if (!$course) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy kỳ học',
+                ], 404);
+            }
+
+            // Check if has classes
+            $hasClasses = Classes::where('khoaHoc_id', $id)->exists();
+            if ($hasClasses) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xóa kỳ học đã có lớp học',
+                ], 422);
+            }
+
+            $course->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa kỳ học thành công',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting course: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa kỳ học',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Tạo lớp học cho ngành và kỳ học
+     * POST /api/courses/create-classes
+     */
+    public function createClasses(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'khoa_hoc_id' => 'required|exists:khoa_hoc,id',
+                'major_id' => 'required|exists:majors,id',
+                'trinh_do' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $khoaHoc = KhoaHoc::find($request->khoa_hoc_id);
+            $major = Major::find($request->major_id);
+
+            // Generate class name: {MajorCode} {ma_khoa_hoc}
+            // Example: CNTT 2025.1.1
+            $majorCode = $major->maNganh ?? 'UNKN';
+            $className = "{$majorCode} {$khoaHoc->ma_khoa_hoc}";
+
+            // Check if class already exists
+            $exists = Classes::where('class_name', $className)
+                ->where('khoaHoc_id', $request->khoa_hoc_id)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Lớp {$className} đã tồn tại",
+                ], 422);
+            }
+
+            $class = Classes::create([
+                'class_name' => $className,
+                'major_id' => $request->major_id,
+                'khoaHoc_id' => $request->khoa_hoc_id,
+                'maTrinhDoDaoTao' => $request->trinh_do,
+                'trangThai' => 'DangHoc',
+                'createdBy' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Tạo lớp {$className} thành công",
+                'data' => $class,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating class: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể tạo lớp học',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Lấy danh sách kỳ học để chọn (dropdown)
+     * GET /api/courses/simple
+     */
+    public function simple()
+    {
+        try {
+            $courses = KhoaHoc::select('id', 'ma_khoa_hoc', 'nam_hoc', 'hoc_ky', 'dot')
+                ->orderBy('nam_hoc', 'desc')
+                ->orderBy('hoc_ky', 'desc')
+                ->orderBy('dot', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $courses,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching simple courses: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể lấy danh sách kỳ học',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 }
-

@@ -1,20 +1,20 @@
 import { useMemo, useState, useEffect } from 'react';
-import { roomService } from '~/services/room.service';
+import { courseService } from '~/services/course.service';
 import { majorService } from '~/services/major.service';
-import { academicYearService } from '~/services/academic-year.service';
 import { useTable } from '~/hooks/useTable';
 import { useForm } from '~/hooks/useForm';
-import type { Room } from '~/types/room';
+import type { Course, CourseFormData, CreateClassRequest } from '~/types/course';
 import type { Major } from '~/types/major';
 import type { TableQueryParams, PaginatedResponse } from '~/types/common';
 import {
-    AcademicCapIcon,
+    CalendarDaysIcon,
     MagnifyingGlassIcon,
     FunnelIcon,
     ArrowPathIcon,
-    UserGroupIcon,
     PlusCircleIcon,
-    CalendarIcon
+    PencilIcon,
+    TrashIcon,
+    AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
@@ -22,23 +22,24 @@ import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
+import { Modal } from '~/components/ui/Modal';
 
 export function meta() {
     return [
-        { title: "Danh sách lớp học - VMU Training" },
-        { name: "description", content: "Quản lý thông tin lớp học theo ngành và khóa học" },
+        { title: "Quản lý kỳ học - VMU Training" },
+        { name: "description", content: "Quản lý thông tin kỳ học và tạo lớp học" },
     ];
 }
 
-export default function RoomPage() {
-    // State for majors list
+export default function CoursePage() {
     const [majors, setMajors] = useState<Major[]>([]);
-
-    // State for academic year modal
-    const [showAddYearModal, setShowAddYearModal] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showCreateClassModal, setShowCreateClassModal] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Load majors on component mount
+    // Load majors
     useEffect(() => {
         const loadMajors = async () => {
             try {
@@ -51,312 +52,261 @@ export default function RoomPage() {
         loadMajors();
     }, []);
 
-    // ============================================
-    // FORM for academic year with major selection
-    // ============================================
-    const yearForm = useForm({
+    // Form for creating new course
+    const addForm = useForm<CourseFormData>({
         initialValues: {
             nam_hoc: new Date().getFullYear(),
-            selected_majors: [] as string[], // List of major IDs to create classes for
+            hoc_ky: 1,
+            dot: 1,
+            ngay_bat_dau: '',
+            ngay_ket_thuc: '',
+            ghi_chu: '',
         },
         onSubmit: async (values) => {
-            if (values.selected_majors.length === 0) {
-                alert('⚠️ Vui lòng chọn ít nhất một ngành học để tạo lớp');
-                return;
-            }
-
             setIsSubmitting(true);
             try {
-                await academicYearService.createAcademicYear({
-                    nam_hoc: values.nam_hoc,
-                    ten_khoa_hoc: `Năm học ${values.nam_hoc}-${values.nam_hoc + 1}`,
-                    major_ids: values.selected_majors,
-                });
-
-                const majorCount = values.selected_majors.length;
-                alert(`✅ Đã thêm năm học ${values.nam_hoc}-${values.nam_hoc + 1} thành công!\n📚 Đã tạo lớp cho ${majorCount} ngành học.`);
-                setShowAddYearModal(false);
-                yearForm.reset();
+                await courseService.createCourse(values);
+                alert(`✅ Tạo kỳ học ${values.nam_hoc}.${values.hoc_ky}.${values.dot} thành công!`);
+                setShowAddModal(false);
+                addForm.reset();
                 table.refresh();
             } catch (error: any) {
-                alert(`❌ Lỗi: ${error.message || 'Không thể thêm năm học'}`);
+                alert(`❌ Lỗi: ${error.message || 'Không thể tạo kỳ học'}`);
             } finally {
                 setIsSubmitting(false);
             }
         },
     });
 
-    // Handle major selection toggle
-    const handleMajorToggle = (majorId: string) => {
-        const currentSelection = yearForm.values.selected_majors;
-        if (currentSelection.includes(majorId)) {
-            yearForm.handleChange('selected_majors', currentSelection.filter(id => id !== majorId));
-        } else {
-            yearForm.handleChange('selected_majors', [...currentSelection, majorId]);
-        }
-    };
-
-    // Select all majors
-    const handleSelectAllMajors = () => {
-        if (yearForm.values.selected_majors.length === majors.length) {
-            yearForm.handleChange('selected_majors', []);
-        } else {
-            yearForm.handleChange('selected_majors', majors.map(m => m.maNganh || m.id.toString()));
-        }
-    };
-
-    // ============================================
-    // FORM for search
-    // ============================================
-    const searchForm = useForm({
-        initialValues: { search: '' },
+    // Form for editing course
+    const editForm = useForm<Partial<CourseFormData>>({
+        initialValues: {
+            ngay_bat_dau: '',
+            ngay_ket_thuc: '',
+            ghi_chu: '',
+        },
         onSubmit: async (values) => {
-            handleSearch(values.search);
+            if (!selectedCourse) return;
+            setIsSubmitting(true);
+            try {
+                await courseService.updateCourse(selectedCourse.id, values);
+                alert('✅ Cập nhật kỳ học thành công!');
+                setShowEditModal(false);
+                setSelectedCourse(null);
+                table.refresh();
+            } catch (error: any) {
+                alert(`❌ Lỗi: ${error.message || 'Không thể cập nhật kỳ học'}`);
+            } finally {
+                setIsSubmitting(false);
+            }
         },
     });
 
-    // ============================================
-    // TABLE HOOK - Fetch data with pagination
-    // ============================================
-    const fetchRoomsData = async (params: TableQueryParams): Promise<PaginatedResponse<Room>> => {
+    // Form for creating class
+    const createClassForm = useForm<CreateClassRequest>({
+        initialValues: {
+            khoa_hoc_id: 0,
+            major_id: 0,
+            trinh_do: 'THS',
+        },
+        onSubmit: async (values) => {
+            setIsSubmitting(true);
+            try {
+                const result = await courseService.createClass(values);
+                alert(`✅ ${result.message || 'Tạo lớp học thành công!'}`);
+                setShowCreateClassModal(false);
+                createClassForm.reset();
+            } catch (error: any) {
+                alert(`❌ Lỗi: ${error.message || 'Không thể tạo lớp học'}`);
+            } finally {
+                setIsSubmitting(false);
+            }
+        },
+    });
+
+    // Search form
+    const searchForm = useForm({
+        initialValues: {search: ''},
+        onSubmit: async (values) => {
+            table.handleSearch(values.search);
+        },
+    });
+
+    // Table hook
+    const fetchCoursesData = async (params: TableQueryParams): Promise<PaginatedResponse<Course>> => {
         try {
-            const allData = await roomService.getDanhSach();
-
-            // Client-side filtering
-            let filtered = allData;
-            if (params.search) {
-                const keyword = params.search.toLowerCase().trim();
-                filtered = allData.filter(room =>
-                    room.tenLop?.toLowerCase().includes(keyword) ||
-                    room.giaoVienChuNhiem?.toLowerCase().includes(keyword) ||
-                    room.maNganhHoc?.toLowerCase().includes(keyword) ||
-                    room.khoaHoc?.toString().includes(keyword)
-                );
-            }
-
-            // Client-side sorting
-            if (params.sort_by) {
-                filtered = [...filtered].sort((a, b) => {
-                    const aVal = (a as any)[params.sort_by!];
-                    const bVal = (b as any)[params.sort_by!];
-
-                    if (params.sort_direction === 'desc') {
-                        return bVal > aVal ? 1 : -1;
-                    }
-                    return aVal > bVal ? 1 : -1;
-                });
-            }
-
-            // Client-side pagination
-            const page = params.page || 1;
-            const perPage = params.per_page || 10;
-            const start = (page - 1) * perPage;
-            const end = start + perPage;
-            const paginatedData = filtered.slice(start, end);
-            const lastPage = Math.ceil(filtered.length / perPage);
-
-            return {
-                data: paginatedData,
-                current_page: page,
-                last_page: lastPage,
-                per_page: perPage,
-                total: filtered.length,
-                from: start + 1,
-                to: Math.min(end, filtered.length),
-                first_page_url: '',
-                last_page_url: '',
-                next_page_url: page < lastPage ? '' : null,
-                prev_page_url: page > 1 ? '' : null,
-                path: '',
-            };
+            return await courseService.getCourses(params);
         } catch (error) {
-            console.error('Error fetching rooms:', error);
+            console.error('❌ Error fetching courses:', error);
             throw error;
         }
     };
 
-    const table = useTable<Room>({
-        fetchData: fetchRoomsData,
+    const table = useTable<Course>({
+        fetchData: fetchCoursesData,
         initialPage: 1,
         initialPerPage: 10,
-        initialSortBy: 'khoaHoc',
+        initialSortBy: 'id',
         initialSortDirection: 'desc',
     });
 
-    // ============================================
-    // HELPERS
-    // ============================================
-    const getMajorName = (room: Room): string => {
-        // Prioritize major_name from API join
-        if (room.major_name) {
-            return room.major_name;
-        }
-
-        // Fallback to local mapping if needed
-        const majorId = room.major_id || room.maNganhHoc;
-        if (!majorId) return '-';
-
-        // Try to find major by ID or code
-        const major = majors.find(m =>
-            m.id.toString() === majorId.toString() ||
-            m.ma === majorId ||
-            m.maNganh === majorId
-        );
-
-        if (major) {
-            return major.tenNganhHoc || major.tenNganh || majorId;
-        }
-
-        return majorId;
+    // Handlers
+    const handleEdit = (course: Course) => {
+        setSelectedCourse(course);
+        editForm.setValues({
+            ngay_bat_dau: course.ngay_bat_dau || '',
+            ngay_ket_thuc: course.ngay_ket_thuc || '',
+            ghi_chu: course.ghi_chu || '',
+        });
+        setShowEditModal(true);
     };
 
-    const getAcademicYear = (room: Room): string => {
-        // Prioritize nam_hoc from API join
-        if (room.nam_hoc) {
-            // Display single year (e.g., 2024)
-            return room.nam_hoc.toString();
+    const handleDelete = async (course: Course) => {
+        if (!confirm(`Bạn có chắc chắn muốn xóa kỳ học ${course.ma_khoa_hoc}?`)) return;
+        try {
+            await courseService.deleteCourse(course.id);
+            alert('✅ Xóa kỳ học thành công!');
+            table.refresh();
+        } catch (error: any) {
+            alert(`❌ Lỗi: ${error.message || 'Không thể xóa kỳ học'}`);
         }
-
-        // Fallback for old data
-        const year = room.khoaHoc_id || room.khoaHoc;
-        if (!year) return '-';
-
-        // If year looks like a full year (>= 2000), use it
-        if (year >= 2000) {
-            return year.toString();
-        }
-
-        // Otherwise it's probably a course ID, show as is
-        return `Khóa ${year}`;
     };
 
-    // ============================================
-    // TABLE COLUMNS CONFIGURATION
-    // ============================================
+    const handleCreateClass = (course: Course) => {
+        setSelectedCourse(course);
+        createClassForm.setFieldValue('khoa_hoc_id', course.id);
+        setShowCreateClassModal(true);
+    };
+
+    // Table columns
     const columns = useMemo(() => [
         {
             key: 'stt',
             label: 'STT',
             width: '60px',
-            render: (_: Room, index: number) => (
+            render: (_: Course, index: number) => (
                 <span className="text-gray-900">
-          {(table.meta.current_page - 1) * table.meta.per_page + index + 1}
-        </span>
+                    {(table.meta.current_page - 1) * table.meta.per_page + index + 1}
+                </span>
             ),
         },
         {
-            key: 'id',
-            label: 'ID',
-            sortable: true,
-            width: '80px',
-            render: (item: Room) => (
-                <span className="font-semibold text-blue-600">
-          {item.id}
-        </span>
-            ),
-        },
-        {
-            key: 'tenLop',
-            label: 'Tên lớp',
-            sortable: true,
-            render: (item: Room) => (
-                <div className="text-sm font-medium text-gray-900">
-                    {item.tenLop || item.class_name || '-'}
-                </div>
-            ),
-        },
-        {
-            key: 'khoaHoc',
-            label: 'Năm học',
+            key: 'ma_khoa_hoc',
+            label: 'Mã kỳ học',
             sortable: true,
             width: '120px',
-            render: (item: Room) => (
-                <Badge variant="info">
-                    {getAcademicYear(item)}
-                </Badge>
+            render: (item: Course) => (
+                <span className="font-semibold text-blue-600">
+                    {item.ma_khoa_hoc}
+                </span>
             ),
         },
         {
-            key: 'maNganhHoc',
-            label: 'Ngành học',
-            width: '200px',
-            render: (item: Room) => (
-                <div className="text-sm text-gray-700 font-medium">
-                    {getMajorName(item)}
-                </div>
-            ),
-        },
-        {
-            key: 'maTrinhDoDaoTao',
-            label: 'Trình độ',
+            key: 'nam_hoc',
+            label: 'Năm học',
+            sortable: true,
             width: '100px',
-            render: (item: Room) => (
-                <Badge variant="default">
-                    {item.maTrinhDoDaoTao || '-'}
-                </Badge>
+            render: (item: Course) => (
+                <Badge variant="info">{item.nam_hoc}</Badge>
             ),
         },
         {
-            key: 'giaoVienChuNhiem',
-            label: 'GVCN',
-            render: (item: Room) => (
-                <div className="text-sm text-gray-700">
-                    {item.giaoVienChuNhiem || '-'}
-                </div>
-            ),
-        },
-        {
-            key: 'soLuongHocVien',
-            label: 'Sĩ số',
+            key: 'hoc_ky',
+            label: 'Học kỳ',
             width: '80px',
-            render: (item: Room) => (
-                <div className="text-center">
-                    <div className="inline-flex items-center gap-1 text-sm">
-                        <UserGroupIcon className="w-4 h-4 text-gray-500" />
-                        <span className="font-semibold text-gray-900">
-              {item.phanLops?.length || 0}
-            </span>
-                    </div>
+            render: (item: Course) => (
+                <Badge variant="default">HK {item.hoc_ky}</Badge>
+            ),
+        },
+        {
+            key: 'dot',
+            label: 'Đợt',
+            width: '70px',
+            render: (item: Course) => (
+                <Badge variant="default">Đợt {item.dot}</Badge>
+            ),
+        },
+        {
+            key: 'ngay_bat_dau',
+            label: 'Ngày bắt đầu',
+            width: '120px',
+            render: (item: Course) => {
+                if (!item.ngay_bat_dau) return <span className="text-sm text-gray-700">-</span>;
+                const date = new Date(item.ngay_bat_dau);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return <span className="text-sm text-gray-700">{`${day}-${month}-${year}`}</span>;
+            },
+        },
+        {
+            key: 'ngay_ket_thuc',
+            label: 'Ngày kết thúc',
+            width: '120px',
+            render: (item: Course) => {
+                if (!item.ngay_ket_thuc) return <span className="text-sm text-gray-700">-</span>;
+                const date = new Date(item.ngay_ket_thuc);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return <span className="text-sm text-gray-700">{`${day}-${month}-${year}`}</span>;
+            },
+        },
+        {
+            key: 'ghi_chu',
+            label: 'Ghi chú',
+            render: (item: Course) => (
+                <span className="text-sm text-gray-600">
+                    {item.ghi_chu || '-'}
+                </span>
+            ),
+        },
+        {
+            key: 'actions',
+            label: 'Thao tác',
+            width: '100px',
+            render: (item: Course) => (
+                <div className="flex gap-2">
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleEdit(item)}
+                    >
+                        <PencilIcon className="w-4 h-4"/>
+                    </Button>
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(item)}
+                    >
+                        <TrashIcon className="w-4 h-4"/>
+                    </Button>
                 </div>
             ),
         },
-    ], [table.meta.current_page, table.meta.per_page, majors]);
+    ], [table.meta.current_page, table.meta.per_page]);
 
-    // ============================================
-    // HANDLERS
-    // ============================================
-    const handleSearch = (searchTerm: string) => {
-        table.handleSearch(searchTerm);
-    };
-
-    const handleClearSearch = () => {
-        searchForm.reset();
-        table.handleSearch('');
-    };
-
-    // ============================================
-    // RENDER
-    // ============================================
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
-                        <AcademicCapIcon className="w-6 h-6 text-white" />
+                    <div
+                        className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <CalendarDaysIcon className="w-6 h-6 text-white"/>
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Danh sách lớp học</h1>
-                        <p className="text-sm text-gray-500">Quản lý thông tin lớp học theo ngành và năm học</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Quản lý kỳ học</h1>
+                        <p className="text-sm text-gray-500">Quản lý thông tin kỳ học và tạo lớp học</p>
                     </div>
                 </div>
 
                 <div className="flex gap-2">
                     <Button
                         variant="success"
-                        onClick={() => setShowAddYearModal(true)}
+                        onClick={() => setShowAddModal(true)}
                     >
-                        <PlusCircleIcon className="w-5 h-5 mr-2" />
+                        <PlusCircleIcon className="w-5 h-5 mr-2"/>
                         Thêm kỳ học
                     </Button>
                     <Button
@@ -364,7 +314,7 @@ export default function RoomPage() {
                         onClick={() => table.refresh()}
                         disabled={table.isLoading}
                     >
-                        <ArrowPathIcon className={`w-5 h-5 mr-2 ${table.isLoading ? 'animate-spin' : ''}`} />
+                        <ArrowPathIcon className={`w-5 h-5 mr-2 ${table.isLoading ? 'animate-spin' : ''}`}/>
                         Làm mới
                     </Button>
                 </div>
@@ -374,259 +324,298 @@ export default function RoomPage() {
             <Card>
                 <div className="p-4 space-y-4">
                     <div className="flex items-center gap-2 text-gray-700 font-semibold">
-                        <FunnelIcon className="w-5 h-5" />
+                        <FunnelIcon className="w-5 h-5"/>
                         <span>Tìm kiếm & Lọc</span>
                     </div>
 
-                    <form onSubmit={searchForm.handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Search Input */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Tìm kiếm lớp học
-                            </label>
+                    <form onSubmit={searchForm.handleSubmit} className="flex gap-4">
+                        <div className="flex-1">
                             <div className="relative">
-                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <MagnifyingGlassIcon
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"/>
                                 <Input
                                     type="text"
-                                    placeholder="Tìm theo tên lớp, GVCN, ngành học, năm học..."
+                                    placeholder="Tìm theo mã kỳ học, năm học, ghi chú..."
                                     value={searchForm.values.search}
                                     onChange={(e) => searchForm.handleChange('search', e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            searchForm.handleSubmit();
-                                        }
-                                    }}
                                     className="pl-10"
                                 />
                             </div>
                         </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-end gap-2">
-                            <Button
-                                type="submit"
-                                variant="primary"
-                                className="flex-1"
-                                disabled={table.isLoading}
-                            >
-                                <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
-                                Tìm kiếm
-                            </Button>
-                            {searchForm.values.search && (
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={handleClearSearch}
-                                >
-                                    Xóa
-                                </Button>
-                            )}
-                        </div>
+                        <Button type="submit" variant="primary">
+                            Tìm kiếm
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                searchForm.reset();
+                                table.handleSearch('');
+                            }}
+                        >
+                            Xóa lọc
+                        </Button>
                     </form>
                 </div>
             </Card>
 
-            {/* Error Message */}
-            {table.error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                    ⚠️ {table.error.message}
-                    <button
-                        onClick={() => table.refresh()}
-                        className="ml-4 underline hover:no-underline"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            )}
-
-            {/* Table Card */}
+            {/* Table */}
             <Card>
-                <div className="p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-gray-900">
-                            Danh sách lớp học
-                        </h2>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <span>Hiển thị:</span>
-                            <select
-                                value={table.meta.per_page}
-                                onChange={(e) => table.handlePerPageChange(Number(e.target.value))}
-                                className="border border-gray-300 rounded px-2 py-1"
-                            >
-                                <option value={5}>5</option>
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                            </select>
-                            <span>/ trang</span>
-                        </div>
-                    </div>
-
-                    {/* Table with UI component */}
+                <div className="p-4">
                     <Table
                         columns={columns}
-                        data={table.data}
+                        data={table.data || []}
                         isLoading={table.isLoading}
-                        emptyMessage={
-                            searchForm.values.search
-                                ? `Không tìm thấy lớp học nào với từ khóa "${searchForm.values.search}"`
-                                : 'Chưa có dữ liệu lớp học'
-                        }
+                        emptyMessage="Không có kỳ học nào"
                         onSort={table.handleSort}
                         sortBy={table.sortBy}
                         sortDirection={table.sortDirection}
-                        keyExtractor={(item) => item.id?.toString() || ''}
                     />
-
-                    {/* Pagination */}
-                    {!table.isLoading && table.data.length > 0 && (
-                        <div className="flex justify-center mt-4">
-                            <Pagination
-                                currentPage={table.meta.current_page}
-                                totalPages={table.meta.last_page}
-                                onPageChange={table.handlePageChange}
-                            />
-                        </div>
-                    )}
                 </div>
             </Card>
 
-            {/* Add Academic Year Modal */}
-            {showAddYearModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-200">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <CalendarIcon className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900">Thêm kỳ học mới</h3>
-                                    <p className="text-sm text-gray-500">Tạo năm học và các lớp cho ngành học</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form onSubmit={yearForm.handleSubmit} className="p-6 space-y-6">
-                            {/* Year Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Năm học <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    type="number"
-                                    min="2000"
-                                    max="2100"
-                                    value={yearForm.values.nam_hoc}
-                                    onChange={(e) => yearForm.handleChange('nam_hoc', parseInt(e.target.value))}
-                                    placeholder="VD: 2026"
-                                    required
-                                />
-                                <p className="mt-1 text-sm text-gray-500">
-                                    Năm học sẽ hiển thị là: <strong>{yearForm.values.nam_hoc}-{yearForm.values.nam_hoc + 1}</strong>
-                                </p>
-                            </div>
-
-                            {/* Major Selection */}
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Chọn ngành học để tạo lớp <span className="text-red-500">*</span>
-                                    </label>
-                                    <button
-                                        type="button"
-                                        onClick={handleSelectAllMajors}
-                                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                                    >
-                                        {yearForm.values.selected_majors.length === majors.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
-                                    </button>
-                                </div>
-
-                                <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto">
-                                    {majors.length === 0 ? (
-                                        <div className="p-4 text-center text-gray-500">
-                                            Đang tải danh sách ngành...
-                                        </div>
-                                    ) : (
-                                        <div className="divide-y divide-gray-100">
-                                            {majors.map((major) => {
-                                                const majorId = major.maNganh || major.id.toString();
-                                                const isSelected = yearForm.values.selected_majors.includes(majorId);
-
-                                                return (
-                                                    <label
-                                                        key={major.id}
-                                                        className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                                            isSelected ? 'bg-blue-50' : ''
-                                                        }`}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => handleMajorToggle(majorId)}
-                                                            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                                                        />
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-gray-900 text-sm">
-                                                                {major.tenNganhHoc || major.tenNganh || major.ma}
-                                                            </div>
-                                                            {major.ma && (
-                                                                <div className="text-xs text-gray-500">
-                                                                    Mã: {major.ma}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {yearForm.values.selected_majors.length > 0 && (
-                                    <p className="mt-2 text-sm text-green-600">
-                                        ✓ Đã chọn {yearForm.values.selected_majors.length} ngành học
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setShowAddYearModal(false);
-                                        yearForm.reset();
-                                    }}
-                                    disabled={isSubmitting}
-                                >
-                                    Hủy
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    disabled={isSubmitting || yearForm.values.selected_majors.length === 0}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
-                                            Đang tạo lớp...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <PlusCircleIcon className="w-4 h-4 mr-2" />
-                                            Tạo {yearForm.values.selected_majors.length > 0 ? `${yearForm.values.selected_majors.length} lớp` : 'kỳ học'}
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
+            {/* Pagination */}
+            {table.meta.total > 0 && (
+                <div className="flex justify-center">
+                    <Pagination
+                        currentPage={table.meta.current_page}
+                        totalPages={table.meta.last_page}
+                        onPageChange={table.handlePageChange}
+                    />
                 </div>
             )}
+
+            {/* Add Course Modal */}
+            <Modal
+                isOpen={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                title="Thêm kỳ học mới"
+            >
+                <form onSubmit={addForm.handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Năm học <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                                type="number"
+                                value={addForm.values.nam_hoc}
+                                onChange={(e) => addForm.handleChange('nam_hoc', parseInt(e.target.value))}
+                                min={2020}
+                                max={2100}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Học kỳ <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                value={addForm.values.hoc_ky}
+                                onChange={(e) => addForm.handleChange('hoc_ky', parseInt(e.target.value))}
+                            >
+                                <option value={1}>Học kỳ 1</option>
+                                <option value={2}>Học kỳ 2</option>
+                                <option value={3}>Học kỳ 3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Đợt <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                value={addForm.values.dot}
+                                onChange={(e) => addForm.handleChange('dot', parseInt(e.target.value))}
+                            >
+                                <option value={1}>Đợt 1</option>
+                                <option value={2}>Đợt 2</option>
+                                <option value={3}>Đợt 3</option>
+                                <option value={4}>Đợt 4</option>
+                                <option value={5}>Đợt 5</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Ngày bắt đầu
+                            </label>
+                            <Input
+                                type="date"
+                                value={addForm.values.ngay_bat_dau}
+                                onChange={(e) => addForm.handleChange('ngay_bat_dau', e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Ngày kết thúc
+                            </label>
+                            <Input
+                                type="date"
+                                value={addForm.values.ngay_ket_thuc}
+                                onChange={(e) => addForm.handleChange('ngay_ket_thuc', e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Ghi chú
+                        </label>
+                        <textarea
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            rows={3}
+                            value={addForm.values.ghi_chu}
+                            onChange={(e) => addForm.handleChange('ghi_chu', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setShowAddModal(false)}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Đang tạo...' : 'Tạo kỳ học'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Edit Course Modal */}
+            <Modal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                title={`Chỉnh sửa kỳ học ${selectedCourse?.ma_khoa_hoc}`}
+            >
+                <form onSubmit={editForm.handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Ngày bắt đầu
+                            </label>
+                            <Input
+                                type="date"
+                                value={editForm.values.ngay_bat_dau}
+                                onChange={(e) => editForm.handleChange('ngay_bat_dau', e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Ngày kết thúc
+                            </label>
+                            <Input
+                                type="date"
+                                value={editForm.values.ngay_ket_thuc}
+                                onChange={(e) => editForm.handleChange('ngay_ket_thuc', e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Ghi chú
+                        </label>
+                        <textarea
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            rows={3}
+                            value={editForm.values.ghi_chu}
+                            onChange={(e) => editForm.handleChange('ghi_chu', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setShowEditModal(false)}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Create Class Modal */}
+            <Modal
+                isOpen={showCreateClassModal}
+                onClose={() => setShowCreateClassModal(false)}
+                title={`Tạo lớp học cho kỳ ${selectedCourse?.ma_khoa_hoc}`}
+            >
+                <form onSubmit={createClassForm.handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Ngành học <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            value={createClassForm.values.major_id}
+                            onChange={(e) => createClassForm.handleChange('major_id', parseInt(e.target.value))}
+                            required
+                        >
+                            <option value={0}>-- Chọn ngành học --</option>
+                            {majors.map(major => (
+                                <option key={major.id} value={major.id}>
+                                    {major.maNganh} - {major.tenNganh || major.tenNganhHoc}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Tên lớp sẽ được tạo theo format: {'{'}Mã ngành{'}'} {selectedCourse?.ma_khoa_hoc}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Trình độ đào tạo <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            value={createClassForm.values.trinh_do}
+                            onChange={(e) => createClassForm.handleChange('trinh_do', e.target.value)}
+                            required
+                        >
+                            <option value="THS">Thạc sĩ</option>
+                            <option value="TS">Tiến sĩ</option>
+                            <option value="CH">Cử nhân</option>
+                        </select>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setShowCreateClassModal(false)}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="success"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Đang tạo...' : 'Tạo lớp học'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }
-

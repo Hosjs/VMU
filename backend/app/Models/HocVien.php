@@ -90,7 +90,8 @@ class HocVien extends Model
               ->orWhere('hoDem', 'like', "%{$search}%")
               ->orWhere('ten', 'like', "%{$search}%")
               ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('dienThoai', 'like', "%{$search}%");
+              ->orWhere('dienThoai', 'like', "%{$search}%")
+              ->orWhere('maNganh', 'like', "%{$search}%");
         });
     }
 

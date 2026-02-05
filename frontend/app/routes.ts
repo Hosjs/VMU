@@ -14,20 +14,16 @@ export default [
 
     //student routes
     route("students", "routes/student/students.tsx"),
-    route("rooms", "routes/student/rooms.tsx"),
+    route("class-management", "routes/student/classes/rooms.tsx"),
     route("subject-management", "routes/student/subject-management.tsx"),
 
     //lecturer routes
     route("lecturers", "routes/lecturer/lecturers.tsx"),
-    route("lecturer/assignments", "routes/lecturer/assignments.tsx"),
-    route("lecturer/calendar", "routes/lecturer/calendar.tsx"),
     route("lecturer/class-students/:classId", "routes/lecturer/class-students.$classId.tsx"),
-    route("teachers/salaries", "routes/lecturer/teacher-salaries.tsx"),
 
     //training routes
     route("training/course-registrations", "routes/training/course-registrations.tsx"),
     route("training/study-plans", "routes/training/study-plans.tsx"),
-    route("training/schedules", "routes/training/schedules.tsx"),
 
     //categories routes
     route("majors", "routes/categories/majors.tsx"),
@@ -39,7 +35,8 @@ export default [
 
     //setting routes
     route("/admin/settings", "routes/setting.tsx"),
+
     //academic routes
-    route("academic/grades/*", "routes/academic/grade-management.tsx"),
+    route("academic/grades", "routes/academic/grades.tsx"),
   ]),
 ] satisfies RouteConfig;

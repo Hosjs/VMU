@@ -10,8 +10,8 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowPathIcon,
-  UsersIcon,
 } from '@heroicons/react/24/outline';
+import { ClassActionButtons } from './components/ClassActionButtons';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Select } from '~/components/ui/Select';
@@ -23,8 +23,8 @@ import { generateKhoaHocOptions } from '~/constants/room.constants';
 
 export function meta() {
   return [
-    { title: "Danh sách lớp học - VMU Training" },
-    { name: "description", content: "Quản lý thông tin lớp học thạc sỹ" },
+    { title: "Quản lý lớp - VMU Training" },
+    { name: "description", content: "Quản lý thông tin lớp học" },
   ];
 }
 
@@ -156,22 +156,24 @@ export default function Rooms() {
       sortable: true,
       render: (room: Room) => (
         <div>
-          <div className="font-semibold text-blue-600">{room.tenLop}</div>
+          <div className="font-semibold text-blue-600">{room.tenLop || room.class_name}</div>
           <div className="text-xs text-gray-500">ID: {room.id}</div>
         </div>
       ),
     },
     {
-      key: 'maNganhHoc',
+      key: 'major_name',
       label: 'Ngành học',
-      render: (room: Room) => (
-        <div>
-          <div className="text-sm font-medium text-gray-700">{room.maNganhHoc}</div>
-          {room.maNganhHocNavigation?.tenNganh && (
-            <div className="text-xs text-gray-500">{room.maNganhHocNavigation.tenNganh}</div>
-          )}
-        </div>
-      ),
+      render: (room: Room) => {
+        const majorName = room.major_name || room.maNganhHocNavigation?.tenNganh;
+        const majorCode = room.major_code || room.maNganhHoc || room.major_id;
+        return (
+          <div>
+            <div className="text-sm font-medium text-gray-800">{majorName || 'Chưa xác định'}</div>
+            {majorCode && <div className="text-xs text-gray-500">Mã ngành: {majorCode}</div>}
+          </div>
+        );
+      },
     },
     {
       key: 'maTrinhDoDaoTao',
@@ -186,36 +188,29 @@ export default function Rooms() {
     {
       key: 'khoaHoc',
       label: 'Khóa',
-      width: '100px',
+      width: '120px',
       sortable: true,
-      render: (room: Room) => (
-        <div className="text-center">
-          <Badge variant="secondary">
-            {room.khoaHoc || 'N/A'}
-          </Badge>
-        </div>
-      ),
+      render: (room: Room) => {
+        const khoaHocLabel = room.nam_hoc || room.ma_khoa_hoc || room.khoaHoc_id || room.khoaHoc;
+        return (
+          <div className="text-center">
+            <Badge variant="secondary">
+              {khoaHocLabel || 'N/A'}
+            </Badge>
+          </div>
+        );
+      },
     },
     {
-      key: 'giaoVienChuNhiem',
-      label: 'GVCN',
+      key: 'actions',
+      label: 'Thao tác',
+      width: '180px',
       render: (room: Room) => (
-        <div className="text-sm text-gray-700">
-          {room.giaoVienChuNhiem || '-'}
-        </div>
-      ),
-    },
-    {
-      key: 'soLuongHocVien',
-      label: 'Sĩ số',
-      width: '100px',
-      render: (room: Room) => (
-        <div className="flex items-center justify-center gap-1">
-          <UsersIcon className="w-4 h-4 text-gray-500" />
-          <span className="font-semibold text-indigo-600">
-            {room.soLuongHocVien || room.phanLops?.length || 0}
-          </span>
-        </div>
+        <ClassActionButtons
+          onView={() => console.log('View class', room.id)}
+          onEdit={() => console.log('Edit class', room.id)}
+          onDelete={() => console.log('Delete class', room.id)}
+        />
       ),
     },
   ], [meta.current_page, meta.per_page]);
@@ -250,8 +245,8 @@ export default function Rooms() {
             <AcademicCapIcon className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Danh sách lớp học</h1>
-            <p className="text-sm text-gray-500">Quản lý thông tin lớp học thạc sỹ</p>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý lớp</h1>
+            <p className="text-sm text-gray-500">Quản lý thông tin lớp học</p>
           </div>
         </div>
 
@@ -285,7 +280,7 @@ export default function Rooms() {
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Tìm theo tên lớp, GVCN, mã ngành..."
+                  placeholder="Tìm theo tên lớp, mã ngành..."
                   value={searchForm.values.search}
                   onChange={(e) => searchForm.handleChange('search', e.target.value)}
                   onKeyDown={(e) => {
@@ -453,16 +448,16 @@ export default function Rooms() {
 
           {/* Table with UI component */}
           <Table
-            columns={columns}
-            data={rooms}
-            isLoading={isLoading}
-            emptyMessage={
-              searchForm.values.search
-                ? `Không tìm thấy lớp học nào v��i từ khóa "${searchForm.values.search}"`
-                : 'Chưa có dữ liệu lớp học'
-            }
-            keyExtractor={getRoomKey}
-          />
+             columns={columns}
+             data={rooms}
+             isLoading={isLoading}
+             emptyMessage={
+               searchForm.values.search
+                ? `Không tìm thấy lớp học nào với từ khóa "${searchForm.values.search}"`
+                 : 'Chưa có dữ liệu lớp học'
+             }
+             keyExtractor={getRoomKey}
+           />
 
           {/* Pagination */}
           {!isLoading && rooms.length > 0 && (

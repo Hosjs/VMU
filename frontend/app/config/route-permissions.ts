@@ -132,7 +132,7 @@ export const ROUTE_PERMISSIONS: Record<string, RoutePermissionConfig> = {
   'academic/grades': {
     path: '/academic/grades',
     permission: 'grades.view',
-    unauthorizedMessage: 'Bạn không có quyền xem điểm',
+    unauthorizedMessage: 'Bạn không có quyền tra cứu điểm',
   },
 
   // ==========================================
