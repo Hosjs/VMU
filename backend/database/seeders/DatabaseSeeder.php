@@ -121,15 +121,6 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // =====================
-        // 12. TEACHING ASSIGNMENTS
-        // =====================
-        $this->command->info('📅 Creating Teaching Assignments...');
-        $this->call([
-            TeachingAssignmentsSeeder::class, // Lecturer teaching assignments
-        ]);
-        $this->command->newLine();
-
-        // =====================
         // 13. USERS (Admin & Staff)
         // =====================
         $this->command->info('👥 Creating Users...');
