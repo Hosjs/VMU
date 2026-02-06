@@ -250,5 +250,30 @@ class LecturerController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get simplified list of lecturers for dropdown/autocomplete
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function simple()
+    {
+        try {
+            $lecturers = Lecturer::select('id', 'hoTen', 'trinhDoChuyenMon', 'hocHam')
+                ->orderBy('hoTen', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $lecturers,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể lấy danh sách giảng viên',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
 

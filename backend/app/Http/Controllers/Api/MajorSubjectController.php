@@ -340,5 +340,50 @@ class MajorSubjectController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get simplified list of subjects by major for autocomplete
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSubjectsByMajor(Request $request)
+    {
+        try {
+            $majorId = $request->query('major_id');
+
+            if (!$majorId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'major_id is required',
+                ], 400);
+            }
+
+            $subjects = DB::table('major_subjects as ms')
+                ->join('subjects as s', 'ms.subject_id', '=', 's.id')
+                ->where('ms.major_id', $majorId)
+                ->select(
+                    's.id',
+                    's.maMon',
+                    's.tenMon',
+                    's.soTinChi'
+                )
+                ->orderBy('s.tenMon', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $subjects,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching subjects by major: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể lấy danh sách môn học',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+            ], 500);
+        }
+    }
 }
 

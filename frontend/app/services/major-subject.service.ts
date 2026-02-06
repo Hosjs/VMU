@@ -72,6 +72,13 @@ class MajorSubjectService {
     const response = await apiService.get<any>(`/major-subjects/available-subjects/${majorId}`);
     return response.success ? response.data : response;
   }
+
+  /**
+   * Lấy danh sách môn học theo ngành (cho autocomplete)
+   */
+  async getSubjectsByMajor(majorId: number): Promise<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>> {
+    return await apiService.get<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>>('/major-subjects/by-major', { major_id: majorId });
+  }
 }
 
 export const majorSubjectService = new MajorSubjectService();

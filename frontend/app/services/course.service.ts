@@ -21,8 +21,8 @@ export const courseService = {
    * Lấy danh sách kỳ học đơn giản (cho dropdown)
    */
   async getSimpleCourses(): Promise<Course[]> {
-    const response = await apiService.get<{ data: Course[] }>('/courses/simple');
-    return response.data;
+    // apiService.get already extracts data from { success: true, data: [...] }
+    return await apiService.get<Course[]>('/courses/simple');
   },
 
   /**

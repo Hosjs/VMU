@@ -64,5 +64,12 @@ export const lecturerService = {
   async delete(id: number): Promise<void> {
     await apiService.delete(`/lecturers/${id}`);
   },
+
+  /**
+   * Get simplified list of lecturers for autocomplete
+   */
+  async getSimpleLecturers(): Promise<Array<{ id: number; hoTen: string; trinhDoChuyenMon?: string; hocHam?: string }>> {
+    return await apiService.get<Array<{ id: number; hoTen: string; trinhDoChuyenMon?: string; hocHam?: string }>>('/lecturers/simple');
+  },
 };
 

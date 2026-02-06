@@ -4,6 +4,7 @@ export interface AutocompleteOption {
   value: string | number;
   label: string;
   subtitle?: string;
+  searchText?: string;
 }
 
 interface UseAutocompleteOptions {
@@ -41,7 +42,8 @@ export function useAutocomplete({
     const filtered = options.filter(
       (opt) =>
         opt.label.toLowerCase().includes(term) ||
-        opt.subtitle?.toLowerCase().includes(term)
+        opt.subtitle?.toLowerCase().includes(term) ||
+        opt.searchText?.toLowerCase().includes(term)
     );
     setFilteredOptions(filtered);
   }, [searchTerm, options]);

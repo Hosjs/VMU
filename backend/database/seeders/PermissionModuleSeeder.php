@@ -243,6 +243,19 @@ class PermissionModuleSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'teaching_schedules',
+                'display_name' => 'Lịch giảng dạy',
+                'description' => 'Quản lý lịch giảng dạy theo ngành và kỳ học',
+                'icon' => 'CalendarDaysIcon',
+                'sort_order' => 45,
+                'actions' => [
+                    ['action' => 'view', 'display_name' => 'Xem'],
+                    ['action' => 'create', 'display_name' => 'Tạo mới'],
+                    ['action' => 'edit', 'display_name' => 'Sửa'],
+                    ['action' => 'delete', 'display_name' => 'Xóa'],
+                ],
+            ],
+            [
                 'name' => 'grades',
                 'display_name' => 'Điểm học tập',
                 'description' => 'Quản lý điểm học tập',

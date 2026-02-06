@@ -144,6 +144,12 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           icon: <AcademicCapIcon className="w-5 h-5" />,
           requiredPermissions: ['teachers.view'], // ✅ Manager có
         },
+        {
+            title: 'Kế hoạch giảng dạy',
+            path: '/lecturer/schedule',
+            icon: <DocumentTextIcon className="w-5 h-5" />,
+            requiredPermissions: ['teaching_schedules.view'],
+        }
       ],
     },
     {
