@@ -119,10 +119,10 @@ export default function MajorsPage() {
 
   const handleEdit = (major: Major) => {
     setSelectedMajor(major);
-    form.setFieldValue('ma_nganh', major.ma);
-    form.setFieldValue('ten_nganh', major.tenNganhHoc);
-    form.setFieldValue('mo_ta', major.mo_ta || '');
-    form.setFieldValue('thoi_gian_dao_tao', major.thoiGianDaoTao);
+    form.setFieldValue('ma_nganh', major.maNganh);
+    form.setFieldValue('ten_nganh', major.tenNganh);
+    form.setFieldValue('mo_ta', major.ghiChu || '');
+    form.setFieldValue('thoi_gian_dao_tao', major.thoi_gian_dao_tao);
     form.setFieldValue('parent_id', major.parent_id || null);
     editModal.open();
   };
@@ -436,7 +436,7 @@ export default function MajorsPage() {
               <option value="">-- Không có ngành cha --</option>
               {parentMajors.map(major => (
                 <option key={major.id} value={major.id}>
-                  {major.ma} - {major.tenNganhHoc}
+                  {major.maNganh} - {major.tenNganh}
                 </option>
               ))}
             </select>

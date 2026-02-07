@@ -113,7 +113,7 @@ export default function SubjectManagement() {
         ...majors
           .map(major => ({
             value: major.id.toString(),
-            label: `${major.ma} - ${major.tenNganhHoc}`,
+            label: `${major.maNganh} - ${major.tenNganh}`,
           }))
       ];
       setMajorOptions(options);

@@ -573,7 +573,7 @@ export default function CoursePage() {
                             <option value={0}>-- Chọn ngành học --</option>
                             {majors.map(major => (
                                 <option key={major.id} value={major.id}>
-                                    {major.maNganh} - {major.tenNganh || major.tenNganhHoc}
+                                    {major.maNganh} - {major.tenNganh}
                                 </option>
                             ))}
                         </select>

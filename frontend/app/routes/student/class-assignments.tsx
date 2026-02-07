@@ -98,9 +98,8 @@ export default function ClassAssignments() {
         { value: '', label: '-- Chọn ngành --' },
         ...majors
           .map(major => {
-            // ✅ Sử dụng ma (accessor) hoặc maNganh (field gốc)
-            const maNganh = major.ma || (major as any).maNganh || '';
-            const tenNganh = major.tenNganhHoc || (major as any).tenNganh || '';
+            const maNganh = major.maNganh || '';
+            const tenNganh = major.tenNganh || '';
 
             return {
               value: maNganh,

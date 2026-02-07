@@ -35,6 +35,7 @@ export default function Rooms() {
   const [nganhOptions, setNganhOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
   const [trinhDoOptions, setTrinhDoOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
   const [khoaHocOptions] = useState<SelectOption[]>(generateKhoaHocOptions(10));
+  const [majorNamesMap, setMajorNamesMap] = useState<Record<string, string>>({});
 
   // ============================================
   // FORM for search
@@ -90,6 +91,15 @@ export default function Rooms() {
         { value: '', label: 'Tất cả' },
         ...majorsData,
       ]);
+
+      // Build map for quick lookup: maNganh -> tenNganh
+      const namesMap: Record<string, string> = {};
+      majorsData.forEach(major => {
+        if (major.value) {
+          namesMap[major.value] = major.label;
+        }
+      });
+      setMajorNamesMap(namesMap);
 
       // Load trình độ từ database
       const trinhDoData = await studentService.getTrinhDoList();
@@ -157,7 +167,6 @@ export default function Rooms() {
       render: (room: Room) => (
         <div>
           <div className="font-semibold text-blue-600">{room.tenLop || room.class_name}</div>
-          <div className="text-xs text-gray-500">ID: {room.id}</div>
         </div>
       ),
     },
@@ -165,8 +174,12 @@ export default function Rooms() {
       key: 'major_name',
       label: 'Ngành học',
       render: (room: Room) => {
-        const majorName = room.major_name || room.maNganhHocNavigation?.tenNganh;
+        let majorName = room.major_name || room.maNganhHocNavigation?.tenNganh;
         const majorCode = room.major_code || room.maNganhHoc || room.major_id;
+        if (!majorName && majorCode && majorNamesMap[majorCode]) {
+          majorName = majorNamesMap[majorCode];
+        }
+
         return (
           <div>
             <div className="text-sm font-medium text-gray-800">{majorName || 'Chưa xác định'}</div>
@@ -213,7 +226,7 @@ export default function Rooms() {
         />
       ),
     },
-  ], [meta.current_page, meta.per_page]);
+  ], [meta.current_page, meta.per_page, majorNamesMap]);
 
   // ============================================
   // KEY EXTRACTOR

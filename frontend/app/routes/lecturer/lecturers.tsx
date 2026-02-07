@@ -84,8 +84,8 @@ export default function Lecturers() {
       console.log('📚 First major sample:', majorsData[0]);
 
       const options: AutocompleteOption[] = majorsData.map(major => {
-        const code = major.maNganh || major.ma || '';
-        const name = major.tenNganh || major.tenNganhHoc || '';
+        const code = major.maNganh || '';
+        const name = major.tenNganh || '';
 
         return {
           value: major.id, // ✅ Use ID (number)

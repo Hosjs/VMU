@@ -284,8 +284,8 @@ export default function CourseRegistrationsPage() {
               >
                 <option value="">-- Chọn ngành --</option>
                 {filteredMajors.map((major) => (
-                  <option key={major.id} value={major.ma}>
-                    {major.ma} - {major.tenNganhHoc}
+                  <option key={major.id} value={major.maNganh}>
+                    {major.maNganh} - {major.tenNganh}
                   </option>
                 ))}
               </Select>

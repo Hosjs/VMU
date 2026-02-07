@@ -138,7 +138,7 @@ export default function MajorSubjectsPage() {
     if (!majorsAsync.data) return [];
     return majorsAsync.data.map((major: Major) => ({
       value: major.id,
-      label: `${major.ma} - ${major.tenNganhHoc}`,
+      label: `${major.maNganh} - ${major.tenNganh}`,
     }));
   }, [majorsAsync.data]);
 

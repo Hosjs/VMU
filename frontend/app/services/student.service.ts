@@ -242,8 +242,8 @@ export const studentService = {
         const maNganh = major.maNganh || major.ma_nganh || '';
 
         return {
-          value: maNganh, // Sử dụng maNganh thay vì id
-          label: `${tenNganh} (${maNganh})`
+          value: maNganh,
+          label: `${tenNganh}`
         };
       }).filter((opt: { value: string; label: string }) => opt.value && opt.value.trim() !== '');
 
