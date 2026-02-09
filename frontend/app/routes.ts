@@ -14,7 +14,7 @@ export default [
 
     //student routes
     route("students", "routes/student/students.tsx"),
-    route("class-management", "routes/student/classes/rooms.tsx"),
+    route("class-management", "routes/student/classes/classes.tsx"),
     route("subject-management", "routes/student/subject-management.tsx"),
 
     //lecturer routes

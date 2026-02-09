@@ -33,27 +33,35 @@ class ClassController extends Controller
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('classes.class_name', 'like', "%{$search}%")
-                      ->orWhere('majors.tenNganhHoc', 'like', "%{$search}%")
-                      ->orWhere('majors.ma', 'like', "%{$search}%")
+                      ->orWhere('majors.tenNganh', 'like', "%{$search}%")
+                      ->orWhere('majors.maNganh', 'like', "%{$search}%")
                       ->orWhere('khoa_hoc.nam_hoc', 'like', "%{$search}%");
                 });
             }
 
-            // Filter by trình độ đào tạo
             if ($request->has('maTrinhDoDaoTao')) {
                 $query->where('classes.maTrinhDoDaoTao', $request->maTrinhDoDaoTao);
             }
 
-            // Filter by ngành học
             if ($request->has('maNganhHoc') || $request->has('major_id')) {
-                $majorId = $request->maNganhHoc ?? $request->major_id;
-                $query->where('classes.major_id', $majorId);
+                $majorValue = $request->maNganhHoc ?? $request->major_id;
+
+                // Check if it's a numeric ID or a string code (maNganh)
+                if (is_numeric($majorValue)) {
+                    $query->where('classes.major_id', $majorValue);
+                } else {
+                    // It's a maNganh string like "8520216", filter by majors.maNganh
+                    $query->where('majors.maNganh', $majorValue);
+                }
             }
 
-            // Filter by khóa học
             if ($request->has('khoaHoc') || $request->has('khoaHoc_id')) {
                 $khoaHoc = $request->khoaHoc ?? $request->khoaHoc_id;
                 $query->where('classes.khoaHoc_id', $khoaHoc);
+            }
+
+            if ($request->has('namVao')) {
+                $query->where('khoa_hoc.nam_hoc', $request->namVao);
             }
 
             // Sorting - đảm bảo sort đúng với tên cột trong database

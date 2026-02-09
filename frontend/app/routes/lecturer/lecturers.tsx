@@ -80,8 +80,6 @@ export default function Lecturers() {
     try {
       // Load ngành học từ majorService và map theo ID
       const majorsData = await majorService.getAllMajors();
-      console.log('📚 Loaded majors data:', majorsData.length, 'majors');
-      console.log('📚 First major sample:', majorsData[0]);
 
       const options: AutocompleteOption[] = majorsData.map(major => {
         const code = major.maNganh || '';
@@ -93,9 +91,6 @@ export default function Lecturers() {
           searchText: `${name} ${code}`, // For better search
         };
       });
-
-      console.log('📚 Total autocomplete options:', options.length);
-      console.log('📚 Sample options:', options.slice(0, 3));
       setNganhOptions(options);
     } catch (err) {
       console.error('❌ Error loading filter options:', err);
@@ -115,8 +110,6 @@ export default function Lecturers() {
     },
     onSubmit: async (values) => {
       try {
-        console.log('📝 Form values before cleaning:', values);
-        console.log('📝 maNganh value:', values.maNganh, 'Type:', typeof values.maNganh);
 
         // Clean up empty string values to null for proper validation
         const cleanedValues: any = {
@@ -140,8 +133,6 @@ export default function Lecturers() {
         if (values.maNganh) {
           const maNganhNumber = Number(values.maNganh);
           cleanedValues.maNganh = maNganhNumber;
-          console.log('✅ Setting maNganh:', maNganhNumber, 'Type:', typeof maNganhNumber);
-          console.log('✅ Is valid number?', !isNaN(maNganhNumber));
 
           // ⚠️ VALIDATION: Check if maNganh looks like a code instead of ID
           if (maNganhNumber > 1000) {
@@ -156,17 +147,12 @@ export default function Lecturers() {
             return; // Prevent submission
           }
         } else {
-          console.log('⚠️  maNganh is empty/null, not sending');
         }
 
-        console.log('📤 Final payload to API:', JSON.stringify(cleanedValues, null, 2));
-
         if (selectedLecturer) {
-          console.log('🔄 Updating lecturer ID:', selectedLecturer.id);
           await lecturerService.update(selectedLecturer.id, cleanedValues);
           setToast({ message: '✅ Cập nhật giảng viên thành công!', type: 'success' });
         } else {
-          console.log('➕ Creating new lecturer');
           await lecturerService.create(cleanedValues);
           setToast({ message: '✅ Thêm giảng viên thành công!', type: 'success' });
         }
@@ -194,8 +180,6 @@ export default function Lecturers() {
 
   const handleEdit = (lecturer: Lecturer) => {
     setSelectedLecturer(lecturer);
-    console.log('Editing lecturer:', lecturer);
-    console.log('Current maNganh:', lecturer.maNganh, 'Type:', typeof lecturer.maNganh);
 
     form.setFieldValue('hoTen', lecturer.hoTen);
     form.setFieldValue('trinhDoChuyenMon', lecturer.trinhDoChuyenMon || '');
@@ -403,7 +387,6 @@ export default function Lecturers() {
             value={filters.maNganh || ''}
             onChange={(value) => {
               handleFilter('maNganh', value ? Number(value) : undefined);
-              console.log('🔍 Filter - Autocomplete changed:', value);
             }}
             options={nganhOptions}
           />
@@ -515,7 +498,6 @@ export default function Lecturers() {
             onChange={(value) => {
               const numValue = value ? Number(value) : null;
               form.setFieldValue('maNganh', numValue);
-              console.log('🔄 Create - Autocomplete changed:', value, '→ Saved as:', numValue);
             }}
             options={nganhOptions}
           />
@@ -582,7 +564,6 @@ export default function Lecturers() {
             onChange={(value) => {
               const numValue = value ? Number(value) : null;
               form.setFieldValue('maNganh', numValue);
-              console.log('🔄 Edit - Autocomplete changed:', value, '→ Saved as:', numValue);
             }}
             options={nganhOptions}
           />

@@ -19,6 +19,7 @@ export class RoomService {
     khoaHoc_id?: number;
     major_id?: string;
     maTrinhDoDaoTao?: string;
+    namVao?: number;
     search?: string;
   }): Promise<Room[]> => {
     try {
@@ -26,6 +27,7 @@ export class RoomService {
       if (params?.khoaHoc_id) queryParams.append('khoaHoc_id', params.khoaHoc_id.toString());
       if (params?.major_id) queryParams.append('major_id', params.major_id);
       if (params?.maTrinhDoDaoTao) queryParams.append('maTrinhDoDaoTao', params.maTrinhDoDaoTao);
+      if (params?.namVao) queryParams.append('namVao', params.namVao.toString());
       if (params?.search) queryParams.append('search', params.search);
 
       const url = `${this.apiUrl}/classes${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
@@ -101,6 +103,7 @@ export class RoomService {
         khoaHoc_id: params.filters?.khoaHoc || params.filters?.khoaHoc_id,
         major_id: params.filters?.maNganhHoc || params.filters?.major_id,
         maTrinhDoDaoTao: params.filters?.maTrinhDoDaoTao,
+        namVao: params.filters?.namVao,
         search: params.search,
       });
 

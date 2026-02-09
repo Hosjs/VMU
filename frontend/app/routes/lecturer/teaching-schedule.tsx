@@ -59,9 +59,7 @@ export default function TeachingSchedulePage() {
 
   // Debug courseOptions changes
   useEffect(() => {
-    console.log('🔄 courseOptions updated:', courseOptions.length, 'items');
     if (courseOptions.length > 0) {
-      console.log('First option:', courseOptions[0]);
     }
   }, [courseOptions]);
 
@@ -78,7 +76,6 @@ export default function TeachingSchedulePage() {
       if (selectedMajor) {
         try {
           const subjectsData = await majorSubjectService.getSubjectsByMajor(Number(selectedMajor));
-          console.log('📖 Subjects Data:', subjectsData);
           setSubjects(subjectsData || []);
         } catch (err) {
           console.error('❌ Error loading subjects:', err);
@@ -102,10 +99,6 @@ export default function TeachingSchedulePage() {
         lecturerService.getSimpleLecturers(),
       ]);
 
-      console.log('📚 Courses Data:', coursesData);
-      console.log('🎓 Majors Response:', majorsResponse);
-      console.log('👨‍🏫 Lecturers Data:', lecturersData);
-
       setCourses(coursesData || []);
       setMajors(majorsResponse.data || []);
       setLecturers(lecturersData || []);
@@ -127,9 +120,6 @@ export default function TeachingSchedulePage() {
         searchText: `${course.ma_khoa_hoc} ${course.nam_hoc} ${course.hoc_ky} ${course.dot}`,
       }));
 
-      console.log('📋 Course Options:', courseOpts);
-      console.log('📋 Major Options:', majorOpts);
-
       setCourseOptions(courseOpts);
     } catch (err) {
       setError('Lỗi khi tải dữ liệu');
@@ -144,11 +134,6 @@ export default function TeachingSchedulePage() {
   const loadExistingSchedules = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Loading schedules with params:', {
-        khoa_hoc_id: Number(selectedCourse),
-        major_id: Number(selectedMajor),
-        semester_code: semesterCode,
-      });
 
       const schedules = await getTeachingSchedules({
         khoa_hoc_id: Number(selectedCourse),
@@ -156,13 +141,7 @@ export default function TeachingSchedulePage() {
         semester_code: semesterCode,
       });
 
-      console.log('📚 Schedules received:', schedules);
-      console.log('📚 Schedules type:', typeof schedules);
-      console.log('📚 Is Array?:', Array.isArray(schedules));
-      console.log('📚 Schedules length:', schedules?.length);
-
       if (schedules && Array.isArray(schedules) && schedules.length > 0) {
-        console.log('✅ Mapping schedules to rows');
         const mappedRows = schedules.map((schedule) => ({
           id: schedule.id,
           stt: schedule.stt,
@@ -174,10 +153,8 @@ export default function TeachingSchedulePage() {
           ghi_chu: schedule.ghi_chu || '',
           isNew: false,
         }));
-        console.log('📋 Mapped rows:', mappedRows);
         setRows(mappedRows);
       } else {
-        console.log('⚠️ No schedules found, creating empty row');
         // Start with one empty row
         setRows([createNewRow(1)]);
       }
@@ -325,13 +302,10 @@ export default function TeachingSchedulePage() {
         schedules,
       };
 
-      console.log('💾 Saving schedules with data:', requestData);
       const response = await bulkSaveTeachingSchedules(requestData);
-      console.log('✅ Save response:', response);
       setSuccess('Lưu lịch giảng dạy thành công!');
 
       // Reload the schedules
-      console.log('🔄 Reloading schedules...');
       await loadExistingSchedules();
     } catch (err: any) {
       console.error('❌ Save error:', err);

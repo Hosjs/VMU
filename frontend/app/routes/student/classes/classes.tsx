@@ -28,7 +28,7 @@ export function meta() {
   ];
 }
 
-export default function Rooms() {
+export default function Classes() {
   // ============================================
   // DYNAMIC OPTIONS từ API
   // ============================================
@@ -183,7 +183,6 @@ export default function Rooms() {
         return (
           <div>
             <div className="text-sm font-medium text-gray-800">{majorName || 'Chưa xác định'}</div>
-            {majorCode && <div className="text-xs text-gray-500">Mã ngành: {majorCode}</div>}
           </div>
         );
       },

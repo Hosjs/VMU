@@ -127,11 +127,8 @@ export default function SubjectManagement() {
 
     try {
       setIsLoadingSubjects(true);
-      console.log('🔍 Loading subjects for major:', selectedMajorId, 'year:', namHoc);
       const data = await subjectService.getSubjectsByMajorAndYear(selectedMajorId, namHoc);
-      console.log('✅ Received subjects data:', data);
       setSubjects(data);
-      console.log('✅ State updated, subjects count:', data.length);
     } catch (err) {
       console.error('❌ Error loading subjects:', err);
       setToast({ message: '❌ Lỗi khi tải danh sách môn học', type: 'error' });

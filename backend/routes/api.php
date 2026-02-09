@@ -50,7 +50,7 @@ Route::delete('/academic-years/{id}', [AcademicYearController::class, 'destroy']
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/roles/{id}', [RoleController::class, 'show']);
 
-// Rooms/Classes Routes (Public)
+// Classes/Classes Routes (Public)
 Route::prefix('class-management')->group(function () {
     Route::get('/thac-sy', [RoomController::class, 'getThacSy']);
     Route::get('/', [RoomController::class, 'index']);
