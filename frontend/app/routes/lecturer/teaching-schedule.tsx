@@ -18,7 +18,7 @@ import {
   Typography,
   Autocomplete as MuiAutocomplete
 } from '@mui/material';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { getTeachingSchedules, bulkSaveTeachingSchedules } from '~/services/teachingScheduleService';
 import { courseService } from '~/services/course.service';
 import { majorService } from '~/services/major.service';
@@ -29,6 +29,7 @@ import type { AutocompleteOption } from '~/components/ui/Autocomplete';
 import type { TeachingScheduleRow, BulkSaveTeachingScheduleRequest } from '~/types/teaching-schedule';
 import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
+import { exportTeachingScheduleToExcel } from '~/utils/excelExporter';
 
 export async function loader() {
   return {};
@@ -131,6 +132,34 @@ export default function TeachingSchedulePage() {
     }
   };
 
+  // Create default fixed subjects (always included)
+  const createDefaultSubjects = (): TeachingScheduleRow[] => {
+    return [
+      {
+        id: 'default-triet-hoc-1',
+        stt: 1,
+        ten_hoc_phan: 'Triết học',
+        so_tin_chi: 3,
+        can_bo_giang_day: 'Các thầy cô khoa LL chính trị',
+        tuan: '',
+        ngay: '',
+        ghi_chu: '',
+        isNew: true,
+      },
+      {
+        id: 'default-tieng-anh-1',
+        stt: 2,
+        ten_hoc_phan: 'Tiếng Anh',
+        so_tin_chi: 3,
+        can_bo_giang_day: 'Khoa Ngoại ngữ',
+        tuan: '',
+        ngay: '',
+        ghi_chu: '',
+        isNew: true,
+      },
+    ];
+  };
+
   const loadExistingSchedules = async () => {
     try {
       setLoading(true);
@@ -142,25 +171,30 @@ export default function TeachingSchedulePage() {
       });
 
       if (schedules && Array.isArray(schedules) && schedules.length > 0) {
-        const mappedRows = schedules.map((schedule) => ({
-          id: schedule.id,
-          stt: schedule.stt,
-          ten_hoc_phan: schedule.ten_hoc_phan,
-          so_tin_chi: schedule.so_tin_chi,
-          can_bo_giang_day: schedule.can_bo_giang_day,
-          tuan: schedule.tuan || '',
-          ngay: schedule.ngay || '',
-          ghi_chu: schedule.ghi_chu || '',
-          isNew: false,
-        }));
+        const mappedRows = schedules.map((schedule): TeachingScheduleRow => {
+          return {
+            id: schedule.id,
+            stt: schedule.stt,
+            ten_hoc_phan: schedule.ten_hoc_phan,
+            so_tin_chi: (schedule.so_tin_chi === 0 ? '' : schedule.so_tin_chi) as number | '',
+            can_bo_giang_day: schedule.can_bo_giang_day ?? '',
+            tuan: schedule.tuan ?? '',
+            ngay: schedule.ngay ?? '',
+            ghi_chu: schedule.ghi_chu ?? '',
+            isNew: false,
+            isBreak: schedule.so_tin_chi === 0,
+          };
+        });
         setRows(mappedRows);
       } else {
-        // Start with one empty row
-        setRows([createNewRow(1)]);
+        // Start with default subjects + one empty row
+        const defaultRows = createDefaultSubjects();
+        setRows([...defaultRows, createNewRow(3)]);
       }
     } catch (err) {
       console.error('❌ Error loading schedules:', err);
-      setRows([createNewRow(1)]);
+      const defaultRows = createDefaultSubjects();
+      setRows([...defaultRows, createNewRow(3)]);
     } finally {
       setLoading(false);
     }
@@ -182,7 +216,12 @@ export default function TeachingSchedulePage() {
   };
 
   const validateRow = (row: TeachingScheduleRow): boolean => {
-    // Required fields: ten_hoc_phan, so_tin_chi, can_bo_giang_day
+    // Break/holiday rows only need ten_hoc_phan
+    if (row.isBreak) {
+      return !!row.ten_hoc_phan && row.ten_hoc_phan.trim() !== '';
+    }
+
+    // Regular rows require: ten_hoc_phan, so_tin_chi, can_bo_giang_day
     const hasTenHocPhan = !!row.ten_hoc_phan && row.ten_hoc_phan.trim() !== '';
     const hasSoTinChi = row.so_tin_chi !== '' && Number(row.so_tin_chi) > 0;
     const hasCanBo = !!row.can_bo_giang_day && row.can_bo_giang_day.trim() !== '';
@@ -246,6 +285,36 @@ export default function TeachingSchedulePage() {
     setError(null);
   };
 
+  // Add additional lecturer for existing subject (for Excel export - will be merged)
+  const handleAddLecturerToSubject = (rowId: GridRowId) => {
+    const originalRow = rows.find(r => r.id === rowId);
+    if (!originalRow) return;
+
+    const insertIndex = rows.findIndex(r => r.id === rowId) + 1;
+    const newId = `lecturer-${Date.now()}-${Math.random()}`;
+
+    // Create new row with same subject info but empty lecturer
+    const newLecturerRow: TeachingScheduleRow = {
+      id: newId,
+      stt: originalRow.stt, // Same STT (will merge in Excel)
+      ten_hoc_phan: originalRow.ten_hoc_phan, // Same subject name (will merge in Excel)
+      so_tin_chi: originalRow.so_tin_chi, // Same credits
+      can_bo_giang_day: '', // Empty - user will fill in
+      tuan: '',
+      ngay: '',
+      ghi_chu: '',
+      isNew: true,
+      isAdditionalLecturer: true, // Flag to indicate this is additional lecturer for same subject
+    };
+
+    // Insert after the original row
+    const newRows = [...rows];
+    newRows.splice(insertIndex, 0, newLecturerRow);
+    setRows(newRows);
+    setSuccess(`✅ Đã thêm dòng giảng viên thứ 2 cho môn "${originalRow.ten_hoc_phan}". STT và Tên môn sẽ tự động merge trong Excel.`);
+    setError(null);
+  };
+
   const handleDeleteRow = (id: GridRowId) => {
     setRows(rows.filter((row) => row.id !== id));
     // Re-calculate STT
@@ -285,11 +354,12 @@ export default function TeachingSchedulePage() {
     try {
       setSaving(true);
 
+      // Map all rows including break rows
       const schedules = rows.map((row) => ({
         stt: row.stt,
         ten_hoc_phan: row.ten_hoc_phan,
-        so_tin_chi: Number(row.so_tin_chi),
-        can_bo_giang_day: row.can_bo_giang_day,
+        so_tin_chi: row.isBreak ? 0 : Number(row.so_tin_chi), // Break rows have 0 credits
+        can_bo_giang_day: row.isBreak ? null : row.can_bo_giang_day, // Break rows have null instructor
         tuan: row.tuan || undefined,
         ngay: row.ngay || undefined,
         ghi_chu: row.ghi_chu || undefined,
@@ -315,6 +385,60 @@ export default function TeachingSchedulePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleExportToExcel = () => {
+    if (!selectedCourse || !selectedMajor || !semesterCode || rows.length === 0) {
+      setError('Vui lòng chọn kỳ học, ngành học và có dữ liệu để xuất');
+      return;
+    }
+
+    try {
+      const selectedCourseData = courses.find(c => c.id === selectedCourse);
+      const selectedMajorData = majors.find(m => m.id === selectedMajor);
+
+      if (!selectedCourseData || !selectedMajorData) {
+        setError('Không tìm thấy thông tin kỳ học hoặc ngành học');
+        return;
+      }
+
+      // Call the export utility
+      exportTeachingScheduleToExcel({
+        rows,
+        selectedCourseData,
+        selectedMajorData,
+      });
+
+      setSuccess('✅ Xuất file Excel thành công!');
+    } catch (err) {
+      console.error('Export error:', err);
+      setError('Lỗi khi xuất file Excel');
+    }
+  };
+
+  const handleAddBreakRow = () => {
+    if (!canAddNewRow()) {
+      const incompleteRows = getIncompleteRows();
+      setError(`Vui lòng hoàn thiện dòng ${incompleteRows.join(', ')} trước khi thêm lịch nghỉ`);
+      return;
+    }
+
+    const newId = `break-${Date.now()}-${Math.random()}`;
+    const newBreakRow: TeachingScheduleRow = {
+      id: newId,
+      stt: rows.length + 1,
+      ten_hoc_phan: 'NGHỈ TẾT DƯƠNG LỊCH 01/01/2027',
+      so_tin_chi: '',
+      can_bo_giang_day: '',
+      tuan: 'Tuần 01, 02, 03/2027',
+      ngay: 'Từ ngày 01/01/2027 đến ngày 24/01/2027',
+      ghi_chu: '',
+      isNew: true,
+      isBreak: true,
+    };
+    setRows([...rows, newBreakRow]);
+    setSuccess('✅ Đã thêm lịch nghỉ. Hãy nhấp vào các ô để chỉnh sửa tên kỳ nghỉ, tuần và ngày nghỉ.');
+    setError(null);
   };
 
   const columns: GridColDef<TeachingScheduleRow>[] = [
@@ -410,9 +534,13 @@ export default function TeachingSchedulePage() {
       align: 'center',
       headerAlign: 'center',
       cellClassName: (params) => {
+        // Don't mark as error if it's a break row
+        if (params.row.isBreak) return '';
         return !params.value || params.value === '' ? 'bg-red-50 border-red-200' : '';
       },
       preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
+        // Don't validate break rows
+        if (params.row.isBreak) return { ...params.props, error: false };
         const value = params.props.value;
         const hasError = value === '' || value === null || Number(value) <= 0;
         return { ...params.props, error: hasError };
@@ -424,6 +552,8 @@ export default function TeachingSchedulePage() {
       width: 300,
       editable: true,
       cellClassName: (params) => {
+        // Don't mark as error if it's a break row
+        if (params.row.isBreak) return '';
         return !params.value ? 'bg-red-50 border-red-200' : '';
       },
       renderEditCell: (params) => {
@@ -483,6 +613,8 @@ export default function TeachingSchedulePage() {
         );
       },
       preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
+        // Don't validate break rows
+        if (params.row.isBreak) return { ...params.props, error: false };
         const hasError = !params.props.value || params.props.value.trim() === '';
         return { ...params.props, error: hasError };
       },
@@ -508,18 +640,31 @@ export default function TeachingSchedulePage() {
     {
       field: 'actions',
       headerName: 'Thao tác',
-      width: 100,
+      width: 200,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Button
-          size="small"
-          color="error"
-          onClick={() => handleDeleteRow(params.id)}
-          startIcon={<TrashIcon className="w-4 h-4" />}
-        >
-          Xóa
-        </Button>
+        <div className="flex gap-2">
+          {/* Don't show "Add Lecturer" button for break rows or additional lecturer rows */}
+          {!params.row.isBreak && !params.row.isAdditionalLecturer && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => handleAddLecturerToSubject(params.id)}
+              title="Thêm giảng viên thứ 2 cho môn này"
+            >
+              + GV
+            </Button>
+          )}
+          <Button
+            size="small"
+            color="error"
+            onClick={() => handleDeleteRow(params.id)}
+            startIcon={<TrashIcon className="w-4 h-4" />}
+          >
+            Xóa
+          </Button>
+        </div>
       ),
     },
   ];
@@ -600,12 +745,30 @@ export default function TeachingSchedulePage() {
             <div className="flex gap-2">
               <Button
                 variant="outlined"
+                color="secondary"
+                startIcon={<PlusIcon className="w-5 h-5" />}
+                onClick={handleAddBreakRow}
+                disabled={loading}
+              >
+                Thêm lịch nghỉ
+              </Button>
+              <Button
+                variant="outlined"
                 startIcon={<PlusIcon className="w-5 h-5" />}
                 onClick={handleAddRow}
                 disabled={!canAddNewRow() || loading}
                 color={canAddNewRow() ? 'primary' : 'warning'}
               >
                 Thêm dòng
+              </Button>
+              <Button
+                variant="outlined"
+                color="info"
+                startIcon={<ArrowDownTrayIcon className="w-5 h-5" />}
+                onClick={handleExportToExcel}
+                disabled={loading || rows.length === 0}
+              >
+                Xuất Excel
               </Button>
               <Button
                 variant="contained"
@@ -626,9 +789,18 @@ export default function TeachingSchedulePage() {
               loading={loading}
               disableRowSelectionOnClick
               editMode="cell"
+              getRowClassName={(params) => {
+                // Highlight break/holiday rows
+                return params.row.isBreak ? 'bg-red-50' : '';
+              }}
               sx={{
                 '& .bg-red-50': {
                   backgroundColor: '#fee2e2',
+                  fontWeight: 'bold',
+                  fontStyle: 'italic',
+                  '&:hover': {
+                    backgroundColor: '#fecaca',
+                  },
                 },
                 '& .border-red-200': {
                   borderColor: '#fecaca',
@@ -658,7 +830,9 @@ export default function TeachingSchedulePage() {
               <li><strong>Các trường bắt buộc (*)</strong>: Tên học phần, Số tín chỉ, Cán bộ giảng dạy</li>
               <li><strong>Tên học phần</strong>: Có gợi ý từ danh sách môn học của ngành, tự động điền số tín chỉ</li>
               <li><strong>Cán bộ giảng dạy</strong>: Có gợi ý từ danh sách giảng viên (hiển thị học hàm, trình độ)</li>
-              <li>Ô màu đỏ nhạt = chưa điền thông tin bắt buộc</li>
+              <li><strong>Thêm lịch nghỉ</strong>: Dùng nút "Thêm lịch nghỉ" để thêm kỳ nghỉ lễ/tết. Dòng nghỉ có nền màu đỏ nhạt và chỉ cần điền tên kỳ nghỉ, tuần và ngày nghỉ (không cần số tín chỉ và giảng viên)</li>
+              <li><strong>Xuất Excel</strong>: File Excel sẽ có đầy đủ tiêu đề, định dạng chuyên nghiệp và ghi chú cuối trang</li>
+              <li><strong>Dòng màu đỏ nhạt</strong>: Các ô chưa điền thông tin bắt buộc hoặc dòng nghỉ lễ</li>
               <li>Phải hoàn thiện dòng hiện tại trước khi thêm dòng mới</li>
               <li>Hỗ trợ copy-paste từ Excel (Ctrl+C / Ctrl+V)</li>
               <li>Nút "Lưu tất cả" chỉ hoạt động khi tất cả dòng đã đầy đủ thông tin</li>

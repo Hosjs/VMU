@@ -9,7 +9,7 @@ export interface TeachingSchedule {
   stt: number;
   ten_hoc_phan: string;
   so_tin_chi: number;
-  can_bo_giang_day: string;
+  can_bo_giang_day: string | null; // Allow null for break rows
   tuan?: string;
   ngay?: string;
   ghi_chu?: string;
@@ -43,6 +43,8 @@ export interface TeachingScheduleRow {
   ngay?: string;
   ghi_chu?: string;
   isNew?: boolean; // Flag to indicate new row
+  isBreak?: boolean; // Flag to indicate break/holiday row
+  isAdditionalLecturer?: boolean; // Flag to indicate additional lecturer for same subject (STT + Ten HP will merge in Excel)
 }
 
 /**
@@ -56,7 +58,7 @@ export interface BulkSaveTeachingScheduleRequest {
     stt: number;
     ten_hoc_phan: string;
     so_tin_chi: number;
-    can_bo_giang_day: string;
+    can_bo_giang_day: string | null; // Allow null for break rows
     tuan?: string;
     ngay?: string;
     ghi_chu?: string;

@@ -93,8 +93,8 @@ class TeachingScheduleController extends Controller
             'schedules' => 'required|array|min:1',
             'schedules.*.stt' => 'required|integer',
             'schedules.*.ten_hoc_phan' => 'required|string|max:255',
-            'schedules.*.so_tin_chi' => 'required|integer|min:1',
-            'schedules.*.can_bo_giang_day' => 'required|string|max:500',
+            'schedules.*.so_tin_chi' => 'required|integer|min:0', // Allow 0 for break rows
+            'schedules.*.can_bo_giang_day' => 'nullable|string|max:500', // Allow empty for break rows
             'schedules.*.tuan' => 'nullable|string|max:100',
             'schedules.*.ngay' => 'nullable|string|max:255',
             'schedules.*.ghi_chu' => 'nullable|string',

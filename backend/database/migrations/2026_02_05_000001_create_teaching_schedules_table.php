@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('semester_code', 50)->comment('Mã kỳ học: VD QLKT 2025.2.1');
             $table->integer('stt')->comment('Số thứ tự');
             $table->string('ten_hoc_phan', 255)->comment('Tên học phần');
-            $table->integer('so_tin_chi')->comment('Số tín chỉ');
-            $table->string('can_bo_giang_day', 500)->comment('Cán bộ giảng dạy (có thể nhiều người)');
+            $table->integer('so_tin_chi')->nullable()->default(0)->comment('Số tín chỉ (0 cho dòng nghỉ lễ)');
+            $table->string('can_bo_giang_day', 500)->nullable()->comment('Cán bộ giảng dạy (NULL cho dòng nghỉ lễ)');
             $table->string('tuan', 100)->nullable()->comment('Tuần học (VD: Tuần 46, 47, 48, 49/2025)');
             $table->string('ngay', 255)->nullable()->comment('Ngày học cụ thể');
             $table->text('ghi_chu')->nullable()->comment('Ghi chú');
