@@ -111,19 +111,14 @@ export const exportTeachingScheduleToExcel = ({
         { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Header 1
         { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Header 2
         { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }, // Header 3
-
-        // Merge dọc cho STT và Tên HP của các học phần
-        ...mergeRanges,
-
-        // Merge ngang cho các dòng đặc biệt (chỉ merge STT + Tên HP, giữ nguyên Số tín chỉ)
-        { s: { r: specialStartRow, c: 0 }, e: { r: specialStartRow, c: 1 } },     // Ôn tập & thi (merge 2 cột đầu)
-        { s: { r: specialStartRow + 1, c: 0 }, e: { r: specialStartRow + 1, c: 1 } }, // Nghỉ Tết
-        { s: { r: specialStartRow + 2, c: 0 }, e: { r: specialStartRow + 2, c: 1 } }, // Thực tập (có số TC riêng)
-        { s: { r: specialStartRow + 3, c: 0 }, e: { r: specialStartRow + 3, c: 1 } }, // Đề án (có số TC riêng)
+         ...mergeRanges,
+        { s: { r: specialStartRow, c: 0 }, e: { r: specialStartRow, c: 3 } },     // Ôn tập & thi
+        { s: { r: specialStartRow + 1, c: 0 }, e: { r: specialStartRow + 1, c: 3 } }, // Nghỉ Tết
+        { s: { r: specialStartRow + 2, c: 0 }, e: { r: specialStartRow + 2, c: 1 } }, // Thực tập
+        { s: { r: specialStartRow + 3, c: 0 }, e: { r: specialStartRow + 3, c: 1 } }, // Đề án
         { s: { r: specialStartRow + 4, c: 0 }, e: { r: specialStartRow + 4, c: 1 } }, // Bảo vệ
         { s: { r: specialStartRow + 5, c: 0 }, e: { r: specialStartRow + 5, c: 1 } }, // Bế giảng
 
-        // Ghi chú & Footer
         { s: { r: noteRow, c: 0 }, e: { r: noteRow, c: 6 } },
         { s: { r: footerRow, c: 0 }, e: { r: footerRow, c: 2 } },
         { s: { r: footerRow, c: 4 }, e: { r: footerRow, c: 6 } },

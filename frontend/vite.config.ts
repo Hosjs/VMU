@@ -22,8 +22,11 @@ export default defineConfig({
       },
     },
   ],
+  optimizeDeps: {
+    include: ['xlsx-js-style'],
+  },
   ssr: {
-    noExternal: ['@mui/x-data-grid', '@mui/material', '@mui/system'],
+    noExternal: ['@mui/x-data-grid', '@mui/material', '@mui/system', 'xlsx-js-style'],
   },
   server: {
     host: true,
