@@ -55,18 +55,41 @@ export const exportTeachingScheduleToExcel = ({
             j++;
         }
 
-        // Push all rows for this subject
         sameSubjectRows.forEach((row, index) => {
-            data.push([
-                index === 0 ? (row.stt || '') : '', // Only show STT on first row
-                index === 0 ? (row.ten_hoc_phan || '') : '', // Only show subject name on first row
-                row.so_tin_chi || '',
-                row.can_bo_giang_day || '',
-                row.tuan || '',
-                row.ngay || '',
-                row.ghi_chu || ''
-            ]);
+            const isNghi = (row.ten_hoc_phan || '').trim().toUpperCase() === 'NGHỈ';
+
+            if (isNghi) {
+                // Dòng NGHỈ
+                data.push([
+                    row.ten_hoc_phan || '',   // "NGHỈ"
+                    '',
+                    '',
+                    '',
+                    row.tuan || '',
+                    row.ngay || '',
+                    row.ghi_chu || ''
+                ]);
+            } else {
+                // Dòng bình thường
+                data.push([
+                    index === 0 ? (row.stt || '') : '',
+                    index === 0 ? (row.ten_hoc_phan || '') : '',
+                    row.so_tin_chi || '',
+                    row.can_bo_giang_day || '',
+                    row.tuan ?? '',
+                    row.ngay || '',
+                    row.ghi_chu || ''
+                ]);
+            }
         });
+
+
+        if ((currentRow.ten_hoc_phan || '').trim().toUpperCase() === 'NGHỈ') {
+            mergeRanges.push({
+                s: { r: groupStartRow, c: 0 },
+                e: { r: groupStartRow, c: 3 }
+            });
+        }
 
         // If multiple rows for same subject, merge STT and subject name vertically
         if (sameSubjectRows.length > 1) {
