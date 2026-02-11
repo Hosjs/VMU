@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\GradeManagementController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\TeachingScheduleController;
+use App\Http\Controllers\Api\WeeklyScheduleController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -113,6 +114,14 @@ Route::prefix('teaching-schedules')->group(function () {
     Route::get('/', [TeachingScheduleController::class, 'index']);
     Route::get('/semester-codes', [TeachingScheduleController::class, 'getSemesterCodes']);
     Route::get('/{id}', [TeachingScheduleController::class, 'show']);
+});
+
+// Weekly Schedule Routes (Public)
+Route::prefix('weekly-schedules')->group(function () {
+    Route::get('/', [WeeklyScheduleController::class, 'index']);
+    Route::get('/week-numbers', [WeeklyScheduleController::class, 'getWeekNumbers']);
+    Route::get('/weeks-by-semester', [WeeklyScheduleController::class, 'getWeeksBySemester']);
+    Route::get('/{id}', [WeeklyScheduleController::class, 'show']);
 });
 
 // Grade Management Routes (for teachers/admin)
@@ -230,5 +239,12 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/bulk-save', [TeachingScheduleController::class, 'bulkSave'])->middleware('permission:teaching_schedules.create');
         Route::put('/{id}', [TeachingScheduleController::class, 'update'])->middleware('permission:teaching_schedules.edit');
         Route::delete('/{id}', [TeachingScheduleController::class, 'destroy'])->middleware('permission:teaching_schedules.delete');
+    });
+
+    // Weekly Schedule Management (Protected)
+    Route::prefix('weekly-schedules')->group(function () {
+        Route::post('/bulk-save', [WeeklyScheduleController::class, 'bulkSave'])->middleware('permission:weekly_schedules.create');
+        Route::put('/{id}', [WeeklyScheduleController::class, 'update'])->middleware('permission:weekly_schedules.edit');
+        Route::delete('/{id}', [WeeklyScheduleController::class, 'destroy'])->middleware('permission:weekly_schedules.delete');
     });
 });

@@ -427,11 +427,11 @@ export default function TeachingSchedulePage() {
     const newBreakRow: TeachingScheduleRow = {
       id: newId,
       stt: rows.length + 1,
-      ten_hoc_phan: 'NGHỈ TẾT DƯƠNG LỊCH 01/01/2027',
+      ten_hoc_phan: 'Lịch nghỉ',
       so_tin_chi: '',
       can_bo_giang_day: '',
-      tuan: 'Tuần 01, 02, 03/2027',
-      ngay: 'Từ ngày 01/01/2027 đến ngày 24/01/2027',
+      tuan: 'Tuần',
+      ngay: 'Ngày',
       ghi_chu: '',
       isNew: true,
       isBreak: true,
@@ -820,24 +820,6 @@ export default function TeachingSchedulePage() {
               }}
             />
           </Box>
-
-          <Alert severity="info" className="mt-4">
-            <Typography variant="subtitle2" className="font-semibold mb-2">
-              💡 Hướng dẫn sử dụng:
-            </Typography>
-            <ul className="list-disc list-inside ml-2 space-y-1 text-sm">
-              <li>Nhấp vào ô để chỉnh sửa trực tiếp (giống Excel)</li>
-              <li><strong>Các trường bắt buộc (*)</strong>: Tên học phần, Số tín chỉ, Cán bộ giảng dạy</li>
-              <li><strong>Tên học phần</strong>: Có gợi ý từ danh sách môn học của ngành, tự động điền số tín chỉ</li>
-              <li><strong>Cán bộ giảng dạy</strong>: Có gợi ý từ danh sách giảng viên (hiển thị học hàm, trình độ)</li>
-              <li><strong>Thêm lịch nghỉ</strong>: Dùng nút "Thêm lịch nghỉ" để thêm kỳ nghỉ lễ/tết. Dòng nghỉ có nền màu đỏ nhạt và chỉ cần điền tên kỳ nghỉ, tuần và ngày nghỉ (không cần số tín chỉ và giảng viên)</li>
-              <li><strong>Xuất Excel</strong>: File Excel sẽ có đầy đủ tiêu đề, định dạng chuyên nghiệp và ghi chú cuối trang</li>
-              <li><strong>Dòng màu đỏ nhạt</strong>: Các ô chưa điền thông tin bắt buộc hoặc dòng nghỉ lễ</li>
-              <li>Phải hoàn thiện dòng hiện tại trước khi thêm dòng mới</li>
-              <li>Hỗ trợ copy-paste từ Excel (Ctrl+C / Ctrl+V)</li>
-              <li>Nút "Lưu tất cả" chỉ hoạt động khi tất cả dòng đã đầy đủ thông tin</li>
-            </ul>
-          </Alert>
         </Paper>
       ) : (
         <Paper elevation={1} className="p-12 text-center">

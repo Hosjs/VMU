@@ -96,6 +96,14 @@ class classes extends Model
         return $this->belongsTo(Major::class, 'major_id', 'id');
     }
 
+    /**
+     * Relationship to KhoaHoc (Khóa học/Kỳ học)
+     */
+    public function khoaHoc()
+    {
+        return $this->belongsTo(KhoaHoc::class, 'khoaHoc_id', 'id');
+    }
+
     public function hocViens()
     {
         return $this->hasMany(HocVien::class, 'idLop', 'id');

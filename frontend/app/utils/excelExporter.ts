@@ -61,7 +61,7 @@ export const exportTeachingScheduleToExcel = ({
             if (isNghi) {
                 // Dòng NGHỈ
                 data.push([
-                    row.ten_hoc_phan || '',   // "NGHỈ"
+                    row.ten_hoc_phan || '',
                     '',
                     '',
                     '',
@@ -193,5 +193,5 @@ export const exportTeachingScheduleToExcel = ({
     ws['!cols'] = [{ wch: 6 }, { wch: 45 }, { wch: 10 }, { wch: 25 }, { wch: 18 }, { wch: 30 }, { wch: 15 }];
 
     XLSX.utils.book_append_sheet(wb, ws, 'QLCA');
-    XLSX.writeFile(wb, `KE_HOACH_DA_SUA_HOAN_HAO.xlsx`);
+    XLSX.writeFile(wb, `Ke_hoach_giang_day.xlsx`);
 };

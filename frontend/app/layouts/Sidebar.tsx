@@ -149,6 +149,12 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
             path: '/lecturer/schedule',
             icon: <DocumentTextIcon className="w-5 h-5" />,
             requiredPermissions: ['teaching_schedules.view'],
+        },
+        {
+            title: 'Lịch học theo tuần',
+            path: '/lecturer/weekly-schedule',
+            icon: <CalendarDaysIcon className="w-5 h-5" />,
+            requiredPermissions: ['weekly_schedules.view'],
         }
       ],
     },

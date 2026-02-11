@@ -14,6 +14,7 @@ export class RoomService {
   /**
    * Lấy danh sách lớp học từ bảng classes
    * Sử dụng cột khoaHoc_id thay vì khoaHoc
+   * ✅ FIXED: Fetch ALL classes by setting per_page to a large number
    */
   getClasses = async (params?: {
     khoaHoc_id?: number;
@@ -30,6 +31,9 @@ export class RoomService {
       if (params?.namVao) queryParams.append('namVao', params.namVao.toString());
       if (params?.search) queryParams.append('search', params.search);
 
+      // ✅ FIX: Request all records for dropdown/autocomplete usage
+      queryParams.append('per_page', '10000');
+
       const url = `${this.apiUrl}/classes${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
       const response = await fetch(url, {
@@ -45,7 +49,7 @@ export class RoomService {
 
       const result = await response.json();
 
-      // API trả về { data: [...], current_page, ... }
+      // API trả về { data: [...], current_page, total, ... }
       if (result.data) {
         return Array.isArray(result.data) ? result.data : [];
       }

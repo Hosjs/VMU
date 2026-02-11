@@ -75,9 +75,27 @@ class MajorSubjectService {
 
   /**
    * Lấy danh sách môn học theo ngành (cho autocomplete)
+   * ✅ FIXED: Accept both number (majors.id) and string (maNganh)
+   * ✅ FIXED: apiService.get already extracts .data, so response is the array directly
    */
-  async getSubjectsByMajor(majorId: number): Promise<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>> {
-    return await apiService.get<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>>('/major-subjects/by-major', { major_id: majorId });
+  async getSubjectsByMajor(majorId: number | string): Promise<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>> {
+    // ✅ Handle null, undefined, 0, empty string
+    if (!majorId || majorId === 0 || majorId === '' || majorId === '0') {
+      return [];
+    }
+
+    try {
+      // apiService.get already extracts response.data
+      // So response is directly the subjects array
+      const subjects = await apiService.get<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>>('/major-subjects/by-major', { major_id: majorId });
+
+      console.log('📚 API response for major_id', majorId, ':', subjects);
+
+      return Array.isArray(subjects) ? subjects : [];
+    } catch (error) {
+      console.error('❌ Error in getSubjectsByMajor:', error);
+      return [];
+    }
   }
 }
 

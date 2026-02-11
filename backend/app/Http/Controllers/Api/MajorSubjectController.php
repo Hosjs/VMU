@@ -343,6 +343,8 @@ class MajorSubjectController extends Controller
 
     /**
      * Get simplified list of subjects by major for autocomplete
+     * ✅ FIXED: Handle both numeric ID and string maNganh
+     * Convert maNganh to majors.id before querying major_subjects
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -359,9 +361,44 @@ class MajorSubjectController extends Controller
                 ], 400);
             }
 
+            // ✅ FIX: Determine actual majors.id
+            // If major_id is string (maNganh like "8480201"), convert to majors.id first
+            $actualMajorId = null;
+
+            if (is_numeric($majorId)) {
+                // Check if it's already a valid majors.id
+                $major = DB::table('majors')->where('id', $majorId)->first();
+
+                if ($major) {
+                    $actualMajorId = $major->id;
+                } else {
+                    // Maybe it's a maNganh that looks numeric (like "8480201")
+                    $major = DB::table('majors')->where('maNganh', $majorId)->first();
+                    if ($major) {
+                        $actualMajorId = $major->id;
+                    }
+                }
+            } else {
+                // It's a string code like "CNTT" or "8480201" - find by maNganh
+                $major = DB::table('majors')->where('maNganh', $majorId)->first();
+                if ($major) {
+                    $actualMajorId = $major->id;
+                }
+            }
+
+            if (!$actualMajorId) {
+                \Log::warning('Major not found', ['major_id' => $majorId]);
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'Major not found',
+                ]);
+            }
+
+            // Now query major_subjects with the actual majors.id
             $subjects = DB::table('major_subjects as ms')
                 ->join('subjects as s', 'ms.subject_id', '=', 's.id')
-                ->where('ms.major_id', $majorId)
+                ->where('ms.major_id', $actualMajorId)
                 ->select(
                     's.id',
                     's.maMon',
@@ -371,12 +408,20 @@ class MajorSubjectController extends Controller
                 ->orderBy('s.tenMon', 'asc')
                 ->get();
 
+            \Log::info('getSubjectsByMajor', [
+                'input_major_id' => $majorId,
+                'actual_major_id' => $actualMajorId,
+                'is_numeric' => is_numeric($majorId),
+                'subjects_count' => $subjects->count(),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'data' => $subjects,
             ]);
         } catch (\Exception $e) {
             \Log::error('Error fetching subjects by major: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
