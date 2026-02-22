@@ -84,7 +84,7 @@ export interface SemesterWeeksResponse {
 export interface WeeklyScheduleRow {
   id: number | string;
   stt: number;
-  class_name: string;
+  class_names: string[]; // Array of class names
   subject_name: string;
   lecturer_name: string;
   time_slot: string;

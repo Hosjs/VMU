@@ -19,6 +19,10 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import weeklyScheduleService from '~/services/weeklyScheduleService';
@@ -27,6 +31,7 @@ import { subjectService } from '~/services/subject.service';
 import { lecturerService } from '~/services/lecturer.service';
 import { courseService } from '~/services/course.service';
 import { majorSubjectService } from '~/services/major-subject.service';
+import { exportWeeklyScheduleToExcel, exportWeeklyScheduleToPDF } from '~/utils/excelExporter';
 import type { WeeklyScheduleRow, BulkSaveWeeklyScheduleRequest, Week } from '~/types/weekly-schedule';
 import type { Room } from '~/types/room';
 import type { Subject } from '~/types/subject';
@@ -50,6 +55,8 @@ export default function WeeklySchedulePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [addingClassToRow, setAddingClassToRow] = useState<string | number | null>(null);
+  const [newClassInput, setNewClassInput] = useState<string>('');
 
   // Load initial data on mount
   useEffect(() => {
@@ -176,17 +183,33 @@ export default function WeeklySchedulePage() {
       });
 
       if (schedules && schedules.length > 0) {
-        const formattedRows: WeeklyScheduleRow[] = schedules.map((schedule) => ({
-          id: schedule.id,
-          stt: schedule.stt,
-          class_name: schedule.class?.class_name || '',
-          subject_name: schedule.subject_name || schedule.subject?.tenMonHoc || '',
-          lecturer_name: schedule.lecturer_name || schedule.lecturer?.hoTen || '',
-          time_slot: schedule.time_slot || '',
-          room: schedule.room || '',
-          ghi_chu: schedule.ghi_chu || '',
-        }));
+        // Group schedules by STT and other fields (subject, lecturer, time, room)
+        const groupedBySTT = schedules.reduce((acc, schedule) => {
+          const key = `${schedule.stt}-${schedule.subject_name || ''}-${schedule.lecturer_name || ''}-${schedule.time_slot || ''}-${schedule.room || ''}`;
 
+          if (!acc[key]) {
+            acc[key] = {
+              id: schedule.id,
+              stt: schedule.stt,
+              class_names: [],
+              subject_name: schedule.subject_name || schedule.subject?.tenMonHoc || '',
+              lecturer_name: schedule.lecturer_name || schedule.lecturer?.hoTen || '',
+              time_slot: schedule.time_slot || '',
+              room: schedule.room || '',
+              ghi_chu: schedule.ghi_chu || '',
+            };
+          }
+
+          // Add class name if not empty
+          const className = schedule.class?.class_name || '';
+          if (className && !acc[key].class_names.includes(className)) {
+            acc[key].class_names.push(className);
+          }
+
+          return acc;
+        }, {} as Record<string, WeeklyScheduleRow>);
+
+        const formattedRows = Object.values(groupedBySTT).sort((a, b) => a.stt - b.stt);
         setRows(formattedRows);
       } else {
         // Create empty rows if no existing data
@@ -205,7 +228,7 @@ export default function WeeklySchedulePage() {
     return Array.from({ length: count }, (_, index) => ({
       id: `new-${Date.now()}-${index}`,
       stt: index + 1,
-      class_name: '',
+      class_names: [],
       subject_name: '',
       lecturer_name: '',
       time_slot: '',
@@ -219,7 +242,7 @@ export default function WeeklySchedulePage() {
     const newRow: WeeklyScheduleRow = {
       id: `new-${Date.now()}`,
       stt: rows.length + 1,
-      class_name: '',
+      class_names: [],
       subject_name: '',
       lecturer_name: '',
       time_slot: '',
@@ -265,7 +288,7 @@ export default function WeeklySchedulePage() {
 
       // Check if at least one row has data
       const hasData = rows.some(
-        (row) => row.class_name.trim() && (row.subject_name.trim() || row.lecturer_name.trim())
+        (row) => row.class_names.length > 0 && (row.subject_name.trim() || row.lecturer_name.trim())
       );
 
       if (!hasData) {
@@ -276,12 +299,12 @@ export default function WeeklySchedulePage() {
       setSaving(true);
       setError(null);
 
-      // Extract unique class_ids from rows
-      const classNamesInRows = rows
-        .filter(row => row.class_name.trim())
-        .map(row => row.class_name.trim());
+      // Extract unique class_ids from all rows
+      const allClassNames = rows
+        .filter(row => row.class_names.length > 0)
+        .flatMap(row => row.class_names);
 
-      const uniqueClassNames = [...new Set(classNamesInRows)];
+      const uniqueClassNames = [...new Set(allClassNames)];
 
       // Map class names to IDs
       const classIds = uniqueClassNames
@@ -298,7 +321,7 @@ export default function WeeklySchedulePage() {
 
       // Prepare data for bulk save
       const schedulesData = rows
-        .filter((row) => row.class_name.trim() && (row.subject_name.trim() || row.lecturer_name.trim()))
+        .filter((row) => row.class_names.length > 0 && (row.subject_name.trim() || row.lecturer_name.trim()))
         .map((row) => ({
           stt: row.stt,
           subject_id: null,
@@ -340,12 +363,117 @@ export default function WeeklySchedulePage() {
       return;
     }
 
+    if (rows.length === 0) {
+      setError('Không có dữ liệu để xuất');
+      return;
+    }
+
     try {
-      setSuccess('Chức năng xuất Excel đang được phát triển');
+      // Find the selected course and week data
+      const selectedCourseData = courses.find(c => c.id === selectedCourse);
+      const selectedWeekData = weeks.find(w => w.week_number === selectedWeek);
+
+      if (!selectedCourseData || !selectedWeekData) {
+        setError('Không tìm thấy thông tin kỳ học hoặc tuần học');
+        return;
+      }
+
+      // Call the export utility
+      exportWeeklyScheduleToExcel({
+        rows,
+        selectedCourseData: {
+          ma_khoa_hoc: selectedCourseData.ma_khoa_hoc,
+          dot: selectedCourseData.dot,
+          hoc_ky: selectedCourseData.hoc_ky,
+          nam_hoc: selectedCourseData.nam_hoc,
+        },
+        selectedWeekData: {
+          week_number: selectedWeekData.week_number,
+          week_label: selectedWeekData.week_label,
+          start_date: selectedWeekData.start_date,
+          end_date: selectedWeekData.end_date,
+          display_label: selectedWeekData.display_label,
+        },
+      });
+
+      setSuccess('✅ Xuất file Excel thành công!');
     } catch (err) {
       console.error('❌ Error exporting:', err);
-      setError('Lỗi khi xuất file');
+      setError('Lỗi khi xuất file Excel');
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!selectedCourse || !selectedWeek) {
+      setError('Vui lòng chọn kỳ học và tuần để xuất file');
+      return;
+    }
+
+    if (rows.length === 0) {
+      setError('Không có dữ liệu để xuất');
+      return;
+    }
+
+    try {
+      // Find the selected course and week data
+      const selectedCourseData = courses.find(c => c.id === selectedCourse);
+      const selectedWeekData = weeks.find(w => w.week_number === selectedWeek);
+
+      if (!selectedCourseData || !selectedWeekData) {
+        setError('Không tìm thấy thông tin kỳ học hoặc tuần học');
+        return;
+      }
+
+      // Call the PDF export utility
+      exportWeeklyScheduleToPDF({
+        rows,
+        selectedCourseData: {
+          ma_khoa_hoc: selectedCourseData.ma_khoa_hoc,
+          dot: selectedCourseData.dot,
+          hoc_ky: selectedCourseData.hoc_ky,
+          nam_hoc: selectedCourseData.nam_hoc,
+        },
+        selectedWeekData: {
+          week_number: selectedWeekData.week_number,
+          week_label: selectedWeekData.week_label,
+          start_date: selectedWeekData.start_date,
+          end_date: selectedWeekData.end_date,
+          display_label: selectedWeekData.display_label,
+        },
+      });
+
+      setSuccess('✅ Xuất file PDF thành công!');
+    } catch (err) {
+      console.error('❌ Error exporting PDF:', err);
+      setError('Lỗi khi xuất file PDF');
+    }
+  };
+
+  const handleConfirmAddClass = () => {
+    if (!addingClassToRow || !newClassInput.trim()) {
+      return;
+    }
+
+    const updatedRows = rows.map(r => {
+      if (r.id === addingClassToRow) {
+        const newClassNames = [...r.class_names, newClassInput.trim()];
+        // Load subjects for the new class's major
+        const selectedClass = classes.find(c => c.class_name === newClassInput.trim());
+        if (selectedClass && selectedClass.major_id) {
+          loadSubjectsByMajor(String(selectedClass.major_id));
+        }
+        return { ...r, class_names: newClassNames };
+      }
+      return r;
+    });
+    setRows(updatedRows);
+    setAddingClassToRow(null);
+    setNewClassInput('');
+  };
+
+  const handleCancelAddClass = () => {
+    setAddingClassToRow(null);
+    setNewClassInput('');
   };
 
   // ✅ Memoize columns with majorSubjectsMap dependency
@@ -360,69 +488,125 @@ export default function WeeklySchedulePage() {
       editable: false,
     },
     {
-      field: 'class_name',
+      field: 'class_names',
       headerName: 'Lớp Học *',
-      width: 180,
-      editable: true,
-      renderEditCell: (params) => {
-        const classOptions = classes.map(c => ({
-          label: c.class_name || '',
-          value: c.class_name || '',
-          id: c.id,
-        }));
+      width: 300,
+      minWidth: 250,
+      flex: 1,
+      editable: false,
+      renderCell: (params) => {
+        const row = rows.find(r => r.id === params.id);
+        if (!row) return null;
+
+        const handleAddClass = () => {
+          setAddingClassToRow(params.id);
+        };
+
+        const handleRemoveClass = (classNameToRemove: string) => {
+          const updatedRows = rows.map(r => {
+            if (r.id === params.id) {
+              return { ...r, class_names: r.class_names.filter(cn => cn !== classNameToRemove) };
+            }
+            return r;
+          });
+          setRows(updatedRows);
+        };
 
         return (
-          <MuiAutocomplete
-            freeSolo
-            openOnFocus
-            options={classOptions}
-            value={params.value || ''}
-            onChange={(_, newValue) => {
-              if (typeof newValue === 'string') {
-                params.api.setEditCellValue({ id: params.id, field: 'class_name', value: newValue });
-              } else if (newValue && typeof newValue === 'object') {
-                params.api.setEditCellValue({ id: params.id, field: 'class_name', value: newValue.value });
-              }
-            }}
-            onInputChange={(_, newInputValue) => {
-              params.api.setEditCellValue({ id: params.id, field: 'class_name', value: newInputValue });
-            }}
-            renderInput={(inputParams) => (
-              <TextField
-                {...inputParams}
-                autoFocus
-                fullWidth
-                variant="standard"
-                placeholder="Chọn hoặc nhập lớp học..."
-              />
-            )}
-            renderOption={(props, option) => {
-              const { key, ...otherProps } = props;
-              return (
-                <li key={key} {...otherProps}>
-                  {option.label}
-                </li>
-              );
-            }}
-            sx={{ width: '100%' }}
-          />
+          <Box sx={{
+            display: 'flex',
+            gap: 0.5,
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            py: 1,
+            width: '100%',
+            minHeight: '52px',
+          }}>
+            {row.class_names.map((className, idx) => (
+              <Box
+                key={idx}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  backgroundColor: '#e3f2fd',
+                  borderRadius: '16px',
+                  padding: '6px 10px',
+                  fontSize: '0.875rem',
+                  border: '1px solid #90caf9',
+                  whiteSpace: 'nowrap',
+                  marginBottom: '4px',
+                }}
+              >
+                <span style={{ fontWeight: 500 }}>{className}</span>
+                <button
+                  onClick={() => handleRemoveClass(className)}
+                  style={{
+                    marginLeft: '6px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#1976d2',
+                    fontSize: '18px',
+                    padding: 0,
+                    lineHeight: 1,
+                    fontWeight: 'bold',
+                  }}
+                  title="Xóa lớp"
+                >
+                  ×
+                </button>
+              </Box>
+            ))}
+            <button
+              onClick={handleAddClass}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '28px',
+                minHeight: '28px',
+                borderRadius: '50%',
+                backgroundColor: '#1976d2',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#1565c0';
+                e.currentTarget.style.transform = 'scale(1.1)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#1976d2';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              title="Thêm lớp học"
+            >
+              +
+            </button>
+          </Box>
         );
       },
     },
     {
       field: 'subject_name',
       headerName: 'Học phần *',
-      width: 250,
+      width: 280,
+      minWidth: 200,
       editable: true,
       renderEditCell: (params) => {
-        // Get the class for this row
+        // Get the class for this row (use first class if multiple)
         const row = rows.find(r => r.id === params.id);
-        const selectedClass = classes.find(c => c.class_name === row?.class_name);
+        const firstClassName = row?.class_names[0];
+        const selectedClass = firstClassName ? classes.find(c => c.class_name === firstClassName) : undefined;
 
         // Use cached major subjects if available, otherwise use all subjects
         let availableSubjects = subjects;
-        if (selectedClass?.major_id && majorSubjectsMap.has(selectedClass.major_id)) {
-          availableSubjects = majorSubjectsMap.get(selectedClass.major_id) || subjects;
+        if (selectedClass?.major_id && majorSubjectsMap.has(String(selectedClass.major_id))) {
+          availableSubjects = majorSubjectsMap.get(String(selectedClass.major_id)) || subjects;
         }
 
         const subjectOptions = availableSubjects.map(s => ({
@@ -433,8 +617,8 @@ export default function WeeklySchedulePage() {
         }));
 
         // Load subjects for this major if not already loaded
-        if (selectedClass?.major_id && !majorSubjectsMap.has(selectedClass.major_id)) {
-          loadSubjectsByMajor(selectedClass.major_id);
+        if (selectedClass?.major_id && !majorSubjectsMap.has(String(selectedClass.major_id))) {
+          loadSubjectsByMajor(String(selectedClass.major_id));
         }
 
         return (
@@ -445,8 +629,8 @@ export default function WeeklySchedulePage() {
             value={params.value || ''}
             onFocus={() => {
               // Load subjects when the field is focused
-              if (selectedClass?.major_id && !majorSubjectsMap.has(selectedClass.major_id)) {
-                loadSubjectsByMajor(selectedClass.major_id);
+              if (selectedClass?.major_id && !majorSubjectsMap.has(String(selectedClass.major_id))) {
+                loadSubjectsByMajor(String(selectedClass.major_id));
               }
             }}
             onChange={(_, newValue) => {
@@ -488,7 +672,8 @@ export default function WeeklySchedulePage() {
     {
       field: 'lecturer_name',
       headerName: 'Giảng viên *',
-      width: 250,
+      width: 220,
+      minWidth: 180,
       editable: true,
       renderEditCell: (params) => {
         const lecturerOptions = lecturers.map(l => {
@@ -550,7 +735,8 @@ export default function WeeklySchedulePage() {
     {
       field: 'time_slot',
       headerName: 'Thời gian',
-      width: 200,
+      width: 180,
+      minWidth: 150,
       editable: true,
       renderEditCell: (params) => (
         <TextField
@@ -571,7 +757,8 @@ export default function WeeklySchedulePage() {
     {
       field: 'room',
       headerName: 'Phòng Học',
-      width: 120,
+      width: 110,
+      minWidth: 90,
       editable: true,
       renderEditCell: (params) => (
         <TextField
@@ -592,7 +779,8 @@ export default function WeeklySchedulePage() {
     {
       field: 'ghi_chu',
       headerName: 'Ghi chú',
-      width: 200,
+      width: 180,
+      minWidth: 150,
       editable: true,
       renderEditCell: (params) => (
         <TextField
@@ -721,6 +909,15 @@ export default function WeeklySchedulePage() {
           >
             Xuất Excel
           </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<ArrowDownTrayIcon className="h-5 w-5" />}
+            onClick={handleExportPDF}
+            disabled={rows.length === 0}
+          >
+            Xuất PDF
+          </Button>
         </Box>
 
         {/* DataGrid */}
@@ -736,6 +933,19 @@ export default function WeeklySchedulePage() {
             }}
             disableRowSelectionOnClick
             editMode="cell"
+            getRowHeight={() => 'auto'}
+            sx={{
+              '& .MuiDataGrid-cell': {
+                display: 'flex',
+                alignItems: 'flex-start',
+                paddingTop: '8px',
+                paddingBottom: '8px',
+              },
+              '& .MuiDataGrid-row': {
+                minHeight: '52px !important',
+                maxHeight: 'none !important',
+              },
+            }}
           />
         </Box>
 
@@ -751,6 +961,7 @@ export default function WeeklySchedulePage() {
             <li>Lịch học của tuần đó sẽ tự động được tải lên</li>
             <li>Click vào từng ô trong bảng để chỉnh sửa trực tiếp</li>
             <li><strong>Chọn Lớp học trước:</strong> Sau khi chọn lớp, danh sách Học phần sẽ tự động lọc theo ngành của lớp đó</li>
+            <li><strong>Thêm nhiều lớp:</strong> Click nút "+" trong cột Lớp học để thêm nhiều lớp vào cùng một lịch</li>
             <li>Tất cả các cột (Lớp học, Học phần, Giảng viên) đều có gợi ý tìm kiếm</li>
             <li>Có thể nhập tự do hoặc chọn từ danh sách gợi ý</li>
             <li>Thời gian và Phòng học nhập tự do (VD: Thứ 2, 7h-9h)</li>
@@ -758,6 +969,45 @@ export default function WeeklySchedulePage() {
             <li>Click "Lưu lịch học" để lưu toàn bộ thay đổi</li>
           </Typography>
         </Box>
+
+        {/* Add Class Dialog */}
+        <Dialog open={addingClassToRow !== null} onClose={handleCancelAddClass} maxWidth="sm" fullWidth>
+          <DialogTitle>Thêm Lớp Học</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <MuiAutocomplete
+                freeSolo
+                options={classes.map(c => c.class_name || '')}
+                value={newClassInput}
+                onChange={(_, newValue) => {
+                  setNewClassInput(newValue || '');
+                }}
+                onInputChange={(_, newInputValue) => {
+                  setNewClassInput(newInputValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Tên lớp học"
+                    placeholder="Chọn hoặc nhập tên lớp học..."
+                    autoFocus
+                    fullWidth
+                  />
+                )}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelAddClass}>Hủy</Button>
+            <Button
+              onClick={handleConfirmAddClass}
+              variant="contained"
+              disabled={!newClassInput.trim()}
+            >
+              Thêm
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Paper>
     </Box>
   );

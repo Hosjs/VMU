@@ -23,6 +23,8 @@
     "express": "^5.2.1",
     "glob": "^13.0.1",
     "isbot": "^5.1.27",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
     "laravel-echo": "^2.2.6",
     "lodash": "^4.17.23",
     "pusher-js": "^8.4.0",
