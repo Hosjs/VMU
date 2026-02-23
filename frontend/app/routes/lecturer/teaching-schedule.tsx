@@ -311,7 +311,7 @@ export default function TeachingSchedulePage() {
     const newRows = [...rows];
     newRows.splice(insertIndex, 0, newLecturerRow);
     setRows(newRows);
-    setSuccess(`✅ Đã thêm dòng giảng viên thứ 2 cho môn "${originalRow.ten_hoc_phan}". STT và Tên môn sẽ tự động merge trong Excel.`);
+    setSuccess(`✅ Đã thêm dòng giảng viên thứ 2 cho môn "${originalRow.ten_hoc_phan}". STT, Tên môn và Số tín chỉ sẽ tự động merge trong Excel. Giảng viên đầu tiên sẽ được in đậm.`);
     setError(null);
   };
 
@@ -402,7 +402,6 @@ export default function TeachingSchedulePage() {
         return;
       }
 
-      // Call the export utility
       exportTeachingScheduleToExcel({
         rows,
         selectedCourseData,
@@ -650,6 +649,7 @@ export default function TeachingSchedulePage() {
             <Button
               size="small"
               variant="outlined"
+              color="primary"
               onClick={() => handleAddLecturerToSubject(params.id)}
               title="Thêm giảng viên thứ 2 cho môn này"
             >
@@ -791,7 +791,10 @@ export default function TeachingSchedulePage() {
               editMode="cell"
               getRowClassName={(params) => {
                 // Highlight break/holiday rows
-                return params.row.isBreak ? 'bg-red-50' : '';
+                if (params.row.isBreak) return 'bg-red-50';
+                // Highlight additional lecturer rows
+                if (params.row.isAdditionalLecturer) return 'bg-blue-50';
+                return '';
               }}
               sx={{
                 '& .bg-red-50': {
@@ -800,6 +803,13 @@ export default function TeachingSchedulePage() {
                   fontStyle: 'italic',
                   '&:hover': {
                     backgroundColor: '#fecaca',
+                  },
+                },
+                '& .bg-blue-50': {
+                  backgroundColor: '#eff6ff',
+                  borderLeft: '3px solid #3b82f6',
+                  '&:hover': {
+                    backgroundColor: '#dbeafe',
                   },
                 },
                 '& .border-red-200': {
