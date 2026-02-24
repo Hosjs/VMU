@@ -41,7 +41,6 @@ export const exportTeachingScheduleToExcel = ({
     const headerRowIndex = 3;
 
     // 3. DANH SÁCH HỌC PHẦN
-    // Group rows by STT and subject name to handle multiple lecturers for same subject
     const dataStartRow = data.length;
     const mergeRanges: any[] = [];
     const firstLecturerRows: number[] = []; // Track row indices of first lecturers (for bold formatting)
@@ -51,20 +50,50 @@ export const exportTeachingScheduleToExcel = ({
     let i = 0;
     while (i < rows.length) {
         const currentRow = rows[i];
+
+        // Kiểm tra xem có phải dòng NGHỈ không (check cả isBreak flag và text)
+        const isBreak = currentRow.isBreak ||
+            (currentRow.ten_hoc_phan && currentRow.ten_hoc_phan.toUpperCase().includes('NGHỈ'));
+
+        if (isBreak) {
+            // DÒNG NGHỈ - Push dữ liệu vào cột A (viết HOA) và để trống các cột B, C, D
+            const breakRowData = [
+                currentRow.ten_hoc_phan?.toUpperCase() || '', // Viết HOA
+                '', // Cột B trống
+                '', // Cột C trống
+                '', // Cột D trống
+                currentRow.tuan || '',
+                currentRow.ngay || '',
+                currentRow.ghi_chu || ''
+            ];
+            data.push(breakRowData);
+            // Lưu index để merge A→D và format bold sau
+            breakRowIndices.push(data.length - 1);
+
+            i++;
+            continue;
+        }
+
+        // XỬ LÝ DÒNG BÌNH THƯỜNG (như cũ)
         const groupStartRow = data.length;
         const sameSubjectRows: TeachingScheduleRow[] = [currentRow];
 
-        // Find consecutive rows with same STT and subject name
         const currentSTT = String(currentRow.stt || '').trim();
         const currentSubject = String(currentRow.ten_hoc_phan || '').trim();
 
         let j = i + 1;
         while (j < rows.length) {
-            const nextSTT = String(rows[j].stt || '').trim();
-            const nextSubject = String(rows[j].ten_hoc_phan || '').trim();
+            const nextRow = rows[j];
+            const nextIsBreak = nextRow.isBreak ||
+                (nextRow.ten_hoc_phan && nextRow.ten_hoc_phan.toUpperCase().includes('NGHỈ'));
+
+            if (nextIsBreak) break;
+
+            const nextSTT = String(nextRow.stt || '').trim();
+            const nextSubject = String(nextRow.ten_hoc_phan || '').trim();
 
             if (nextSTT === currentSTT && nextSubject === currentSubject) {
-                sameSubjectRows.push(rows[j]);
+                sameSubjectRows.push(nextRow);
                 j++;
             } else {
                 break;
@@ -72,68 +101,55 @@ export const exportTeachingScheduleToExcel = ({
         }
 
         sameSubjectRows.forEach((row, index) => {
-            const isBreak = row.isBreak || (row.ten_hoc_phan && (
-                row.ten_hoc_phan.includes('NGHỈ') ||
-                row.ten_hoc_phan.includes('nghỉ') ||
-                row.ten_hoc_phan.includes('Nghỉ') ||
-                row.ten_hoc_phan.includes('Lịch nghỉ') ||
-                row.ten_hoc_phan.toLowerCase().includes('nghỉ')
-            ));
+            data.push([
+                index === 0 ? (row.stt || '') : '',
+                index === 0 ? (row.ten_hoc_phan || '') : '',
+                index === 0 ? (row.so_tin_chi || '') : '',
+                row.can_bo_giang_day || '',
+                row.tuan ?? '',
+                row.ngay || '',
+                row.ghi_chu || ''
+            ]);
 
-            if (isBreak) {
-                breakRowIndices.push(data.length - 1);
-            } else {
-                // Dòng bình thường
-                data.push([
-                    index === 0 ? (row.stt || '') : '',
-                    index === 0 ? (row.ten_hoc_phan || '') : '',
-                    index === 0 ? (row.so_tin_chi || '') : '',  // Only show credits in first row (will be merged)
-                    row.can_bo_giang_day || '',
-                    row.tuan ?? '',
-                    row.ngay || '',
-                    row.ghi_chu || ''
-                ]);
-
-                // Mark first lecturer row for bold formatting
-                if (index === 0 && sameSubjectRows.length > 1) {
-                    firstLecturerRows.push(data.length - 1);
-                }
+            if (index === 0 && sameSubjectRows.length > 1) {
+                firstLecturerRows.push(data.length - 1);
             }
         });
 
-
-        // Check if this is a break row (for multi-lecturer logic only)
-        const isBreakRow = currentRow.isBreak || (currentRow.ten_hoc_phan && (
-            currentRow.ten_hoc_phan.includes('NGHỈ') ||
-            currentRow.ten_hoc_phan.includes('nghỉ') ||
-            currentRow.ten_hoc_phan.includes('Nghỉ') ||
-            currentRow.ten_hoc_phan.includes('Lịch nghỉ') ||
-            currentRow.ten_hoc_phan.toLowerCase().includes('nghỉ')
-        ));
-
-        // Merge STT, subject name, credits for multi-lecturer rows (not break rows)
-        if (sameSubjectRows.length > 1 && !isBreakRow) {
+        if (sameSubjectRows.length > 1) {
             const groupEndRow = data.length - 1;
             mergeRanges.push(
-                { s: { r: groupStartRow, c: 0 }, e: { r: groupEndRow, c: 0 } }, // Merge STT
-                { s: { r: groupStartRow, c: 1 }, e: { r: groupEndRow, c: 1 } }, // Merge subject name
-                { s: { r: groupStartRow, c: 2 }, e: { r: groupEndRow, c: 2 } }  // Merge credits (Số tín chỉ)
+                { s: { r: groupStartRow, c: 0 }, e: { r: groupEndRow, c: 0 } },
+                { s: { r: groupStartRow, c: 1 }, e: { r: groupEndRow, c: 1 } },
+                { s: { r: groupStartRow, c: 2 }, e: { r: groupEndRow, c: 2 } }
             );
         }
 
-        i = j; // Move to next subject group
+        i = j;
     }
 
+    // MERGE A→D cho các dòng NGHỈ
+    const breakRowMerges: any[] = [];
+    breakRowIndices.forEach(rowIndex => {
+        const merge = {
+            s: { r: rowIndex, c: 0 },
+            e: { r: rowIndex, c: 3 }
+        };
+        breakRowMerges.push(merge);
+        mergeRanges.push(merge);
+    });
+
+    // 4. CÁC DÒNG KẾ HOẠCH CUỐI (NẰM TRONG BẢNG - VIẾT LIỀN NHAU)
     const specialStartRow = data.length;
     const semesterText = (selectedCourseData.hoc_ky || 1) === 1 ? 'I' : (selectedCourseData.hoc_ky || 1) === 2 ? 'II' : 'III';
 
     // Chú ý: Các dòng này push liên tiếp, không xen kẽ dòng trống
-    data.push([`ÔN TẬP VÀ THI HỌC KỲ ${semesterText}`, '', '', '', 'Tuần 01, 12, 03/2027', 'Ngày 04/01 đến ngày 24/01/2027', '']);
-    data.push(['NGHỈ TẾT NGUYÊN ĐÁN', '', '', '', 'Tuần 04, 05, 06, 07/2027', 'Từ 25/01 đến ngày 22/02/2027', '']);
-    data.push(['Thực tập', '', '7', '', '', 'Tháng 03, 04, 05/2027', '']);
-    data.push(['Đề án tốt nghiệp', '', '9', '', '', 'Tháng 06, 07, 08/2027', '']);
-    data.push(['Bảo vệ đề án tốt nghiệp', '', '', '', '', 'Tháng 09, 10/2027', '']);
-    data.push(['Bế giảng phát bằng', '', '', '', '', 'Tháng 12/2027', '']);
+    data.push([`ÔN TẬP VÀ THI HỌC KỲ ${semesterText}`, '', '', '', '', '', '']);
+    data.push(['NGHỈ TẾT NGUYÊN ĐÁN', '', '', '', '', '', '']);
+    data.push(['Thực tập', '', '7', '', '', '', '']);
+    data.push(['Đề án tốt nghiệp', '', '9', '', '', '', '']);
+    data.push(['Bảo vệ đề án tốt nghiệp', '', '', '', '', '', '']);
+    data.push(['Bế giảng phát bằng', '', '', '', '', '', '']);
 
     const tableEndRow = data.length - 1; // Đây là dòng cuối cùng của bảng
 
@@ -147,35 +163,7 @@ export const exportTeachingScheduleToExcel = ({
     const footerRow = data.length - 1;
 
     const ws = XLSX.utils.aoa_to_sheet(data);
-    data.forEach((row, rowIndex) => {
-        // Skip header rows (0, 1, 2)
-        if (rowIndex <= 2) {
-            return;
-        }
 
-        // Skip special rows (from "ÔN TẬP" to "Bế giảng")
-        if (rowIndex >= specialStartRow && rowIndex <= tableEndRow) {
-            return;
-        }
-
-        // Skip note row and footer rows
-        if (rowIndex >= noteRow) {
-            return;
-        }
-
-        const colD = row[3]; // Cột D (Cán bộ giảng dạy)
-        const colE = row[4]; // Cột E (Tuần)
-        const colF = row[5]; // Cột F (Ngày)
-        const colA = row[0]; // Cột A (TT hoặc Tên HP cho break rows)
-
-        // Chỉ merge nếu: có nội dung ở cột A VÀ cả 3 cột D, E, F đều rỗng
-        if (colA && !colD && !colE && !colF) {
-            mergeRanges.push({
-                s: { r: rowIndex, c: 3 },
-                e: { r: rowIndex, c: 5 }
-            });
-        }
-    });
     // --- VALIDATE & REMOVE DUPLICATE/OVERLAPPING MERGES ---
     const validatedMerges: any[] = [];
     const mergeKeys = new Set<string>();
@@ -192,8 +180,10 @@ export const exportTeachingScheduleToExcel = ({
         // Create unique key for this merge range
         const key = `${merge.s.r},${merge.s.c}-${merge.e.r},${merge.e.c}`;
 
+
         // Check for duplicates
         if (mergeKeys.has(key)) {
+            console.warn(`⚠️  Duplicate merge detected at index ${index}:`, merge);
             return;
         }
 
@@ -201,6 +191,7 @@ export const exportTeachingScheduleToExcel = ({
         let hasOverlap = false;
         for (const existing of validatedMerges) {
             if (isOverlapping(merge, existing)) {
+                console.warn(`⚠️  Overlapping merge detected:`, merge, 'overlaps with', existing);
                 hasOverlap = true;
                 break;
             }
@@ -209,6 +200,7 @@ export const exportTeachingScheduleToExcel = ({
         if (!hasOverlap) {
             mergeKeys.add(key);
             validatedMerges.push(merge);
+        } else {
         }
     });
 
@@ -261,9 +253,10 @@ export const exportTeachingScheduleToExcel = ({
                 ws[addr].s.font.bold = true;
             }
 
-            // Bold break rows (user-created break rows with merge A→D)
-            if (breakRowIndices.includes(R)) {
+            // BOLD cho dòng NGHỈ do user tạo (merge A→D)
+            if (breakRowIndices.includes(R) && C <= 3) {
                 ws[addr].s.font.bold = true;
+                ws[addr].s.alignment.horizontal = 'center';
             }
 
             // Style dòng "Ôn tập" đến "Bế giảng"

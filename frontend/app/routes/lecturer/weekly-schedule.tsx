@@ -82,14 +82,6 @@ export default function WeeklySchedulePage() {
 
   // Debug: Log when majorSubjectsMap changes
   useEffect(() => {
-    console.log('📦 majorSubjectsMap updated:', {
-      size: majorSubjectsMap.size,
-      keys: Array.from(majorSubjectsMap.keys()),
-      data: Array.from(majorSubjectsMap.entries()).map(([key, value]) => ({
-        major_id: key,
-        subjects_count: value.length,
-      })),
-    });
   }, [majorSubjectsMap]);
 
   const loadInitialData = async () => {
@@ -110,13 +102,7 @@ export default function WeeklySchedulePage() {
       setSubjects(subjectsData);
 
       // Debug: Log classes with their major_id
-      console.log('📚 Loaded classes:', classesData?.length || 0);
       if (classesData && classesData.length > 0) {
-        console.log('📝 Sample classes with major_id:', classesData.slice(0, 3).map(c => ({
-          class_name: c.class_name,
-          major_id: c.major_id,
-          major_id_type: typeof c.major_id
-        })));
       }
     } catch (err) {
       setError('Lỗi khi tải dữ liệu');
@@ -149,13 +135,10 @@ export default function WeeklySchedulePage() {
     }
 
     try {
-      console.log('🔍 Loading subjects for major_id:', majorId, 'Type:', typeof majorId);
 
       // ✅ FIX: Pass major_id as-is (could be number or string)
       // Backend will handle both numeric ID and string maNganh
       const majorSubjects = await majorSubjectService.getSubjectsByMajor(majorId);
-
-      console.log('✅ Loaded subjects for major_id:', majorId, 'Count:', majorSubjects.length);
       const subjectsForMajor = majorSubjects.map(ms => ({
         id: ms.id,
         maMon: ms.maMon,

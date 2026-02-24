@@ -89,8 +89,6 @@ class MajorSubjectService {
       // So response is directly the subjects array
       const subjects = await apiService.get<Array<{ id: number; maMon: string; tenMon: string; soTinChi: number }>>('/major-subjects/by-major', { major_id: majorId });
 
-      console.log('📚 API response for major_id', majorId, ':', subjects);
-
       return Array.isArray(subjects) ? subjects : [];
     } catch (error) {
       console.error('❌ Error in getSubjectsByMajor:', error);
