@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\TeachingScheduleController;
 use App\Http\Controllers\Api\WeeklyScheduleController;
+use App\Http\Controllers\Api\TeachingPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -75,6 +76,7 @@ Route::post('/courses', [CourseController::class, 'store']);
 Route::put('/courses/{id}', [CourseController::class, 'update']);
 Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
 Route::post('/courses/create-classes', [CourseController::class, 'createClasses']);
+Route::post('/courses/create-classes-bulk', [CourseController::class, 'createClassesBulk']);
 
 Route::get('/trinh-do-dao-tao', [EducationLevelController::class, 'simple']);
 Route::get('/education-levels', [EducationLevelController::class, 'index']);
@@ -99,6 +101,7 @@ Route::get('/classes', [ClassController::class, 'index']);
 Route::get('/classes/simple', [ClassController::class, 'simple']);
 Route::get('/classes/{id}', [ClassController::class, 'show']);
 Route::get('/classes/{id}/students', [ClassController::class, 'getStudents']);
+Route::delete('/classes/{id}', [ClassController::class, 'destroy']);
 
 Route::prefix('grades')->group(function () {
     Route::get('/', [GradeController::class, 'getGradesByMaHV']);
@@ -122,6 +125,12 @@ Route::prefix('weekly-schedules')->group(function () {
     Route::get('/week-numbers', [WeeklyScheduleController::class, 'getWeekNumbers']);
     Route::get('/weeks-by-semester', [WeeklyScheduleController::class, 'getWeeksBySemester']);
     Route::get('/{id}', [WeeklyScheduleController::class, 'show']);
+});
+
+// Teaching Payment Routes (Public)
+Route::prefix('teaching-payments')->group(function () {
+    Route::get('/', [TeachingPaymentController::class, 'index']);
+    Route::get('/summary', [TeachingPaymentController::class, 'summary']);
 });
 
 // Grade Management Routes (for teachers/admin)
@@ -244,7 +253,17 @@ Route::middleware('auth:api')->group(function () {
     // Weekly Schedule Management (Protected)
     Route::prefix('weekly-schedules')->group(function () {
         Route::post('/bulk-save', [WeeklyScheduleController::class, 'bulkSave'])->middleware('permission:weekly_schedules.create');
+        Route::delete('/by-class', [WeeklyScheduleController::class, 'deleteByClass'])->middleware('permission:weekly_schedules.delete');
         Route::put('/{id}', [WeeklyScheduleController::class, 'update'])->middleware('permission:weekly_schedules.edit');
         Route::delete('/{id}', [WeeklyScheduleController::class, 'destroy'])->middleware('permission:weekly_schedules.delete');
+    });
+
+    // Teaching Payment Management (Protected)
+    Route::prefix('teaching-payments')->group(function () {
+        Route::post('/generate', [TeachingPaymentController::class, 'generate'])->middleware('permission:teaching_payments.create');
+        Route::post('/bulk-save', [TeachingPaymentController::class, 'bulkSave'])->middleware('permission:teaching_payments.create');
+        Route::put('/{id}/status', [TeachingPaymentController::class, 'updateStatus'])->middleware('permission:teaching_payments.edit');
+        Route::post('/bulk-update-status', [TeachingPaymentController::class, 'bulkUpdateStatus'])->middleware('permission:teaching_payments.edit');
+        Route::delete('/{id}', [TeachingPaymentController::class, 'destroy'])->middleware('permission:teaching_payments.delete');
     });
 });

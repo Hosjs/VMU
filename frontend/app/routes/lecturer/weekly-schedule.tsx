@@ -282,44 +282,39 @@ export default function WeeklySchedulePage() {
       setSaving(true);
       setError(null);
 
-      // Extract unique class_ids from all rows
-      const allClassNames = rows
-        .filter(row => row.class_names.length > 0)
-        .flatMap(row => row.class_names);
-
-      const uniqueClassNames = [...new Set(allClassNames)];
-
-      // Map class names to IDs
-      const classIds = uniqueClassNames
-        .map(className => {
-          const foundClass = classes.find(c => c.class_name === className);
-          return foundClass?.id;
-        })
-        .filter((id): id is number => id !== undefined);
-
-      if (classIds.length === 0) {
-        setError('Không tìm thấy lớp học hợp lệ');
-        return;
-      }
-
-      // Prepare data for bulk save
+      // Prepare data for bulk save - each row has its own class_ids
       const schedulesData = rows
         .filter((row) => row.class_names.length > 0 && (row.subject_name.trim() || row.lecturer_name.trim()))
-        .map((row) => ({
-          stt: row.stt,
-          subject_id: null,
-          subject_name: row.subject_name.trim() || null,
-          lecturer_id: null,
-          lecturer_name: row.lecturer_name.trim() || null,
-          time_slot: row.time_slot.trim() || null,
-          room: row.room.trim() || null,
-          ghi_chu: row.ghi_chu?.trim() || null,
-        }));
+        .map((row) => {
+          // Map class names to IDs for this specific row
+          const rowClassIds = row.class_names
+            .map(className => {
+              const foundClass = classes.find(c => c.class_name === className);
+              return foundClass?.id;
+            })
+            .filter((id): id is number => id !== undefined);
+
+          return {
+            stt: row.stt,
+            class_ids: rowClassIds, // Each row has its own class_ids
+            subject_id: null,
+            subject_name: row.subject_name.trim() || null,
+            lecturer_id: null,
+            lecturer_name: row.lecturer_name.trim() || null,
+            time_slot: row.time_slot.trim() || null,
+            room: row.room.trim() || null,
+            ghi_chu: row.ghi_chu?.trim() || null,
+          };
+        });
+
+      if (schedulesData.length === 0) {
+        setError('Không có dữ liệu hợp lệ để lưu');
+        return;
+      }
 
       const request: BulkSaveWeeklyScheduleRequest = {
         week_number: String(selectedWeek),
         khoa_hoc_id: selectedCourse,
-        class_ids: classIds,
         schedules: schedulesData,
       };
 
@@ -485,14 +480,34 @@ export default function WeeklySchedulePage() {
           setAddingClassToRow(params.id);
         };
 
-        const handleRemoveClass = (classNameToRemove: string) => {
-          const updatedRows = rows.map(r => {
-            if (r.id === params.id) {
-              return { ...r, class_names: r.class_names.filter(cn => cn !== classNameToRemove) };
+        const handleRemoveClass = async (classNameToRemove: string) => {
+          try {
+            // Find the class ID
+            const classToRemove = classes.find(c => c.class_name === classNameToRemove);
+
+            // If we have course, week, and class selected, call API to delete from backend
+            if (selectedCourse && selectedWeek && classToRemove) {
+              await weeklyScheduleService.deleteByClass({
+                week_number: String(selectedWeek),
+                khoa_hoc_id: selectedCourse,
+                class_id: classToRemove.id,
+              });
+              setSuccess(`✅ Đã xóa lớp ${classNameToRemove} khỏi lịch học`);
+              setTimeout(() => setSuccess(null), 2000);
             }
-            return r;
-          });
-          setRows(updatedRows);
+
+            // Update local state
+            const updatedRows = rows.map(r => {
+              if (r.id === params.id) {
+                return { ...r, class_names: r.class_names.filter(cn => cn !== classNameToRemove) };
+              }
+              return r;
+            });
+            setRows(updatedRows);
+          } catch (err: any) {
+            console.error('❌ Error removing class:', err);
+            setError(err?.response?.data?.message || `Lỗi khi xóa lớp ${classNameToRemove}`);
+          }
         };
 
         return (

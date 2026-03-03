@@ -257,8 +257,9 @@ class CourseController extends Controller
             $major = Major::find($request->major_id);
 
             // Generate class name: {MajorCode} {ma_khoa_hoc}
-            // Example: CNTT 2025.1.1
-            $majorCode = $major->maNganh ?? 'UNKN';
+            // Example: CNTT 2025.1.1 or 8310110 2025.1.1
+            // Use short_code for display, but save maNganh in database
+            $majorCode = $major->short_code ?? $major->maNganh ?? 'UNKN';
             $className = "{$majorCode} {$khoaHoc->ma_khoa_hoc}";
 
             // Check if class already exists
@@ -275,7 +276,7 @@ class CourseController extends Controller
 
             $class = Classes::create([
                 'class_name' => $className,
-                'major_id' => $request->major_id,
+                'major_id' => $major->maNganh, // ✅ Lưu maNganh (8310110) thay vì id (1)
                 'khoaHoc_id' => $request->khoa_hoc_id,
                 'maTrinhDoDaoTao' => $request->trinh_do,
                 'trangThai' => 'DangHoc',
@@ -289,6 +290,110 @@ class CourseController extends Controller
             ], 201);
         } catch (\Exception $e) {
             Log::error('Error creating class: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể tạo lớp học',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Tạo nhiều lớp học cùng lúc (Bulk creation)
+     * POST /api/courses/create-classes-bulk
+     *
+     * Request body:
+     * {
+     *   "classes": [
+     *     { "khoa_hoc_id": 1, "major_id": 123, "trinh_do": "ThS" },
+     *     { "khoa_hoc_id": 1, "major_id": 124, "trinh_do": "ThS" }
+     *   ]
+     * }
+     */
+    public function createClassesBulk(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'classes' => 'required|array|min:1',
+                'classes.*.khoa_hoc_id' => 'required|exists:khoa_hoc,id',
+                'classes.*.major_id' => 'required|exists:majors,id',
+                'classes.*.trinh_do' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            $results = [
+                'success' => [],
+                'failed' => [],
+            ];
+
+            foreach ($request->classes as $classData) {
+                try {
+                    $khoaHoc = KhoaHoc::find($classData['khoa_hoc_id']);
+                    $major = Major::find($classData['major_id']);
+
+                    // Generate class name using short_code for better readability
+                    // Example: CNTT 2025.1.1 instead of 8310110 2025.1.1
+                    $majorCode = $major->short_code ?? $major->maNganh ?? 'UNKN';
+                    $className = "{$majorCode} {$khoaHoc->ma_khoa_hoc}";
+
+                    // Check if class already exists
+                    $exists = Classes::where('class_name', $className)
+                        ->where('khoaHoc_id', $classData['khoa_hoc_id'])
+                        ->exists();
+
+                    if ($exists) {
+                        $results['failed'][] = [
+                            'class_name' => $className,
+                            'reason' => 'Lớp đã tồn tại',
+                        ];
+                        continue;
+                    }
+
+                    $class = Classes::create([
+                        'class_name' => $className,
+                        'major_id' => $major->maNganh, // ✅ Lưu maNganh (8310110) thay vì id (1)
+                        'khoaHoc_id' => $classData['khoa_hoc_id'],
+                        'maTrinhDoDaoTao' => $classData['trinh_do'],
+                        'trangThai' => 'DangHoc',
+                        'createdBy' => auth()->id(),
+                    ]);
+
+                    $results['success'][] = [
+                        'id' => $class->id,
+                        'class_name' => $className,
+                    ];
+                } catch (\Exception $e) {
+                    $results['failed'][] = [
+                        'major_id' => $classData['major_id'] ?? 'N/A',
+                        'khoa_hoc_id' => $classData['khoa_hoc_id'] ?? 'N/A',
+                        'reason' => $e->getMessage(),
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            $successCount = count($results['success']);
+            $failedCount = count($results['failed']);
+
+            return response()->json([
+                'success' => $successCount > 0,
+                'message' => "Tạo thành công {$successCount} lớp" .
+                            ($failedCount > 0 ? ", thất bại {$failedCount} lớp" : ""),
+                'data' => $results,
+            ], $successCount > 0 ? 201 : 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating classes bulk: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể tạo lớp học',

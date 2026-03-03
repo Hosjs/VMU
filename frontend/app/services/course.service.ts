@@ -63,4 +63,26 @@ export const courseService = {
     const response = await apiService.post<{ data: any }>('/courses/create-classes', data);
     return response.data;
   },
+
+  /**
+   * Tạo nhiều lớp học cùng lúc (Bulk creation)
+   * Gửi 1 request duy nhất thay vì nhiều request riêng lẻ
+   */
+  async createClassBulk(classes: CreateClassRequest[]): Promise<{
+    success: string[];
+    failed: Array<{ class_name?: string; major_id?: string; khoa_hoc_id?: string; reason: string }>;
+  }> {
+    const response = await apiService.post<{
+      data: {
+        success: Array<{ id: number; class_name: string }>;
+        failed: Array<{ class_name?: string; major_id?: string; khoa_hoc_id?: string; reason: string }>;
+      }
+    }>('/courses/create-classes-bulk', { classes });
+
+    // Transform response to match expected format
+    return {
+      success: response.data.success.map(s => s.class_name),
+      failed: response.data.failed,
+    };
+  },
 };

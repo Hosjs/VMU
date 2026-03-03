@@ -25,4 +25,5 @@ export interface CreateClassRequest {
   khoa_hoc_id: number;
   major_id: number;
   trinh_do: string;
+  phu_trach_lop: string;
 }

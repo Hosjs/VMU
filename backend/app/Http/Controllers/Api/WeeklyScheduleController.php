@@ -113,10 +113,10 @@ class WeeklyScheduleController extends Controller
         $validator = Validator::make($request->all(), [
             'week_number' => 'required|string|max:20',
             'khoa_hoc_id' => 'required|integer|exists:khoa_hoc,id',
-            'class_ids' => 'required|array|min:1',
-            'class_ids.*' => 'required|integer|exists:classes,id',
             'schedules' => 'required|array|min:1',
             'schedules.*.stt' => 'required|integer',
+            'schedules.*.class_ids' => 'required|array|min:1',
+            'schedules.*.class_ids.*' => 'required|integer|exists:classes,id',
             'schedules.*.subject_name' => 'nullable|string|max:255',
             'schedules.*.lecturer_name' => 'nullable|string|max:255',
             'schedules.*.time_slot' => 'nullable|string|max:255',
@@ -137,19 +137,27 @@ class WeeklyScheduleController extends Controller
 
             $weekNumber = $request->week_number;
             $khoaHocId = $request->khoa_hoc_id;
-            $classIds = $request->class_ids;
             $schedulesData = $request->schedules;
 
-            // Delete existing schedules for this week, semester and classes
+            // Collect all class_ids to delete existing schedules
+            $allClassIds = [];
+            foreach ($schedulesData as $scheduleData) {
+                $allClassIds = array_merge($allClassIds, $scheduleData['class_ids']);
+            }
+            $allClassIds = array_unique($allClassIds);
+
+            // Delete existing schedules for this week, semester and all classes
             WeeklySchedule::where('week_number', $weekNumber)
                 ->where('khoa_hoc_id', $khoaHocId)
-                ->whereIn('class_id', $classIds)
+                ->whereIn('class_id', $allClassIds)
                 ->delete();
 
-            // Create new schedules for each class
+            // Create new schedules - each row has its own class_ids
             $createdSchedules = [];
-            foreach ($classIds as $classId) {
-                foreach ($schedulesData as $scheduleData) {
+            foreach ($schedulesData as $scheduleData) {
+                $rowClassIds = $scheduleData['class_ids'];
+
+                foreach ($rowClassIds as $classId) {
                     $schedule = WeeklySchedule::create([
                         'stt' => $scheduleData['stt'],
                         'week_number' => $weekNumber,
@@ -235,6 +243,47 @@ class WeeklyScheduleController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Lỗi khi cập nhật lịch học',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete weekly schedules by class (soft delete)
+     * Used when removing a class from a specific week schedule
+     */
+    public function deleteByClass(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'week_number' => 'required|string',
+            'khoa_hoc_id' => 'required|integer',
+            'class_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $deletedCount = WeeklySchedule::where('week_number', $request->week_number)
+                ->where('khoa_hoc_id', $request->khoa_hoc_id)
+                ->where('class_id', $request->class_id)
+                ->delete(); // This is soft delete because model uses SoftDeletes trait
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã xóa {$deletedCount} lịch học của lớp",
+                'deleted_count' => $deletedCount,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi xóa lịch học theo lớp',
                 'error' => $e->getMessage(),
             ], 500);
         }

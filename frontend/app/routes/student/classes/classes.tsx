@@ -10,8 +10,10 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowPathIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { ClassActionButtons } from './components/ClassActionButtons';
+import { AddClassModal } from './components/AddClassModal';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Select } from '~/components/ui/Select';
@@ -36,6 +38,7 @@ export default function Classes() {
   const [trinhDoOptions, setTrinhDoOptions] = useState<SelectOption[]>([{ value: '', label: 'Tất cả' }]);
   const [khoaHocOptions] = useState<SelectOption[]>(generateKhoaHocOptions(10));
   const [majorNamesMap, setMajorNamesMap] = useState<Record<string, string>>({});
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // ============================================
   // FORM for search
@@ -265,6 +268,13 @@ export default function Classes() {
         <div className="flex items-center gap-2">
           <Button
             variant="primary"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <PlusIcon className="w-5 h-5 mr-2" />
+            Thêm lớp
+          </Button>
+          <Button
+            variant="primary"
             onClick={refresh}
             disabled={isLoading}
           >
@@ -483,6 +493,15 @@ export default function Classes() {
           )}
         </div>
       </Card>
+
+      {/* Add Class Modal */}
+      <AddClassModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          refresh();
+        }}
+      />
     </div>
   );
 }

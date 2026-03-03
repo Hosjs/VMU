@@ -36,6 +36,7 @@ class Major extends Model
         'daoTaoThacSy',
         'daoTaoTienSy',
         'is_active',
+        'short_code',
     ];
 
     /**
@@ -76,6 +77,51 @@ class Major extends Model
     public function getIsActiveAttribute()
     {
         return true; // Mặc định là active
+    }
+
+    /**
+     * Get short code for class name generation
+     * Example: "Công nghệ thông tin" -> "CNTT"
+     */
+    public function getShortCodeAttribute()
+    {
+        // Nếu maNganh là chữ cái ngắn (< 10 ký tự), dùng luôn
+        if ($this->maNganh && strlen($this->maNganh) < 10 && preg_match('/^[A-Z]+$/i', $this->maNganh)) {
+            return strtoupper($this->maNganh);
+        }
+
+        // Tạo mã ngắn từ tenNganh
+        $name = $this->tenNganh ?? '';
+
+        // Map các tên phổ biến
+        $mapping = [
+            'Công nghệ thông tin' => 'CNTT',
+            'Kỹ thuật phần mềm' => 'KTPM',
+            'Quản trị kinh doanh' => 'QTKD',
+            'Kinh tế đầu tư' => 'KTĐT',
+            'Tài chính ngân hàng' => 'TCNH',
+            'Kế toán' => 'KT',
+            'Marketing' => 'MKT',
+            'Luật kinh tế' => 'LKT',
+        ];
+
+        // Kiểm tra exact match
+        foreach ($mapping as $fullName => $shortCode) {
+            if (stripos($name, $fullName) !== false) {
+                return $shortCode;
+            }
+        }
+
+        // Fallback: lấy ký tự đầu của mỗi từ
+        $words = explode(' ', $name);
+        $shortCode = '';
+        foreach ($words as $word) {
+            if (mb_strlen($word) > 0) {
+                $shortCode .= mb_strtoupper(mb_substr($word, 0, 1));
+            }
+        }
+
+        return $shortCode ?: $this->maNganh;
     }
 
     /**

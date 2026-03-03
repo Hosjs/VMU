@@ -420,4 +420,52 @@ class ClassController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Delete a class
+     * DELETE /api/classes/{id}
+     */
+    public function destroy($id): JsonResponse
+    {
+        try {
+            $class = DB::table('classes')->where('id', $id)->first();
+
+            if (!$class) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy lớp học',
+                ], 404);
+            }
+
+            // Check if class has students
+            $hasStudents = DB::table('class_students')
+                ->where('class_id', $id)
+                ->whereNull('deleted_at')
+                ->exists();
+
+            if ($hasStudents) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xóa lớp học đã có học viên',
+                ], 422);
+            }
+
+            // Soft delete
+            DB::table('classes')
+                ->where('id', $id)
+                ->update(['deleted_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa lớp học thành công',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting class: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa lớp học',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

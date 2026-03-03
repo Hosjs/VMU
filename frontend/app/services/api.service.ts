@@ -203,9 +203,11 @@ class ApiService {
     return response.data;
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
+  async delete<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
     const token = getAuthToken();
-    const response = await httpClient.delete<{ success: boolean; data: T; message?: string }>(endpoint, token || undefined);
+    const queryString = params ? `?${this.buildQueryString(params)}` : '';
+    const url = `${endpoint}${queryString}`;
+    const response = await httpClient.delete<{ success: boolean; data: T; message?: string }>(url, token || undefined);
     return response.data;
   }
 

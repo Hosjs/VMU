@@ -255,6 +255,50 @@ export const studentService = {
   },
 
   /**
+   * Lấy danh sách ngành học với ID (dùng cho API cần major_id)
+   * Trả về { value: id, label: "maNganh - tenNganh" }
+   */
+  async getMajorsListWithId(): Promise<Array<{ value: string; label: string }>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/majors?per_page=1000`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch majors list');
+      }
+
+      const result = await response.json();
+
+      let majors = [];
+      if (result.data && Array.isArray(result.data)) {
+        majors = result.data;
+      }
+
+      const options = majors.map((major: any) => {
+        const id = major.id;
+        const tenNganh = major.tenNganh || major.ten_nganh || '';
+        const maNganh = major.maNganh || major.ma_nganh || '';
+        const shortCode = major.short_code || maNganh; // Use short_code if available
+
+        return {
+          value: id?.toString() || '',
+          label: `${shortCode} - ${tenNganh}` // Display: "CNTT - Công nghệ thông tin"
+        };
+      }).filter((opt: { value: string; label: string }) => opt.value && opt.value.trim() !== '');
+
+      return options;
+    } catch (error) {
+      console.error('Error fetching majors:', error);
+      return [];
+    }
+  },
+
+  /**
    * Lấy danh sách trình độ đào tạo từ database
    */
   async getTrinhDoList(): Promise<Array<{ maTrinhDoDaoTao: string; tenTrinhDo: string }>> {

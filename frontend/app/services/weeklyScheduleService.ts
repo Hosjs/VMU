@@ -75,6 +75,22 @@ class WeeklyScheduleService {
   }
 
   /**
+   * Delete weekly schedules by class (soft delete)
+   * Used when removing a specific class from a week schedule
+   */
+  async deleteByClass(params: {
+    week_number: string;
+    khoa_hoc_id: number;
+    class_id: number;
+  }): Promise<{ deleted_count: number }> {
+    const response = await apiService.delete<{ deleted_count: number }>(
+      `${this.baseUrl}/by-class`,
+      params
+    );
+    return response;
+  }
+
+  /**
    * Get available week numbers
    */
   async getWeekNumbers(): Promise<string[]> {

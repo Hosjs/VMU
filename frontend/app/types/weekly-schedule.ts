@@ -99,9 +99,9 @@ export interface WeeklyScheduleRow {
 export interface BulkSaveWeeklyScheduleRequest {
   week_number: string;
   khoa_hoc_id: number;
-  class_ids: number[];
   schedules: {
     stt: number;
+    class_ids: number[]; // Each row has its own class_ids
     subject_id?: number | null;
     subject_name?: string | null;
     lecturer_id?: number | null;

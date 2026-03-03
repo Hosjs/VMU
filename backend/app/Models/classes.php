@@ -89,11 +89,12 @@ class classes extends Model
 
     /**
      * Relationship to Major (Ngành học)
-     * ✅ Fixed: Now references majors.id (not maNganh)
+     * major_id trong database lưu maNganh (string like "8310110")
+     * Join với majors.maNganh
      */
     public function major()
     {
-        return $this->belongsTo(Major::class, 'major_id', 'id');
+        return $this->belongsTo(Major::class, 'major_id', 'maNganh');
     }
 
     /**
