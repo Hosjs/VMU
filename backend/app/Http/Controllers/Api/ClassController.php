@@ -20,12 +20,14 @@ class ClassController extends Controller
             $query = DB::table('classes')
                 ->leftJoin('khoa_hoc', 'classes.khoaHoc_id', '=', 'khoa_hoc.id')
                 ->leftJoin('majors', 'classes.major_id', '=', 'majors.id')
+                ->leftJoin('lecturers', 'classes.lecurer_id', '=', 'lecturers.id')
                 ->select(
                     'classes.*',
                     'khoa_hoc.nam_hoc',
                     'khoa_hoc.ma_khoa_hoc',
                     'majors.maNganh as major_code',
-                    'majors.tenNganh as major_name'
+                    'majors.tenNganh as major_name',
+                    'lecturers.hoTen as lecturer_name'
                 );
 
             // Search
@@ -119,6 +121,8 @@ class ClassController extends Controller
                     'major_name' => $item->major_name, // ✅ Major name
                     'lecurer_id' => $item->lecurer_id,
                     'idGiaoVienChuNhiem' => $item->lecurer_id, // alias
+                    'lecturer_name' => $item->lecturer_name, // ✅ Lecturer name
+                    'phu_trach_lop' => $item->lecturer_name, // alias
                     'trangThai' => $item->trangThai,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,

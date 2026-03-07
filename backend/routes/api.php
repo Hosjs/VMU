@@ -131,6 +131,7 @@ Route::prefix('weekly-schedules')->group(function () {
 Route::prefix('teaching-payments')->group(function () {
     Route::get('/', [TeachingPaymentController::class, 'index']);
     Route::get('/summary', [TeachingPaymentController::class, 'summary']);
+    Route::get('/statistics', [TeachingPaymentController::class, 'statistics']);
 });
 
 // Grade Management Routes (for teachers/admin)

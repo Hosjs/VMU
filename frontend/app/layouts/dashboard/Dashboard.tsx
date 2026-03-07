@@ -85,11 +85,11 @@ export default function Dashboard() {
             setError(null);
 
             // Load statistics
-            const statsResponse = await apiService.get<DashboardStats>('/lecturer-payments/statistics');
+            const statsResponse = await apiService.get<DashboardStats>('/teaching-payments/statistics');
             setStats(statsResponse);
 
             // Load recent payments
-            const paymentsResponse = await apiService.getPaginated('/lecturer-payments', {
+            const paymentsResponse = await apiService.getPaginated('/teaching-payments', {
                 page: 1,
                 per_page: 5,
             });
@@ -106,12 +106,17 @@ export default function Dashboard() {
 
     const getPaymentStatusBadge = (status: string) => {
         const badges: Record<string, { label: string; className: string }> = {
+            // English status
             pending: { label: 'Chờ duyệt', className: 'bg-yellow-100 text-yellow-800' },
             approved: { label: 'Đã duyệt', className: 'bg-blue-100 text-blue-800' },
             paid: { label: 'Đã thanh toán', className: 'bg-green-100 text-green-800' },
             rejected: { label: 'Từ chối', className: 'bg-red-100 text-red-800' },
+            // Vietnamese status
+            'chua_thanh_toan': { label: 'Chưa thanh toán', className: 'bg-yellow-100 text-yellow-800' },
+            'da_duyet': { label: 'Đã duyệt', className: 'bg-blue-100 text-blue-800' },
+            'da_thanh_toan': { label: 'Đã thanh toán', className: 'bg-green-100 text-green-800' },
         };
-        return badges[status] || badges.pending;
+        return badges[status] || { label: 'Không xác định', className: 'bg-gray-100 text-gray-800' };
     };
 
     if (isLoading) {
@@ -347,24 +352,24 @@ export default function Dashboard() {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {recentPayments.map((payment: any) => {
-                                    const badge = getPaymentStatusBadge(payment.payment_status);
+                                    const badge = getPaymentStatusBadge(payment.trang_thai_thanh_toan || payment.payment_status);
                                     return (
                                         <tr key={payment.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {payment.lecturer?.hoTen || 'N/A'}
+                                                    {payment.lecturer?.hoTen || payment.ho_ten_giang_vien || payment.can_bo_giang_day || 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900">{payment.subject_name}</div>
-                                                <div className="text-xs text-gray-500">{payment.class_name}</div>
+                                                <div className="text-sm text-gray-900">{payment.ten_hoc_phan || payment.subject_name || 'N/A'}</div>
+                                                <div className="text-xs text-gray-500" dangerouslySetInnerHTML={{ __html: payment.lop || payment.class_name || '' }}></div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                 {payment.semester_code}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="text-sm font-semibold text-gray-900">
-                                                    {formatNumber(payment.total_amount)} đ
+                                                    {formatNumber(payment.thuc_nhan || payment.thanh_tien_chua_thue || payment.total_amount || 0)} đ
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">

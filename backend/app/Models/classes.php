@@ -19,6 +19,7 @@ class classes extends Model
         'khoaHoc_id',
         'lecurer_id',
         'trangThai',
+        'phu_trach_lop',
         'createdBy',
     ];
 

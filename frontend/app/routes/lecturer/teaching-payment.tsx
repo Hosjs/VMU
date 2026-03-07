@@ -18,12 +18,22 @@ import {
   DialogContent,
   DialogActions,
   TextField as MuiTextField,
+  InputAdornment,
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tooltip,
 } from '@mui/material';
 import {
   CheckCircleIcon,
   XCircleIcon,
   ArrowPathIcon,
   ArrowDownTrayIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {
   getTeachingPayments,
@@ -43,6 +53,7 @@ import type {
 } from '~/types/teaching-payment';
 import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
+import { exportTeachingPaymentToExcel } from '~/utils/teachingPaymentExcelExporter';
 
 /**
  * Format currency to VND
@@ -77,6 +88,13 @@ export default function TeachingPaymentPage() {
   }>({ open: false, action: null });
   const [nguoiThanhToan, setNguoiThanhToan] = useState<string>('');
 
+  // 🔍 Search and Filter states
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all'); // 'all' | 'paid' | 'unpaid'
+  const [lecturerFilter, setLecturerFilter] = useState<string>('');
+  const [classFilter, setClassFilter] = useState<string>('');
+  const [filteredRows, setFilteredRows] = useState<GridRowsProp<TeachingPaymentRow>>([]);
+
   // Helper to get selected row count
   const getSelectedCount = () => {
     if (!selectionModel) return 0;
@@ -97,6 +115,34 @@ export default function TeachingPaymentPage() {
     return selectedRows.length;
   };
 
+  // 🔍 Helper: Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setLecturerFilter('');
+    setClassFilter('');
+  };
+
+  // 🔍 Helper: Get unique lecturers for filter
+  const getUniqueLecturers = (): string[] => {
+    const lecturers = new Set<string>();
+    rows.forEach(row => {
+      if (row.ho_ten_giang_vien) lecturers.add(row.ho_ten_giang_vien);
+      else if (row.can_bo_giang_day) lecturers.add(row.can_bo_giang_day);
+    });
+    return Array.from(lecturers).sort();
+  };
+
+  // 🔍 Helper: Check if any filter is active
+  const hasActiveFilters = (): boolean => {
+    return (
+      searchQuery.trim() !== '' ||
+      statusFilter !== 'all' ||
+      lecturerFilter.trim() !== '' ||
+      classFilter.trim() !== ''
+    );
+  };
+
   // Load courses and majors on mount
   useEffect(() => {
     loadInitialData();
@@ -109,6 +155,54 @@ export default function TeachingPaymentPage() {
       loadSummary();
     }
   }, [selectedCourse, selectedMajor, semesterCode]);
+
+  // 🔍 Filter rows based on search query and filters
+  useEffect(() => {
+    let filtered = [...rows];
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(row => {
+        return (
+          row.ten_hoc_phan?.toLowerCase().includes(query) ||
+          row.ho_ten_giang_vien?.toLowerCase().includes(query) ||
+          row.can_bo_giang_day?.toLowerCase().includes(query) ||
+          row.lop?.toLowerCase().includes(query) ||
+          row.chuyen_nganh?.toLowerCase().includes(query) ||
+          row.don_vi?.toLowerCase().includes(query) ||
+          row.chuc_danh_giang_vien?.toLowerCase().includes(query) ||
+          String(row.stt).includes(query)
+        );
+      });
+    }
+
+    // Apply status filter
+    if (statusFilter === 'paid') {
+      filtered = filtered.filter(row => row.trang_thai_thanh_toan === 'da_thanh_toan');
+    } else if (statusFilter === 'unpaid') {
+      filtered = filtered.filter(row => row.trang_thai_thanh_toan === 'chua_thanh_toan');
+    }
+
+    // Apply lecturer filter
+    if (lecturerFilter.trim()) {
+      const lecturerQuery = lecturerFilter.toLowerCase();
+      filtered = filtered.filter(row =>
+        row.ho_ten_giang_vien?.toLowerCase().includes(lecturerQuery) ||
+        row.can_bo_giang_day?.toLowerCase().includes(lecturerQuery)
+      );
+    }
+
+    // Apply class filter
+    if (classFilter.trim()) {
+      const classQuery = classFilter.toLowerCase();
+      filtered = filtered.filter(row =>
+        row.lop?.toLowerCase().includes(classQuery)
+      );
+    }
+
+    setFilteredRows(filtered);
+  }, [rows, searchQuery, statusFilter, lecturerFilter, classFilter]);
 
   const loadInitialData = async () => {
     try {
@@ -456,8 +550,30 @@ export default function TeachingPaymentPage() {
     }
   };
 
-  const handleExportToExcel = () => {
-    setError('Chức năng xuất Excel đang được phát triển');
+  const handleExportToExcel = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+
+      if (rows.length === 0) {
+        setError('Không có dữ liệu để xuất');
+        return;
+      }
+
+      // Use the template path relative to public folder
+      const templatePath = '/Teaching-payment_Excel_format/template_ai.xlsx';
+
+      // Export to Excel using the template
+      await exportTeachingPaymentToExcel({
+        data: rows as TeachingPaymentRow[],
+        templatePath,
+      });
+
+      setSuccess('Xuất file Excel thành công!');
+    } catch (err) {
+      console.error('❌ Error exporting to Excel:', err);
+      setError('Lỗi khi xuất file Excel: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    }
   };
 
   const columns: GridColDef<TeachingPaymentRow>[] = [
@@ -480,16 +596,8 @@ export default function TeachingPaymentPage() {
     {
       field: 'chuc_danh_giang_vien',
       headerName: 'Chức danh GV',
-      width: 120,
-      editable: true,
-      type: 'singleSelect',
-      valueOptions: [
-        { value: '', label: '-- Chọn --' },
-        { value: 'ThS', label: 'ThS' },
-        { value: 'TS', label: 'TS' },
-        { value: 'PGS.TS', label: 'PGS.TS' },
-        { value: 'GS.TS', label: 'GS.TS' },
-      ],
+      width: 150,
+      editable: true, // Có thể edit, nhưng tự động điền từ lecturers
     },
     {
       field: 'ho_ten_giang_vien',
@@ -501,13 +609,7 @@ export default function TeachingPaymentPage() {
       field: 'don_vi',
       headerName: 'Đơn vị',
       width: 150,
-      editable: true,
-      type: 'singleSelect',
-      valueOptions: [
-        { value: '', label: '-- Chọn --' },
-        { value: 'Khoa NN', label: 'Khoa NN' },
-        { value: 'Khoa CNTT', label: 'Khoa CNTT' },
-      ],
+      editable: true, // Có thể edit, nhưng tự động điền từ lecturers
     },
     {
       field: 'ma_so_thue_tncn',
@@ -531,11 +633,23 @@ export default function TeachingPaymentPage() {
     {
       field: 'lop',
       headerName: 'Lớp',
-      width: 120,
+      width: 200, // Tăng width để chứa nhiều dòng
       editable: false, // Không cho edit vì lấy từ weekly_schedules
-      renderCell: (params) => (
-        <span className="text-blue-600 font-medium">{params.value || '-'}</span>
-      ),
+      renderCell: (params) => {
+        const lopValue = params.value || '-';
+        return (
+          <div
+            className="text-blue-600 font-medium"
+            style={{
+              whiteSpace: 'normal',
+              wordWrap: 'break-word',
+              lineHeight: '1.8',
+              padding: '8px 0',
+            }}
+            dangerouslySetInnerHTML={{ __html: lopValue }}
+          />
+        );
+      },
     },
     {
       field: 'chuyen_nganh',
@@ -887,13 +1001,14 @@ export default function TeachingPaymentPage() {
       {/* DataGrid */}
       {selectedCourse && selectedMajor && semesterCode ? (
         <Paper elevation={2} className="p-6">
+          {/* Header with title and count */}
           <div className="flex justify-between items-center mb-4">
             <div>
               <Typography variant="h6" className="text-gray-900 font-semibold">
                 Bảng thanh toán tiền giảng dạy
               </Typography>
               <Typography variant="caption" className="text-gray-600">
-                {rows.length} bản ghi
+                Hiển thị {filteredRows.length} / {rows.length} bản ghi
                 {getSelectedCount() > 0 && (
                   <span className="ml-2 text-blue-600 font-medium">
                     • {getSelectedCount()} dòng đã chọn
@@ -966,9 +1081,169 @@ export default function TeachingPaymentPage() {
             </div>
           </div>
 
+          {/* 🔍 Search and Filters Section */}
+          <div className="mb-4 space-y-3">
+            {/* Search Box */}
+            <div className="flex gap-3">
+              <MuiTextField
+                fullWidth
+                size="small"
+                placeholder="Tìm kiếm theo tên học phần, giảng viên, lớp, chuyên ngành..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setSearchQuery('')}
+                        edge="end"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              {/* Quick Status Filters */}
+              <div className="flex gap-2 items-center min-w-fit">
+                <Chip
+                  icon={<FunnelIcon className="w-4 h-4" />}
+                  label="Tất cả"
+                  onClick={() => setStatusFilter('all')}
+                  color={statusFilter === 'all' ? 'primary' : 'default'}
+                  variant={statusFilter === 'all' ? 'filled' : 'outlined'}
+                />
+                <Chip
+                  icon={<CheckCircleIcon className="w-4 h-4" />}
+                  label="Đã TT"
+                  onClick={() => setStatusFilter('paid')}
+                  color={statusFilter === 'paid' ? 'success' : 'default'}
+                  variant={statusFilter === 'paid' ? 'filled' : 'outlined'}
+                />
+                <Chip
+                  icon={<XCircleIcon className="w-4 h-4" />}
+                  label="Chưa TT"
+                  onClick={() => setStatusFilter('unpaid')}
+                  color={statusFilter === 'unpaid' ? 'warning' : 'default'}
+                  variant={statusFilter === 'unpaid' ? 'filled' : 'outlined'}
+                />
+              </div>
+            </div>
+
+            {/* Advanced Filters Row */}
+            <div className="flex gap-3">
+              {/* Lecturer Filter */}
+              <FormControl size="small" className="min-w-[200px]">
+                <InputLabel>Giảng viên</InputLabel>
+                <Select
+                  value={lecturerFilter}
+                  label="Giảng viên"
+                  onChange={(e) => setLecturerFilter(e.target.value)}
+                >
+                  <MenuItem value="">
+                    <em>Tất cả giảng viên</em>
+                  </MenuItem>
+                  {getUniqueLecturers().map((lecturer) => (
+                    <MenuItem key={lecturer} value={lecturer}>
+                      {lecturer}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Class Filter */}
+              <MuiTextField
+                size="small"
+                label="Lọc theo lớp"
+                placeholder="VD: QLKT 2025"
+                value={classFilter}
+                onChange={(e) => setClassFilter(e.target.value)}
+                className="min-w-[200px]"
+                InputProps={{
+                  endAdornment: classFilter && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setClassFilter('')}
+                        edge="end"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              {/* Clear All Filters Button */}
+              {hasActiveFilters() && (
+                <Tooltip title="Xóa tất cả bộ lọc">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<XMarkIcon className="w-4 h-4" />}
+                    onClick={clearAllFilters}
+                    sx={{ minWidth: 'fit-content', whiteSpace: 'nowrap' }}
+                  >
+                    Xóa bộ lọc
+                  </Button>
+                </Tooltip>
+              )}
+            </div>
+
+            {/* Active Filters Chips */}
+            {hasActiveFilters() && (
+              <div className="flex flex-wrap gap-2 items-center text-sm text-gray-600">
+                <span className="font-medium">Đang lọc:</span>
+                {searchQuery && (
+                  <Chip
+                    size="small"
+                    label={`Tìm kiếm: "${searchQuery}"`}
+                    onDelete={() => setSearchQuery('')}
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {statusFilter !== 'all' && (
+                  <Chip
+                    size="small"
+                    label={`Trạng thái: ${statusFilter === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}`}
+                    onDelete={() => setStatusFilter('all')}
+                    color={statusFilter === 'paid' ? 'success' : 'warning'}
+                    variant="outlined"
+                  />
+                )}
+                {lecturerFilter && (
+                  <Chip
+                    size="small"
+                    label={`Giảng viên: ${lecturerFilter}`}
+                    onDelete={() => setLecturerFilter('')}
+                    color="info"
+                    variant="outlined"
+                  />
+                )}
+                {classFilter && (
+                  <Chip
+                    size="small"
+                    label={`Lớp: ${classFilter}`}
+                    onDelete={() => setClassFilter('')}
+                    color="secondary"
+                    variant="outlined"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
           <Box sx={{ height: 700, width: '100%' }}>
             <DataGrid
-              rows={rows}
+              rows={filteredRows}
               columns={columns}
               processRowUpdate={processRowUpdate}
               onProcessRowUpdateError={handleProcessRowUpdateError}
@@ -976,6 +1251,7 @@ export default function TeachingPaymentPage() {
               checkboxSelection
               disableRowSelectionOnClick
               editMode="cell"
+              getRowHeight={() => 'auto'} // Cho phép row tự động điều chỉnh chiều cao
               onRowSelectionModelChange={(newSelection) => {
                 console.log('📌 Selection changed:', newSelection);
 
@@ -1048,9 +1324,16 @@ export default function TeachingPaymentPage() {
                 },
                 '& .MuiDataGrid-cell': {
                   borderRight: '1px solid #e5e7eb',
+                  whiteSpace: 'normal', // Cho phép xuống dòng
+                  wordWrap: 'break-word', // Tự động cắt từ dài
+                  lineHeight: '1.8', // Khoảng cách giữa các dòng
+                  padding: '8px', // Padding cho đẹp hơn
+                  alignItems: 'flex-start', // Align content to top
                 },
                 '& .MuiDataGrid-row': {
                   borderBottom: '1px solid #d1d5db',
+                  minHeight: 'auto !important', // Override min height
+                  maxHeight: 'none !important', // No max height limit
                 },
               }}
             />

@@ -108,6 +108,7 @@ export default function CoursePage() {
             khoa_hoc_id: 0,
             major_id: 0,
             trinh_do: 'THS',
+            phu_trach_lop: ""
         },
         onSubmit: async (values) => {
             setIsSubmitting(true);

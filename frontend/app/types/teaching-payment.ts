@@ -105,7 +105,9 @@ export interface TeachingPaymentRow {
   so_tin_chi: number;
   can_bo_giang_day: string;
 
+  // Thông tin giảng viên chi tiết
   chuc_danh_giang_vien?: string; // ThS, TS
+  ho_ten_giang_vien?: string; // Họ và tên giảng viên
 
   // Thông tin đơn vị và ngân hàng
   don_vi?: string;

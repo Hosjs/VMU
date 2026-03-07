@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
 } from '@mui/material';
 import { PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import weeklyScheduleService from '~/services/weeklyScheduleService';
@@ -31,11 +32,13 @@ import { subjectService } from '~/services/subject.service';
 import { lecturerService } from '~/services/lecturer.service';
 import { courseService } from '~/services/course.service';
 import { majorSubjectService } from '~/services/major-subject.service';
+import { getTeachingSchedules } from '~/services/teachingScheduleService';
 import { exportWeeklyScheduleToExcel, exportWeeklyScheduleToPDF } from '~/utils/excelExporter';
 import type { WeeklyScheduleRow, BulkSaveWeeklyScheduleRequest, Week } from '~/types/weekly-schedule';
 import type { Room } from '~/types/room';
 import type { Subject } from '~/types/subject';
 import type { Course } from '~/types/course';
+import type { TeachingSchedule } from '~/types/teaching-schedule';
 
 export async function loader() {
   return {};
@@ -51,6 +54,7 @@ export default function WeeklySchedulePage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [majorSubjectsMap, setMajorSubjectsMap] = useState<Map<string, Subject[]>>(new Map());
   const [lecturers, setLecturers] = useState<Array<{ id: number; hoTen: string; tenKhoa?: string; hocHam?: string; trinhDoChuyenMon?: string }>>([]);
+  const [teachingSchedules, setTeachingSchedules] = useState<TeachingSchedule[]>([]); // ✅ Store teaching schedules for comparison
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +81,7 @@ export default function WeeklySchedulePage() {
   useEffect(() => {
     if (selectedCourse && selectedWeek) {
       loadExistingSchedules();
+      loadTeachingSchedules(); // ✅ Load teaching schedules for lecturer comparison
     }
   }, [selectedCourse, selectedWeek]);
 
@@ -153,6 +158,42 @@ export default function WeeklySchedulePage() {
       console.error(`❌ Error loading subjects for major ${majorId}:`, err);
       return [];
     }
+  };
+
+  // ✅ Load teaching schedules for lecturer comparison
+  const loadTeachingSchedules = async () => {
+    if (!selectedCourse) return;
+
+    try {
+      // Load teaching schedules for this course
+      const schedules = await getTeachingSchedules({
+        khoa_hoc_id: selectedCourse,
+      });
+      setTeachingSchedules(schedules || []);
+    } catch (err) {
+      console.error('❌ Error loading teaching schedules:', err);
+      setTeachingSchedules([]);
+    }
+  };
+
+  // ✅ Helper: Get assigned lecturers for a subject from teaching_schedules
+  // Returns array of all lecturers assigned to this subject
+  const getAssignedLecturers = (subjectName: string): string[] => {
+    if (!subjectName || teachingSchedules.length === 0) return [];
+
+    // Find ALL teaching schedules with matching subject name
+    const matchingSchedules = teachingSchedules.filter(
+      ts => ts.ten_hoc_phan?.toLowerCase().trim() === subjectName.toLowerCase().trim()
+    );
+
+    // Extract lecturer names and remove duplicates
+    const lecturerNames = matchingSchedules
+      .map(schedule => schedule.can_bo_giang_day)
+      .filter(name => name && name.trim() !== '') // Remove null/empty
+      .map(name => name!.trim());
+
+    // Return unique lecturer names
+    return [...new Set(lecturerNames)];
   };
 
   const loadExistingSchedules = async () => {
@@ -673,60 +714,215 @@ export default function WeeklySchedulePage() {
       width: 220,
       minWidth: 180,
       editable: true,
+      renderCell: (params) => {
+        const row = rows.find(r => r.id === params.id);
+        if (!row) return null;
+
+        const assignedLecturers = getAssignedLecturers(row.subject_name);
+        const currentLecturer = row.lecturer_name;
+
+        // Check if current lecturer is in the list of assigned lecturers
+        const isMatch = assignedLecturers.length === 0 ||
+                       !currentLecturer ||
+                       assignedLecturers.some(assigned =>
+                         assigned.toLowerCase().trim() === currentLecturer.toLowerCase().trim()
+                       );
+
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+            <span>{currentLecturer}</span>
+            {!isMatch && assignedLecturers.length > 0 && (
+              <Tooltip title={`⚠️ Giảng viên được phân công: ${assignedLecturers.join(', ')}`}>
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ff9800',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'help',
+                  }}
+                >
+                  !
+                </Box>
+              </Tooltip>
+            )}
+          </Box>
+        );
+      },
       renderEditCell: (params) => {
-        const lecturerOptions = lecturers.map(l => {
-          let label = l.hoTen;
+        const row = rows.find(r => r.id === params.id);
+        const assignedLecturers = row ? getAssignedLecturers(row.subject_name) : [];
+
+        // ✅ Build lecturer options with ALL assigned lecturers at top
+        let lecturerOptions: Array<{
+          label: string;
+          subtitle: string;
+          value: string;
+          id: number;
+          isAssigned?: boolean;
+          isDivider?: boolean;
+        }> = [];
+
+        // Track IDs of assigned lecturers to avoid duplicates
+        const assignedLecturerIds = new Set<number>();
+
+        // Add ALL assigned lecturers at the top
+        assignedLecturers.forEach(assignedLecturerName => {
+          const assignedLecturerObj = lecturers.find(
+            l => l.hoTen.toLowerCase().trim() === assignedLecturerName.toLowerCase().trim()
+          );
+
+          if (assignedLecturerObj) {
+            let subtitle = '✅ Được phân công';
+            if (assignedLecturerObj.hocHam || assignedLecturerObj.trinhDoChuyenMon) {
+              const credentials = [assignedLecturerObj.hocHam, assignedLecturerObj.trinhDoChuyenMon].filter(Boolean).join(', ');
+              subtitle = `✅ Được phân công • ${credentials}`;
+            }
+
+            lecturerOptions.push({
+              label: assignedLecturerObj.hoTen,
+              subtitle,
+              value: assignedLecturerObj.hoTen,
+              id: assignedLecturerObj.id,
+              isAssigned: true,
+            });
+
+            assignedLecturerIds.add(assignedLecturerObj.id);
+          }
+        });
+
+        // Add divider if there are assigned lecturers
+        if (assignedLecturers.length > 0) {
+          lecturerOptions.push({
+            label: '─────────────────────',
+            subtitle: 'Giảng viên khác',
+            value: '',
+            id: -1,
+            isDivider: true,
+          });
+        }
+
+        // Add other lecturers (excluding assigned lecturers)
+        lecturers.forEach(l => {
+          // Skip if already added as assigned lecturer
+          if (assignedLecturerIds.has(l.id)) return;
+
           let subtitle = '';
           if (l.hocHam || l.trinhDoChuyenMon) {
             const credentials = [l.hocHam, l.trinhDoChuyenMon].filter(Boolean).join(', ');
             subtitle = credentials;
           }
-          return {
-            label,
+
+          lecturerOptions.push({
+            label: l.hoTen,
             subtitle,
             value: l.hoTen,
             id: l.id,
-          };
+          });
         });
 
         return (
-          <MuiAutocomplete
-            freeSolo
-            openOnFocus
-            options={lecturerOptions}
-            value={params.value || ''}
-            onChange={(_, newValue) => {
-              if (typeof newValue === 'string') {
-                params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newValue });
-              } else if (newValue && typeof newValue === 'object') {
-                params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newValue.value });
-              }
-            }}
-            onInputChange={(_, newInputValue) => {
-              params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newInputValue });
-            }}
-            renderInput={(inputParams) => (
-              <TextField
-                {...inputParams}
-                autoFocus
-                fullWidth
-                variant="standard"
-                placeholder="Chọn hoặc nhập giảng viên..."
-              />
+          <Box sx={{ width: '100%' }}>
+            {assignedLecturers.length > 0 && (
+              <Box sx={{
+                mb: 1,
+                p: 0.5,
+                backgroundColor: '#d4edda',
+                borderRadius: 1,
+                fontSize: '0.75rem',
+                color: '#155724',
+                border: '1px solid #c3e6cb',
+              }}>
+                ✅ Phân công: <strong>{assignedLecturers.join(', ')}</strong>
+              </Box>
             )}
-            renderOption={(props, option) => {
-              const { key, ...otherProps } = props;
-              return (
-                <li key={key} {...otherProps}>
-                  <div>
-                    <div className="font-medium">{option.label}</div>
-                    {option.subtitle && <div className="text-xs text-gray-500">{option.subtitle}</div>}
-                  </div>
-                </li>
-              );
-            }}
-            sx={{ width: '100%' }}
-          />
+            <MuiAutocomplete
+              freeSolo
+              openOnFocus
+              options={lecturerOptions}
+              value={params.value || ''}
+              getOptionDisabled={(option) => option.isDivider === true}
+              onChange={(_, newValue) => {
+                if (typeof newValue === 'string') {
+                  params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newValue });
+                } else if (newValue && typeof newValue === 'object' && !newValue.isDivider) {
+                  params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newValue.value });
+                }
+              }}
+              onInputChange={(_, newInputValue) => {
+                params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newInputValue });
+              }}
+              renderInput={(inputParams) => (
+                <TextField
+                  {...inputParams}
+                  autoFocus
+                  fullWidth
+                  variant="standard"
+                  placeholder={assignedLecturers.length > 0 ? `Phân công: ${assignedLecturers.join(', ')}` : "Chọn hoặc nhập giảng viên..."}
+                />
+              )}
+              renderOption={(props, option) => {
+                const { key, ...otherProps } = props;
+
+                // Divider style
+                if (option.isDivider) {
+                  return (
+                    <li
+                      key={key}
+                      style={{
+                        pointerEvents: 'none',
+                        backgroundColor: '#f8f9fa',
+                        padding: '4px 16px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: '#6c757d',
+                      }}
+                    >
+                      {option.subtitle}
+                    </li>
+                  );
+                }
+
+                // Assigned lecturer style
+                if (option.isAssigned) {
+                  return (
+                    <li
+                      key={key}
+                      {...otherProps}
+                      style={{
+                        ...otherProps.style,
+                        backgroundColor: '#d4edda',
+                        borderLeft: '4px solid #28a745',
+                      }}
+                    >
+                      <div>
+                        <div className="font-medium">{option.label}</div>
+                        <div className="text-xs text-green-700">{option.subtitle}</div>
+                      </div>
+                    </li>
+                  );
+                }
+
+                // Regular lecturer style
+                return (
+                  <li key={key} {...otherProps}>
+                    <div>
+                      <div className="font-medium">{option.label}</div>
+                      {option.subtitle && <div className="text-xs text-gray-500">{option.subtitle}</div>}
+                    </div>
+                  </li>
+                );
+              }}
+              sx={{ width: '100%' }}
+            />
+          </Box>
         );
       },
     },
@@ -816,7 +1012,7 @@ export default function WeeklySchedulePage() {
         </Button>
       ),
     },
-  ], [rows, classes, subjects, majorSubjectsMap, lecturers, loadSubjectsByMajor, handleDeleteRow]);
+  ], [rows, classes, subjects, majorSubjectsMap, lecturers, teachingSchedules, loadSubjectsByMajor, handleDeleteRow]);
 
   return (
     <Box sx={{ p: 3 }}>

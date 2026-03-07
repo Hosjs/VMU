@@ -19,6 +19,7 @@ interface ClassForm {
   khoa_hoc_id: number | '';
   major_id: number | '';
   trinh_do: string;
+  phu_trach_lop: string; // Phụ trách lớp
   class_name?: string; // preview tên lớp
 }
 
@@ -36,6 +37,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
       khoa_hoc_id: '',
       major_id: '',
       trinh_do: '',
+      phu_trach_lop: '',
     },
   ]);
 
@@ -128,6 +130,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
         khoa_hoc_id: '',
         major_id: '',
         trinh_do: '',
+        phu_trach_lop: '',
       },
     ]);
   };
@@ -143,7 +146,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
 
     // Validate all forms
     const invalidForms = classForms.filter(
-      (form) => !form.khoa_hoc_id || !form.major_id || !form.trinh_do
+      (form) => !form.khoa_hoc_id || !form.major_id || !form.trinh_do || !form.phu_trach_lop
     );
 
     if (invalidForms.length > 0) {
@@ -159,6 +162,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
         khoa_hoc_id: Number(form.khoa_hoc_id),
         major_id: Number(form.major_id),
         trinh_do: form.trinh_do,
+        phu_trach_lop: form.phu_trach_lop,
       }));
 
       const result = await courseService.createClassBulk(classesData);
@@ -194,6 +198,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
         khoa_hoc_id: '',
         major_id: '',
         trinh_do: '',
+        phu_trach_lop: '',
       },
     ]);
     setError(null);
@@ -249,7 +254,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Kỳ học */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -289,6 +294,24 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
                       value={form.trinh_do}
                       onChange={(e) => updateForm(form.id, 'trinh_do', e.target.value)}
                       options={getTrinhDoOptionsForSelect()}
+                      required
+                    />
+                  </div>
+
+                  {/* Phụ trách lớp */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phụ trách lớp <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      value={form.phu_trach_lop}
+                      onChange={(e) => updateForm(form.id, 'phu_trach_lop', e.target.value)}
+                      options={[
+                        { value: '', label: '-- Chọn phụ trách lớp --' },
+                        { value: 'Lê Thành Lự', label: 'Lê Thành Lự' },
+                        { value: 'Đồng Phương Thanh', label: 'Đồng Phương Thanh' },
+                        { value: 'Đỗ Tất Mạnh', label: 'Đỗ Tất Mạnh' },
+                      ]}
                       required
                     />
                   </div>

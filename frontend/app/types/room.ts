@@ -22,6 +22,8 @@ export interface Room {
   ma_khoa_hoc?: string; // Course code from khoa_hoc table
   major_code?: string; // Major code from majors table
   major_name?: string; // Major name from majors table
+  lecturer_name?: string; // Lecturer name from lecturers table
+  phu_trach_lop?: string; // Alias for lecturer_name
 
   // Các cột chung
   maTrinhDoDaoTao?: string;

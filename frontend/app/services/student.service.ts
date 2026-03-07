@@ -283,11 +283,10 @@ export const studentService = {
         const id = major.id;
         const tenNganh = major.tenNganh || major.ten_nganh || '';
         const maNganh = major.maNganh || major.ma_nganh || '';
-        const shortCode = major.short_code || maNganh; // Use short_code if available
 
         return {
           value: id?.toString() || '',
-          label: `${shortCode} - ${tenNganh}` // Display: "CNTT - Công nghệ thông tin"
+          label: `${maNganh} - ${tenNganh}`
         };
       }).filter((opt: { value: string; label: string }) => opt.value && opt.value.trim() !== '');
 

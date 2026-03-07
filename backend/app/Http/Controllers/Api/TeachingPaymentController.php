@@ -15,7 +15,7 @@ class TeachingPaymentController extends Controller
      * Get teaching payments by filters
      *
      * GET /api/teaching-payments
-     * Query params: major_id, khoa_hoc_id, semester_code
+     * Query params: major_id, khoa_hoc_id, semester_code, page, per_page
      */
     public function index(Request $request)
     {
@@ -38,18 +38,116 @@ class TeachingPaymentController extends Controller
                 $query->where('trang_thai_thanh_toan', $request->trang_thai_thanh_toan);
             }
 
-            $payments = $query->orderBy('stt')->get();
+            $query->orderBy('stt');
 
-            return response()->json([
-                'success' => true,
-                'data' => $payments,
-            ]);
+            // Check if pagination is requested
+            if ($request->has('page') || $request->has('per_page')) {
+                $perPage = $request->get('per_page', 15);
+                $payments = $query->paginate($perPage);
+
+                // Process each payment item
+                foreach ($payments->items() as $payment) {
+                    $this->processPaymentItem($payment);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $payments->items(),
+                    'meta' => [
+                        'current_page' => $payments->currentPage(),
+                        'last_page' => $payments->lastPage(),
+                        'per_page' => $payments->perPage(),
+                        'total' => $payments->total(),
+                    ],
+                ]);
+            } else {
+                // Return all results without pagination
+                $payments = $query->get();
+
+                foreach ($payments as $payment) {
+                    $this->processPaymentItem($payment);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $payments,
+                ]);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Lỗi khi lấy danh sách thanh toán',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Process payment item to fill missing data
+     */
+    private function processPaymentItem($payment)
+    {
+        // ✅ FIX: Only load classes that have this specific subject in weekly_schedules
+        // Điều này đảm bảo "Phương pháp nghiên cứu khoa học" chỉ hiển thị lớp QLVT 2025.2.2, không phải tất cả các lớp
+        if (!empty($payment->ten_hoc_phan)) {
+            // Tìm weekly_schedules theo khoa_hoc_id + ten_hoc_phan
+            $weeklySchedules = \App\Models\WeeklySchedule::with(['class', 'class.major'])
+                ->where('khoa_hoc_id', $payment->khoa_hoc_id)
+                ->where('subject_name', $payment->ten_hoc_phan)
+                ->get();
+
+            // Lấy class names - CHỈ những lớp có học phần này
+            $classNames = [];
+            $chuyenNganh = '';
+            foreach ($weeklySchedules as $ws) {
+                if ($ws->class) {
+                    $classNames[] = $ws->class->class_name;
+                    if (!$chuyenNganh && $ws->class->major) {
+                        $chuyenNganh = $ws->class->major->tenNganh ?? '';
+                    }
+                }
+            }
+
+            // ✅ Chỉ cập nhật nếu tìm thấy classes
+            if (!empty($classNames)) {
+                $payment->lop = implode('<br>', array_unique($classNames));
+                if (!empty($chuyenNganh)) {
+                    $payment->chuyen_nganh = $chuyenNganh;
+                }
+            } else {
+                // ✅ Nếu không có lớp nào học môn này, để trống
+                $payment->lop = '';
+            }
+        }
+
+        // ✅ Fill thông tin giảng viên từ bảng lecturers nếu chuc_danh_giang_vien đang null/rỗng
+        if (empty($payment->chuc_danh_giang_vien) && !empty($payment->can_bo_giang_day)) {
+            $lecturer = \App\Models\Lecturer::with('major')
+                ->where('hoTen', 'LIKE', '%' . trim($payment->can_bo_giang_day) . '%')
+                ->first();
+
+            if ($lecturer) {
+                // Kết hợp hocHam và trinhDoChuyenMon với dấu chấm (VD: "PGS.TS")
+                $chucDanhParts = [];
+                if (!empty($lecturer->hocHam)) {
+                    $chucDanhParts[] = trim($lecturer->hocHam);
+                }
+                if (!empty($lecturer->trinhDoChuyenMon)) {
+                    $chucDanhParts[] = trim($lecturer->trinhDoChuyenMon);
+                }
+
+                if (!empty($chucDanhParts)) {
+                    $payment->chuc_danh_giang_vien = implode('.', $chucDanhParts);
+                }
+
+                // Fill thêm các thông tin khác nếu còn thiếu
+                if (empty($payment->don_vi) && $lecturer->major) {
+                    $payment->don_vi = $lecturer->major->tenNganh ?? '';
+                }
+                if (empty($payment->ho_ten_giang_vien)) {
+                    $payment->ho_ten_giang_vien = $lecturer->hoTen;
+                }
+            }
         }
     }
 
@@ -107,27 +205,30 @@ class TeachingPaymentController extends Controller
                 }
 
                 // ✅ Lấy thông tin lớp học từ weekly_schedules
-                // Tìm weekly_schedule có cùng khoa_hoc_id, subject (ten_hoc_phan), và lecturer (can_bo_giang_day)
-                $weeklySchedules = \App\Models\WeeklySchedule::with(['class', 'class.major'])
-                    ->where('khoa_hoc_id', $schedule->khoa_hoc_id)
-                    ->where('subject_name', $schedule->ten_hoc_phan)
-                    ->get();
-
-                // Lấy danh sách lớp học (có thể nhiều lớp cùng học một môn)
                 $classNames = [];
                 $chuyenNganh = '';
-                foreach ($weeklySchedules as $ws) {
-                    if ($ws->class) {
-                        $classNames[] = $ws->class->class_name;
-                        // Lấy chuyên ngành từ major
-                        if (!$chuyenNganh && $ws->class->major) {
-                            $chuyenNganh = $ws->class->major->tenNganh ?? '';
+
+                // Tìm theo khoa_hoc_id và subject_name (không cần khớp lecturer_name vì có thể khác nhau)
+                if (!empty($schedule->ten_hoc_phan)) {
+                    $weeklySchedules = \App\Models\WeeklySchedule::with(['class', 'class.major'])
+                        ->where('khoa_hoc_id', $schedule->khoa_hoc_id)
+                        ->where('subject_name', $schedule->ten_hoc_phan)
+                        ->get();
+
+                    // Lấy class names từ weekly_schedules
+                    foreach ($weeklySchedules as $ws) {
+                        if ($ws->class) {
+                            $classNames[] = $ws->class->class_name;
+                            // Lấy chuyên ngành từ major
+                            if (!$chuyenNganh && $ws->class->major) {
+                                $chuyenNganh = $ws->class->major->tenNganh ?? '';
+                            }
                         }
                     }
                 }
 
-                // Join class names với dấu phẩy
-                $lop = implode(', ', array_unique($classNames));
+                // Join class names với <br> để xuống dòng trong HTML table
+                $lop = !empty($classNames) ? implode('<br>', array_unique($classNames)) : '';
 
                 // ✅ Lấy thông tin giảng viên từ bảng lecturers
                 $hoTenGiangVien = $schedule->can_bo_giang_day; // Họ tên = Cán bộ giảng dạy
@@ -137,29 +238,25 @@ class TeachingPaymentController extends Controller
 
                 if (!empty($hoTenGiangVien)) {
                     // Tìm lecturer theo tên (hoTen)
-                    $lecturer = \App\Models\Lecturer::where('hoTen', 'LIKE', '%' . trim($hoTenGiangVien) . '%')->first();
+                    $lecturer = \App\Models\Lecturer::with('major')->where('hoTen', 'LIKE', '%' . trim($hoTenGiangVien) . '%')->first();
 
                     if ($lecturer) {
                         $lecturerId = $lecturer->id;
-                        // Lấy chức danh từ trinhDoChuyenMon hoặc hocHam
-                        $chucDanhGiangVien = $lecturer->trinhDoChuyenMon ?? $lecturer->hocHam ?? '';
 
-                        // Lấy đơn vị từ major của lecturer
-                        if ($lecturer->maNganh) {
-                            $lecturerMajor = \App\Models\Major::where('id', $lecturer->maNganh)
-                                ->orWhere('maNganh', $lecturer->maNganh)
-                                ->first();
-                            if ($lecturerMajor) {
-                                // Map tên ngành sang đơn vị (có thể customize)
-                                $tenNganh = $lecturerMajor->tenNganh ?? '';
-                                if (str_contains($tenNganh, 'Ngoại ngữ') || str_contains($tenNganh, 'NN')) {
-                                    $donVi = 'Khoa NN';
-                                } elseif (str_contains($tenNganh, 'CNTT') || str_contains($tenNganh, 'Công nghệ thông tin')) {
-                                    $donVi = 'Khoa CNTT';
-                                } else {
-                                    $donVi = 'Khoa ' . ($lecturerMajor->short_code ?? 'Khác');
-                                }
-                            }
+                        // ✅ Lấy chức danh từ hocHam và trinhDoChuyenMon
+                        // Kết hợp: hocHam.trinhDoChuyenMon (ví dụ: "PGS.TS" hoặc chỉ "TS")
+                        $chucDanhParts = [];
+                        if (!empty($lecturer->hocHam)) {
+                            $chucDanhParts[] = trim($lecturer->hocHam);
+                        }
+                        if (!empty($lecturer->trinhDoChuyenMon)) {
+                            $chucDanhParts[] = trim($lecturer->trinhDoChuyenMon);
+                        }
+                        $chucDanhGiangVien = implode('.', $chucDanhParts);
+
+                        // ✅ Lấy đơn vị từ major.tenNganh của lecturer
+                        if ($lecturer->major) {
+                            $donVi = $lecturer->major->tenNganh ?? '';
                         }
                     }
                 }
@@ -579,6 +676,65 @@ class TeachingPaymentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Lỗi khi lấy thống kê thanh toán',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard statistics
+     *
+     * GET /api/teaching-payments/statistics
+     */
+    public function statistics(Request $request)
+    {
+        try {
+            // Get total lecturers count
+            $totalLecturers = DB::table('lecturers')
+                ->whereNull('deleted_at')
+                ->count();
+
+            // Get total teaching assignments (schedules)
+            $totalTeachingAssignments = DB::table('teaching_schedules')
+                ->whereNull('deleted_at')
+                ->count();
+
+            // Get current semester (most recent khoa_hoc)
+            $currentSemester = DB::table('khoa_hoc')
+                ->select('ma_khoa_hoc')
+                ->orderBy('ngay_bat_dau', 'desc')
+                ->first();
+
+            // Payment statistics
+            $totalPayments = TeachingPayment::count();
+            $pendingPayments = TeachingPayment::where('trang_thai_thanh_toan', 'chua_thanh_toan')->count();
+            $approvedPayments = TeachingPayment::where('trang_thai_thanh_toan', 'da_duyet')->count();
+            $paidPayments = TeachingPayment::where('trang_thai_thanh_toan', 'da_thanh_toan')->count();
+
+            // Amount statistics
+            $totalAmount = TeachingPayment::sum('thanh_tien_chua_thue') ?? 0;
+            $pendingAmount = TeachingPayment::where('trang_thai_thanh_toan', 'chua_thanh_toan')->sum('thanh_tien_chua_thue') ?? 0;
+            $paidAmount = TeachingPayment::where('trang_thai_thanh_toan', 'da_thanh_toan')->sum('thuc_nhan') ?? 0;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_lecturers' => $totalLecturers,
+                    'total_teaching_assignments' => $totalTeachingAssignments,
+                    'total_payments' => $totalPayments,
+                    'pending_payments' => $pendingPayments,
+                    'approved_payments' => $approvedPayments,
+                    'paid_payments' => $paidPayments,
+                    'total_amount' => $totalAmount,
+                    'pending_amount' => $pendingAmount,
+                    'paid_amount' => $paidAmount,
+                    'current_semester' => $currentSemester ? $currentSemester->ma_khoa_hoc : null,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy thống kê dashboard',
                 'error' => $e->getMessage(),
             ], 500);
         }

@@ -243,6 +243,7 @@ class CourseController extends Controller
                 'khoa_hoc_id' => 'required|exists:khoa_hoc,id',
                 'major_id' => 'required|exists:majors,id',
                 'trinh_do' => 'required|string',
+                'phu_trach_lop' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -279,6 +280,7 @@ class CourseController extends Controller
                 'major_id' => $major->maNganh, // ✅ Lưu maNganh (8310110) thay vì id (1)
                 'khoaHoc_id' => $request->khoa_hoc_id,
                 'maTrinhDoDaoTao' => $request->trinh_do,
+                'phu_trach_lop' => $request->phu_trach_lop,
                 'trangThai' => 'DangHoc',
                 'createdBy' => auth()->id(),
             ]);
@@ -318,6 +320,7 @@ class CourseController extends Controller
                 'classes.*.khoa_hoc_id' => 'required|exists:khoa_hoc,id',
                 'classes.*.major_id' => 'required|exists:majors,id',
                 'classes.*.trinh_do' => 'required|string',
+                'classes.*.phu_trach_lop' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -363,6 +366,7 @@ class CourseController extends Controller
                         'major_id' => $major->maNganh, // ✅ Lưu maNganh (8310110) thay vì id (1)
                         'khoaHoc_id' => $classData['khoa_hoc_id'],
                         'maTrinhDoDaoTao' => $classData['trinh_do'],
+                        'phu_trach_lop' => $classData['phu_trach_lop'],
                         'trangThai' => 'DangHoc',
                         'createdBy' => auth()->id(),
                     ]);

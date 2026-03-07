@@ -217,6 +217,19 @@ export default function Classes() {
       },
     },
     {
+      key: 'phu_trach_lop',
+      label: 'Phụ trách lớp',
+      width: '160px',
+      render: (room: Room) => {
+        const phuTrachLop = room.phu_trach_lop || room.lecturer_name;
+        return (
+          <div className="text-sm text-gray-700">
+            {phuTrachLop || 'Chưa phân công'}
+          </div>
+        );
+      },
+    },
+    {
       key: 'actions',
       label: 'Thao tác',
       width: '180px',
