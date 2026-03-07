@@ -249,7 +249,42 @@ export const exportTeachingPaymentToExcel = async (options: ExportTeachingPaymen
             console.warn('⚠️ Could not merge row 4 - conflict detected');
         }
 
-        // Rows 11-13: Remove borders, add backgrounds
+        // Try to merge row 5 (A5:X5)
+        const merged5 = addSafeMerge(4, 4, 0, 23); // A5 to X5 (column 23, safer range)
+        if (!merged5) {
+            console.warn('⚠️ Could not merge row 5 - conflict detected');
+        }
+
+        // Row 10: Add white background with borders
+        extendedCols.forEach(col => {
+            const cellAddr = `${col}10`;
+            if (worksheet[cellAddr]) {
+                if (!worksheet[cellAddr].s) worksheet[cellAddr].s = {};
+                worksheet[cellAddr].s = {
+                    font: {
+                        name: 'Times New Roman',
+                        sz: 11,
+                        bold: false,
+                    },
+                    fill: {
+                        fgColor: { rgb: 'FFFFFF' },
+                        patternType: 'solid',
+                    },
+                    alignment: {
+                        horizontal: 'left',
+                        vertical: 'center',
+                    },
+                    border: {
+                        top: { style: 'thin', color: { rgb: '000000' } },
+                        bottom: { style: 'thin', color: { rgb: '000000' } },
+                        left: { style: 'thin', color: { rgb: '000000' } },
+                        right: { style: 'thin', color: { rgb: '000000' } },
+                    },
+                };
+            }
+        });
+
+        // Rows 11-13: Add borders AND backgrounds
         for (let row = 11; row <= 13; row++) {
             extendedCols.forEach(col => {
                 const cellAddr = `${col}${row}`;
@@ -279,7 +314,12 @@ export const exportTeachingPaymentToExcel = async (options: ExportTeachingPaymen
                             vertical: 'center',
                             wrapText: true,
                         },
-                        border: undefined, // No borders for rows 11-13
+                        border: {
+                            top: { style: 'thin', color: { rgb: '000000' } },
+                            bottom: { style: 'thin', color: { rgb: '000000' } },
+                            left: { style: 'thin', color: { rgb: '000000' } },
+                            right: { style: 'thin', color: { rgb: '000000' } },
+                        },
                     };
                 }
             });
@@ -523,8 +563,65 @@ export const exportTeachingPaymentToExcel = async (options: ExportTeachingPaymen
             }
         });
 
-        // Preserve merged cells from template (if exists)
-        // Note: Don't modify merges in data region
+        console.log('🔧 Processing all sheets to add borders...');
+
+        workbook.SheetNames.forEach((sheetName, sheetIndex) => {
+            // Skip the main sheet we already processed
+            if (sheetName === 'Bảng kê  (SĐH)-đủ' || sheetIndex === 0) {
+                return;
+            }
+
+            console.log(`📋 Processing sheet: "${sheetName}"`);
+            const otherSheet = workbook.Sheets[sheetName];
+
+            if (!otherSheet || !otherSheet['!ref']) {
+                console.warn(`⚠️ Sheet "${sheetName}" is empty or invalid`);
+                return;
+            }
+
+            // Get the range of the sheet
+            const range = XLSX.utils.decode_range(otherSheet['!ref']);
+
+            // Apply borders to all cells with data
+            for (let row = range.s.r; row <= range.e.r; row++) {
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    const cellAddr = XLSX.utils.encode_cell({ r: row, c: col });
+                    const cell = otherSheet[cellAddr];
+
+                    if (cell && cell.t !== 'z') { // Skip empty cells
+                        if (!cell.s) cell.s = {};
+
+                        // Add borders to the cell
+                        if (!cell.s.border) {
+                            cell.s.border = {
+                                top: { style: 'thin', color: { rgb: '000000' } },
+                                bottom: { style: 'thin', color: { rgb: '000000' } },
+                                left: { style: 'thin', color: { rgb: '000000' } },
+                                right: { style: 'thin', color: { rgb: '000000' } },
+                            };
+                        }
+
+                        // Ensure font exists
+                        if (!cell.s.font) {
+                            cell.s.font = {
+                                name: 'Times New Roman',
+                                sz: 11,
+                            };
+                        }
+
+                        // Ensure alignment exists
+                        if (!cell.s.alignment) {
+                            cell.s.alignment = {
+                                vertical: 'center',
+                                horizontal: 'center',
+                            };
+                        }
+                    }
+                }
+            }
+
+            console.log(`✅ Added borders to sheet: "${sheetName}"`);
+        });
 
         // Generate filename
         const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');

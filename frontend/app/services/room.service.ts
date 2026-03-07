@@ -236,6 +236,122 @@ export class RoomService {
       throw error;
     }
   }
+
+  /**
+   * Lấy chi tiết lớp học theo ID từ /api/classes/{id}
+   */
+  getById = async (id: number): Promise<Room> => {
+    try {
+      const response = await fetch(`${this.apiUrl}/classes/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        return result.data;
+      }
+
+      throw new Error('Không tìm thấy lớp học');
+    } catch (error) {
+      console.error('Error fetching class by id:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cập nhật thông tin lớp học
+   */
+  update = async (id: number, data: Partial<Room>): Promise<Room> => {
+    try {
+      const response = await fetch(`${this.apiUrl}/classes/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        return result.data;
+      }
+
+      throw new Error('Không thể cập nhật lớp học');
+    } catch (error) {
+      console.error('Error updating class:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Xóa mềm lớp học (Soft Delete)
+   */
+  delete = async (id: number): Promise<void> => {
+    try {
+      const response = await fetch(`${this.apiUrl}/classes/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Không thể xóa lớp học');
+      }
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Xóa cứng lớp học (Hard Delete - vĩnh viễn)
+   */
+  forceDelete = async (id: number): Promise<void> => {
+    try {
+      const response = await fetch(`${this.apiUrl}/classes/${id}/force`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Không thể xóa vĩnh viễn lớp học');
+      }
+    } catch (error) {
+      console.error('Error force deleting class:', error);
+      throw error;
+    }
+  }
 }
 
 export const roomService = new RoomService();

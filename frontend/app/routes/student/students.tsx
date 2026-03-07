@@ -426,7 +426,7 @@ export default function Students() {
       editForm.setFieldValue('maHV', selectedStudent.maHV);
       editForm.setFieldValue('hoDem', selectedStudent.hoDem);
       editForm.setFieldValue('ten', selectedStudent.ten);
-      editForm.setFieldValue('ngaySinh', selectedStudent.ngaySinh);
+      editForm.setFieldValue('ngaySinh', formatDateToYYYYMMDD(selectedStudent.ngaySinh));
       editForm.setFieldValue('gioiTinh', selectedStudent.gioiTinh);
       editForm.setFieldValue('soGiayToTuyThan', selectedStudent.soGiayToTuyThan);
       editForm.setFieldValue('dienThoai', selectedStudent.dienThoai);
@@ -437,7 +437,7 @@ export default function Students() {
       editForm.setFieldValue('maTrinhDoDaoTao', selectedStudent.maTrinhDoDaoTao);
       editForm.setFieldValue('maNganh', selectedStudent.maNganh);
       editForm.setFieldValue('trangThai', selectedStudent.trangThai);
-      editForm.setFieldValue('ngayNhapHoc', selectedStudent.ngayNhapHoc);
+      editForm.setFieldValue('ngayNhapHoc', formatDateToYYYYMMDD(selectedStudent.ngayNhapHoc));
       editForm.setFieldValue('namVaoTruong', selectedStudent.namVaoTruong);
     }
   }, [selectedStudent, editModal.isOpen]);

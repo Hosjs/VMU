@@ -426,7 +426,125 @@ class ClassController extends Controller
     }
 
     /**
-     * Delete a class
+     * Update a class
+     * PUT /api/classes/{id}
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        try {
+            $class = DB::table('classes')->where('id', $id)->first();
+
+            if (!$class) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy lớp học',
+                ], 404);
+            }
+
+            // Validate
+            $validated = $request->validate([
+                'class_name' => 'sometimes|string|max:255',
+                'major_id' => 'sometimes|nullable',
+                'khoaHoc_id' => 'sometimes|nullable',
+                'maTrinhDoDaoTao' => 'sometimes|string|max:50',
+                'lecurer_id' => 'sometimes|nullable|integer|exists:lecturers,id',
+                'phu_trach_lop' => 'sometimes|nullable|string|max:255',
+                'trangThai' => 'sometimes|string|max:50',
+            ]);
+
+            $updateData = [];
+
+            if ($request->has('class_name')) {
+                $updateData['class_name'] = $request->class_name;
+            }
+
+            if ($request->has('major_id') && !empty($request->major_id)) {
+                // Convert to integer if it's a string
+                $majorId = is_numeric($request->major_id) ? (int)$request->major_id : $request->major_id;
+
+                // Validate major exists
+                $majorExists = DB::table('majors')->where('id', $majorId)->exists();
+                if (!$majorExists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Ngành học không tồn tại',
+                    ], 422);
+                }
+
+                $updateData['major_id'] = $majorId;
+            }
+
+            if ($request->has('khoaHoc_id') && !empty($request->khoaHoc_id)) {
+                // Convert to integer if it's a string
+                $khoaHocId = is_numeric($request->khoaHoc_id) ? (int)$request->khoaHoc_id : $request->khoaHoc_id;
+
+                // Validate khoa hoc exists
+                $khoaHocExists = DB::table('khoa_hoc')->where('id', $khoaHocId)->exists();
+                if (!$khoaHocExists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Khóa học không tồn tại',
+                    ], 422);
+                }
+
+                $updateData['khoaHoc_id'] = $khoaHocId;
+            }
+
+            if ($request->has('maTrinhDoDaoTao')) {
+                $updateData['maTrinhDoDaoTao'] = $request->maTrinhDoDaoTao;
+            }
+
+            if ($request->has('lecurer_id')) {
+                $updateData['lecurer_id'] = $request->lecurer_id;
+            }
+
+            if ($request->has('phu_trach_lop')) {
+                $updateData['phu_trach_lop'] = $request->phu_trach_lop;
+            }
+
+            if ($request->has('trangThai')) {
+                $updateData['trangThai'] = $request->trangThai;
+            }
+
+            $updateData['updated_at'] = now();
+
+            DB::table('classes')
+                ->where('id', $id)
+                ->update($updateData);
+
+            // Get updated class with relations
+            $updatedClass = DB::table('classes')
+                ->leftJoin('khoa_hoc', 'classes.khoaHoc_id', '=', 'khoa_hoc.id')
+                ->leftJoin('majors', 'classes.major_id', '=', 'majors.id')
+                ->leftJoin('lecturers', 'classes.lecurer_id', '=', 'lecturers.id')
+                ->select(
+                    'classes.*',
+                    'khoa_hoc.nam_hoc',
+                    'khoa_hoc.ma_khoa_hoc',
+                    'majors.maNganh as major_code',
+                    'majors.tenNganh as major_name',
+                    'lecturers.hoTen as lecturer_name'
+                )
+                ->where('classes.id', $id)
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật lớp học thành công',
+                'data' => $updatedClass,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating class: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể cập nhật lớp học',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a class (Soft Delete)
      * DELETE /api/classes/{id}
      */
     public function destroy($id): JsonResponse
@@ -468,6 +586,51 @@ class ClassController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể xóa lớp học',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Force delete a class (Hard Delete)
+     * DELETE /api/classes/{id}/force
+     */
+    public function forceDelete($id): JsonResponse
+    {
+        try {
+            $class = DB::table('classes')->where('id', $id)->first();
+
+            if (!$class) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy lớp học',
+                ], 404);
+            }
+
+            // Check if class has students
+            $hasStudents = DB::table('class_students')
+                ->where('class_id', $id)
+                ->exists();
+
+            if ($hasStudents) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xóa vĩnh viễn lớp học đã có học viên. Vui lòng xóa mềm.',
+                ], 422);
+            }
+
+            // Hard delete
+            DB::table('classes')->where('id', $id)->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa vĩnh viễn lớp học thành công',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error force deleting class: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa vĩnh viễn lớp học',
                 'error' => $e->getMessage(),
             ], 500);
         }

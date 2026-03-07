@@ -101,7 +101,9 @@ Route::get('/classes', [ClassController::class, 'index']);
 Route::get('/classes/simple', [ClassController::class, 'simple']);
 Route::get('/classes/{id}', [ClassController::class, 'show']);
 Route::get('/classes/{id}/students', [ClassController::class, 'getStudents']);
+Route::put('/classes/{id}', [ClassController::class, 'update']);
 Route::delete('/classes/{id}', [ClassController::class, 'destroy']);
+Route::delete('/classes/{id}/force', [ClassController::class, 'forceDelete']);
 
 Route::prefix('grades')->group(function () {
     Route::get('/', [GradeController::class, 'getGradesByMaHV']);

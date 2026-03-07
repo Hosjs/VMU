@@ -14,6 +14,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { ClassActionButtons } from './components/ClassActionButtons';
 import { AddClassModal } from './components/AddClassModal';
+import { ViewClassModal } from './components/ViewClassModal';
+import { EditClassModal } from './components/EditClassModal';
+import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Select } from '~/components/ui/Select';
@@ -39,6 +42,10 @@ export default function Classes() {
   const [khoaHocOptions] = useState<SelectOption[]>(generateKhoaHocOptions(10));
   const [majorNamesMap, setMajorNamesMap] = useState<Record<string, string>>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<Room | null>(null);
 
   // ============================================
   // FORM for search
@@ -150,6 +157,47 @@ export default function Classes() {
   };
 
   // ============================================
+  // ACTION HANDLERS
+  // ============================================
+  const handleView = (room: Room) => {
+    setSelectedClass(room);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEdit = (room: Room) => {
+    setSelectedClass(room);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = (room: Room) => {
+    setSelectedClass(room);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedClass(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedClass(null);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedClass(null);
+  };
+
+  const handleEditSuccess = () => {
+    refresh();
+  };
+
+  const handleDeleteSuccess = () => {
+    refresh();
+  };
+
+  // ============================================
   // TABLE COLUMNS CONFIGURATION
   // ============================================
   const columns = useMemo(() => [
@@ -235,9 +283,9 @@ export default function Classes() {
       width: '180px',
       render: (room: Room) => (
         <ClassActionButtons
-          onView={() => console.log('View class', room.id)}
-          onEdit={() => console.log('Edit class', room.id)}
-          onDelete={() => console.log('Delete class', room.id)}
+          onView={() => handleView(room)}
+          onEdit={() => handleEdit(room)}
+          onDelete={() => handleDelete(room)}
         />
       ),
     },
@@ -514,6 +562,29 @@ export default function Classes() {
         onSuccess={() => {
           refresh();
         }}
+      />
+
+      {/* View Class Modal */}
+      <ViewClassModal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
+        classData={selectedClass}
+      />
+
+      {/* Edit Class Modal */}
+      <EditClassModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSuccess={handleEditSuccess}
+        classData={selectedClass}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onSuccess={handleDeleteSuccess}
+        classData={selectedClass}
       />
     </div>
   );
