@@ -169,12 +169,6 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       icon: <CalendarDaysIcon className="w-5 h-5" />,
       items: [
         {
-          title: 'Học kỳ',
-          path: '/training/semesters',
-          icon: <CalendarDaysIcon className="w-5 h-5" />,
-          requiredPermissions: ['semesters.view'], // ❌ Manager không có
-        },
-        {
           title: 'Đăng ký học phần',
           path: '/training/course-registrations',
           icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
