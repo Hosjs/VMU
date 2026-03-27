@@ -2,13 +2,14 @@
 
 import type { Room } from '~/types/room';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
+import { getApiBaseUrl } from './api.service';
 
 /**
  * Service để quản lý phòng học/lớp học
  * Fetch data từ Laravel backend API
  */
 export class RoomService {
-  private apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  private apiUrl = getApiBaseUrl();
   private classManagementPath = `${this.apiUrl}/class-management`;
 
   /**

@@ -26,9 +26,6 @@ export function meta() {
   ];
 }
 
-export async function loader() {
-  return {};
-}
 
 export default function SubjectManagement() {
   const [namHoc, setNamHoc] = useState<number>(new Date().getFullYear());

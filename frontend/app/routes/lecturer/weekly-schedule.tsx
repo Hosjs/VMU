@@ -40,9 +40,6 @@ import type { Subject } from '~/types/subject';
 import type { Course } from '~/types/course';
 import type { TeachingSchedule } from '~/types/teaching-schedule';
 
-export async function loader() {
-  return {};
-}
 
 export default function WeeklySchedulePage() {
   const [rows, setRows] = useState<GridRowsProp<WeeklyScheduleRow>>([]);

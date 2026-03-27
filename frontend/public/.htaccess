@@ -1,0 +1,19 @@
+Options -MultiViews
+RewriteEngine On
+
+# Bắt buộc HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Không redirect /api/* — để Laravel xử lý qua thư mục api/
+RewriteCond %{REQUEST_URI} ^/api [NC]
+RewriteRule ^ - [L]
+
+# Phục vụ file tĩnh nếu tồn tại
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Tất cả route khác → index.html (SPA client-side routing)
+RewriteRule ^ index.html [L]
+

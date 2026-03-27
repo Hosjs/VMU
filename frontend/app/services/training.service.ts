@@ -1,4 +1,6 @@
-import { apiService } from './api.service';
+import { apiService, getApiBaseUrl } from './api.service';
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface TrainingPlanParams {
   education_type: 'thac-sy' | 'tien-sy';
@@ -55,7 +57,7 @@ class TrainingService {
       ma_nganh: params.ma_nganh
     }).toString();
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/training/course-registrations?${queryString}`, {
+    const response = await fetch(`${API_BASE_URL}/training/course-registrations?${queryString}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -76,7 +78,7 @@ class TrainingService {
       ma_nganh: params.ma_nganh
     }).toString();
 
-    const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/training/study-plans?${queryString}`;
+    const url = `${API_BASE_URL}/training/study-plans?${queryString}`;
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -152,7 +154,7 @@ class TrainingService {
         };
 
         const queryString = new URLSearchParams(params).toString();
-        const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/training/study-plans?${queryString}`;
+        const url = `${API_BASE_URL}/training/study-plans?${queryString}`;
 
         const response = await fetch(url, {
           headers: {
@@ -203,7 +205,7 @@ class TrainingService {
           };
 
           const queryString = new URLSearchParams(params).toString();
-          const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/training/study-plans?${queryString}`;
+          const url = `${API_BASE_URL}/training/study-plans?${queryString}`;
 
           const response = await fetch(url, {
             headers: {

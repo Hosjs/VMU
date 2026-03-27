@@ -1,8 +1,8 @@
-import { apiService } from './api.service';
+import { apiService, getApiBaseUrl } from './api.service';
 import type { Student, StudentFilters, StudentListResponse } from '~/types/student';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = getApiBaseUrl();
 
 export const studentService = {
   /**

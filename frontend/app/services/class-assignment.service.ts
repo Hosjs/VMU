@@ -2,13 +2,14 @@
 
 import type { ClassAssignment } from '~/types/class-assignment';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
+import { getApiBaseUrl } from './api.service';
 
 /**
  * Service để quản lý phân lớp học viên
  * Fetch data từ external API qua Laravel backend proxy
  */
 export class ClassAssignmentService {
-  private apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  private apiUrl = getApiBaseUrl();
 
   /**
    * Lấy danh sách học viên trong lớp với pagination (client-side)

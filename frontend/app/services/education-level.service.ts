@@ -2,12 +2,13 @@
 
 import type { EducationLevel } from '~/types/education-level';
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
+import { getApiBaseUrl } from './api.service';
 
 /**
  * Service để quản lý trình độ đào tạo từ database
  */
 export class EducationLevelService {
-  private apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  private apiUrl = getApiBaseUrl();
 
   /**
    * Lấy danh sách trình độ đào tạo với pagination

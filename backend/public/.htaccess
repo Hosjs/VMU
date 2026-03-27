@@ -4,22 +4,29 @@
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /api/
 
-    # Handle Authorization Header
+    # Xử lý Authorization Header (quan trọng cho Laravel Passport/Bearer token)
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+    # Xử lý preflight OPTIONS (CORS)
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule .* - [L]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # Redirect Trailing Slashes
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
+    # Phục vụ file tĩnh nếu tồn tại
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Chuyển tất cả request đến index.php (Laravel)
     RewriteRule ^ index.php [L]
 </IfModule>
+
+
+
+

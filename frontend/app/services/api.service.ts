@@ -1,6 +1,18 @@
 import type { PaginatedResponse, TableQueryParams } from '~/types/common';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Tự động xác định API URL dựa trên domain đang chạy
+// - localhost / dev: dùng /api
+// - production: dùng <origin>/api
+export function getApiBaseUrl(): string {
+  if (typeof window === 'undefined') return '/api';
+  const { protocol, hostname } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return import.meta.env.VITE_API_URL || '/api';
+  }
+  return `${protocol}//${hostname}/api`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export class ApiError extends Error {
   constructor(

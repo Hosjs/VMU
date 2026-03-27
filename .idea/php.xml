@@ -79,7 +79,6 @@
       <path value="$PROJECT_DIR$/backend/vendor/symfony/mime" />
       <path value="$PROJECT_DIR$/backend/vendor/ramsey/collection" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/console" />
-      <path value="$PROJECT_DIR$/backend/vendor/webmozart/assert" />
       <path value="$PROJECT_DIR$/backend/vendor/ramsey/uuid" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-php85" />
       <path value="$PROJECT_DIR$/backend/vendor/symfony/event-dispatcher-contracts" />
