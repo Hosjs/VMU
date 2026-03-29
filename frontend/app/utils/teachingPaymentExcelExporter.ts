@@ -33,6 +33,35 @@ const toNumber = (value: any): number | '' => {
 };
 
 /**
+ * Convert value to number (returns 0 when value is missing/NaN)
+ */
+const toNumberSafe = (value: any): number => {
+    const n = Number(value);
+    return isNaN(n) ? 0 : n;
+};
+
+/**
+ * Format the Lớp field by replacing HTML <br> tags with newlines
+ */
+const formatLop = (lop: string): string =>
+    lop
+        .replace(/<br\s*\/?>/gi, '\n')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0)
+        .join('\n');
+
+/** Column indices (0-based) that should be left-aligned in the standalone export */
+const STANDALONE_TEXT_COL_INDICES = [
+    1, // Chức danh
+    2, // Họ và tên
+    3, // Đơn vị
+    7, // Lớp
+    8, // Chuyên ngành
+    9, // Học phần
+];
+
+/**
  * Map TeachingPaymentRow to Excel column structure
  */
 const mapRowToExcelData = (row: TeachingPaymentRow, index: number) => {
@@ -637,7 +666,7 @@ export const exportTeachingPaymentToExcel = async (options: ExportTeachingPaymen
         });
 
         // Download file
-        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -648,9 +677,157 @@ export const exportTeachingPaymentToExcel = async (options: ExportTeachingPaymen
         URL.revokeObjectURL(url);
 
     } catch (error) {
-        console.error('❌ Error exporting Excel:', error);
-        throw error;
+        console.warn('⚠️ Template file not found or failed to load. Generating Excel without template.', error);
+        exportTeachingPaymentStandalone(options.data);
     }
+};
+
+/**
+ * Standalone export (no template required) - used as fallback when template file is unavailable.
+ * Generates a fully formatted Excel from scratch.
+ */
+export const exportTeachingPaymentStandalone = (data: TeachingPaymentRow[]): void => {
+    const wb = XLSX.utils.book_new();
+
+    // Header rows
+    const headerRows: any[][] = [
+        ['TRƯỜNG ĐẠI HỌC HÀNG HẢI VIỆT NAM'],
+        ['VIỆN ĐÀO TẠO SAU ĐẠI HỌC'],
+        [],
+        ['BẢNG KÊ THANH TOÁN TIỀN GIẢNG DẠY'],
+        [],
+        [],
+    ];
+
+    // Column headers (row 7 in the sheet - 0-indexed row 6)
+    const colHeaders = [
+        'TT', 'Chức danh', 'Họ và tên', 'Đơn vị', 'Mã số thuế',
+        'Số tài khoản', 'Tại Ngân hàng', 'Lớp', 'Chuyên ngành', 'Học phần',
+        'Số TC', 'Từ ngày', 'Đến ngày', 'Ngày thi',
+        'Đơn giá LT', 'Đơn giá TH',
+        'Số tiết LT', 'Số tiết TH', 'Số tiết BT', 'BT lớn',
+        'Học viên', 'Bài thi', 'Hệ số',
+        'Thành tiền', 'Thuế (10%)', 'Thực nhận', 'Ghi chú',
+    ];
+
+    const dataRows = data.map((row, idx) => {
+        const o = toNumberSafe(row.don_gia_ly_thuyet);
+        const q = toNumberSafe(row.so_tiet_ly_thuyet);
+        const p = toNumberSafe(row.don_gia_thuc_hanh);
+        const r = toNumberSafe(row.so_tiet_thao_luan);
+        const s = toNumberSafe(row.so_tiet_bai_tap_lon);
+        const t = toNumberSafe(row.so_luong_bai_tap);
+        const v = toNumberSafe(row.so_luong_bai_thi);
+        const w = toNumberSafe((row as any).he_so_ra_de_cham_thi ?? row.he_so ?? 1);
+        const thanhTien = o * q + p * r + p * s + p * t + p * v * w;
+        const thue = thanhTien * 0.1;
+        const thucNhan = thanhTien - thue;
+        return [
+            idx + 1,
+            row.chuc_danh_giang_vien || '',
+            row.ho_ten_giang_vien || row.can_bo_giang_day || '',
+            row.don_vi || '',
+            row.ma_so_thue_tncn || '',
+            row.so_tai_khoan || '',
+            row.tai_ngan_hang || '',
+            formatLop(row.lop || ''),
+            row.chuyen_nganh || '',
+            row.ten_hoc_phan || '',
+            toNumberSafe(row.so_tin_chi),
+            formatDateForExcel(row.tu_ngay),
+            formatDateForExcel(row.den_ngay),
+            formatDateForExcel(row.ngay_thi),
+            o || '',
+            p || '',
+            q || '',
+            r || '',
+            s || '',
+            t || '',
+            toNumberSafe(row.si_so) || '',
+            v || '',
+            w || '',
+            thanhTien || '',
+            thue || '',
+            thucNhan || '',
+            row.ghi_chu || '',
+        ];
+    });
+
+    const aoa = [...headerRows, colHeaders, ...dataRows];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    const headerRowIdx = headerRows.length; // 0-indexed row of column headers
+
+    // Style helpers
+    const thin = { style: 'thin', color: { rgb: '000000' } };
+    const allBorders = { top: thin, bottom: thin, left: thin, right: thin };
+
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    for (let R = range.s.r; R <= range.e.r; R++) {
+        for (let C = range.s.c; C <= range.e.c; C++) {
+            const addr = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+            if (!ws[addr].s) ws[addr].s = {};
+            ws[addr].s.font = { name: 'Times New Roman', sz: 11 };
+            ws[addr].s.alignment = { vertical: 'center', wrapText: true };
+
+            // Title rows styling
+            if (R < 4) {
+                ws[addr].s.font.bold = true;
+                ws[addr].s.font.sz = R === 3 ? 13 : 12;
+                ws[addr].s.alignment.horizontal = 'center';
+            }
+
+            // Column header row
+            if (R === headerRowIdx) {
+                ws[addr].s.font.bold = true;
+                ws[addr].s.fill = { fgColor: { rgb: 'D3D3D3' }, patternType: 'solid' };
+                ws[addr].s.alignment.horizontal = 'center';
+                ws[addr].s.border = allBorders;
+            }
+
+            // Data rows
+            if (R > headerRowIdx) {
+                ws[addr].s.border = allBorders;
+                ws[addr].s.alignment.horizontal = STANDALONE_TEXT_COL_INDICES.includes(C) ? 'left' : 'center';
+            }
+        }
+    }
+
+    // Merges for title rows
+    const lastCol = colHeaders.length - 1;
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: lastCol } },
+    ];
+
+    ws['!cols'] = [
+        { wch: 5 }, { wch: 10 }, { wch: 22 }, { wch: 15 }, { wch: 12 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 25 },
+        { wch: 7 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
+        { wch: 12 }, { wch: 12 },
+        { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 },
+        { wch: 8 }, { wch: 8 }, { wch: 7 },
+        { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 18 },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Bảng kê');
+
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const filename = `BangKe_GiangDay_${timestamp}.xlsx`;
+
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };
 
 
