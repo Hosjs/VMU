@@ -280,8 +280,17 @@ export const exportTeachingScheduleToExcel = ({
 
     XLSX.utils.book_append_sheet(wb, ws, 'Ke hoach giang day');
 
-    // Use writeFile with bookType option for browser compatibility
-    XLSX.writeFile(wb, `Ke_hoach_giang_day.xlsx`, { bookType: 'xlsx', type: 'binary' });
+    // Use Blob + anchor download for reliable cross-environment support
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Ke_hoach_giang_day.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
 // --- WEEKLY SCHEDULE EXPORT ---
@@ -551,7 +560,19 @@ export const exportWeeklyScheduleToExcel = ({
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Lịch học tuần');
-    XLSX.writeFile(wb, `Ke_hoach_giang_day_tuan_${selectedWeekData.week_number || ''}.xlsx`);
+
+    // Use Blob + anchor download for reliable cross-environment support
+    const filename = `Ke_hoach_giang_day_tuan_${selectedWeekData.week_number || ''}.xlsx`;
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
 // --- WEEKLY SCHEDULE PDF EXPORT ---

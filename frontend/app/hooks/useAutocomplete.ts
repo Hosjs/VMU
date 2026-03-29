@@ -28,8 +28,12 @@ export function useAutocomplete({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Get selected option
-  const selectedOption = options.find((opt) => opt.value === value);
+  // Get selected option - use String comparison to handle number/string type coercion
+  // (API may return numeric IDs as strings while state stores numbers or vice versa)
+  const selectedOption =
+    value !== '' && value !== undefined && value !== null
+      ? options.find((opt) => String(opt.value) === String(value))
+      : undefined;
 
   // Filter options based on search term
   useEffect(() => {
