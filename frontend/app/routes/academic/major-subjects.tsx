@@ -24,13 +24,7 @@ import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
 import { Modal } from '~/components/ui/Modal';
 import { Pagination } from '~/components/ui/Pagination';
-
-export function meta() {
-  return [
-    { title: "Quản lý Môn học theo Ngành - VMU" },
-    { name: "description", content: "Quản lý danh sách môn học thuộc các ngành đào tạo" },
-  ];
-}
+import { Breadcrumb } from '~/layouts/Breadcrumb';
 
 export default function MajorSubjectsPage() {
   const [searchTerm, setSearchTerm] = useState('');

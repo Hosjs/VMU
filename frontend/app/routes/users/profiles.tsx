@@ -23,12 +23,7 @@ import {
   KeyIcon,
 } from '@heroicons/react/24/outline';
 import { LoadingSpinner } from '~/components/LoadingSystem';
-export function meta() {
-  return [
-    { title: 'Hồ sơ của tôi - VMU Training' },
-    { name: 'description', content: 'Xem và quản lý thông tin hồ sơ cá nhân của bạn.' },
-  ];
-}
+import { Breadcrumb } from '~/layouts/Breadcrumb';
 
 export default function UserProfilePage() {
   const { user: authUser } = useAuth();

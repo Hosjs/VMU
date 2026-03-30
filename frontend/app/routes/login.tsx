@@ -3,13 +3,6 @@ import { useState } from "react";
 import { useNavigateWithTransition, usePageTransition } from "~/components/LoadingSystem";
 import { useAuth } from "~/contexts/AuthContext";
 
-export function meta({}: Route.MetaArgs) {
-    return [
-        { title: "Đăng Nhập - Viện Sau Đại học VMU" },
-        { name: "description", content: "Đăng nhập vào hệ thống quản lý Viện Sau Đại học - Trường Đại học Hàng hải Việt Nam" },
-    ];
-}
-
 export default function Login() {
     const navigateWithTransition = useNavigateWithTransition();
     const { isTransitioning } = usePageTransition();

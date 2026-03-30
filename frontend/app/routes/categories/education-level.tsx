@@ -18,13 +18,6 @@ import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 
-export function meta() {
-  return [
-    { title: "Danh sách trình độ đào tạo - VMU Training" },
-    { name: "description", content: "Quản lý thông tin trình độ đào tạo" },
-  ];
-}
-
 export default function EducationLevelPage() {
   // ============================================
   // FORM for search

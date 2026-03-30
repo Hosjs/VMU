@@ -24,13 +24,6 @@ import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { Modal } from '~/components/ui/Modal';
 
-export function meta() {
-    return [
-        { title: "Quản lý kỳ học - VMU Training" },
-        { name: "description", content: "Quản lý thông tin kỳ học và tạo lớp học" },
-    ];
-}
-
 export default function CoursePage() {
     const [majors, setMajors] = useState<Major[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);

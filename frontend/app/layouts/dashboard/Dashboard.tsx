@@ -21,11 +21,6 @@ const formatNumber = (num: number | string): string => {
     return number.toLocaleString('de-DE');
 };
 
-// Loader function for React Router v7
-export function loader() {
-    return null;
-}
-
 export function meta() {
     return [
         { title: "Tổng quan - VMU Training" },

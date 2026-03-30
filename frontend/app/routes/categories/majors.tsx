@@ -23,13 +23,6 @@ import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { Modal } from '~/components/ui/Modal';
 
-export function meta() {
-  return [
-    { title: "Quản lý ngành học - VMU Training" },
-    { name: "description", content: "Quản lý danh sách các ngành học" },
-  ];
-}
-
 export default function MajorsPage() {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [allMajors, setAllMajors] = useState<Major[]>([]);

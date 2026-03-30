@@ -16,13 +16,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '~/contexts/AuthContext';
 
-export function meta() {
-  return [
-    { title: "Tra cứu Điểm - VMU" },
-    { name: "description", content: "Tra cứu điểm học tập của học viên" },
-  ];
-}
-
 export default function GradesPage() {
   // Auth context to check user role
   const { user } = useAuth();

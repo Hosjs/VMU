@@ -16,13 +16,7 @@ import { Button } from '~/components/ui/Button';
 import { Card } from '~/components/ui/Card';
 import { Table } from '~/components/ui/Table';
 import { Badge } from '~/components/ui/Badge';
-
-export function meta() {
-  return [
-    { title: "Danh sách học viên - VMU Training" },
-    { name: "description", content: "Xem danh sách học viên đã đăng ký môn học" },
-  ];
-}
+import { Breadcrumb } from '~/layouts/Breadcrumb';
 
 export default function ClassStudentsPage() {
   const { classId } = useParams<{ classId: string }>();

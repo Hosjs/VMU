@@ -3,13 +3,6 @@ import { useState } from "react";
 import { useNavigateWithTransition, usePageTransition } from "~/components/LoadingSystem";
 import { useAuth } from "~/contexts/AuthContext";
 
-export function meta({}: Route.MetaArgs) {
-    return [
-        { title: "Đăng Ký" },
-        { name: "description", content: "Đăng ký tài khoản" },
-    ];
-}
-
 export default function Register() {
     const navigateWithTransition = useNavigateWithTransition();
     const { isTransitioning } = usePageTransition();

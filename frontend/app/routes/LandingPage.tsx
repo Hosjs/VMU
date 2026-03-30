@@ -2,13 +2,6 @@ import type { Route } from "./+types/LandingPage";
 import { useNavigateWithTransition } from "~/components/LoadingSystem";
 import { useState } from "react";
 
-export function meta({}: Route.MetaArgs) {
-    return [
-        { title: "Viện Sau Đại học - Trường Đại học Hàng hải Việt Nam" },
-        { name: "description", content: "Hệ thống quản lý đào tạo sau đại học hiện đại, chuyên nghiệp của Trường Đại học Hàng hải Việt Nam" },
-    ];
-}
-
 export default function LandingPage() {
     const navigateWithTransition = useNavigateWithTransition();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

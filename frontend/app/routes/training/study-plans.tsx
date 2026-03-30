@@ -20,13 +20,6 @@ import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
 
-export function meta() {
-  return [
-    { title: "Kế hoạch học tập - VMU Training" },
-    { name: "description", content: "Xem kế hoạch học tập theo ngành và năm" },
-  ];
-}
-
 export default function StudyPlansPage() {
   const [trainingData, setTrainingData] = useState<TrainingCourse[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

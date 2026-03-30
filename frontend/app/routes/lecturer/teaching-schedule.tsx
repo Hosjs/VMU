@@ -31,9 +31,6 @@ import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
 import { exportTeachingScheduleToExcel } from '~/utils/excelExporter';
 
-export async function loader() {
-  return {};
-}
 
 export default function TeachingSchedulePage() {
   const [rows, setRows] = useState<GridRowsProp<TeachingScheduleRow>>([]);

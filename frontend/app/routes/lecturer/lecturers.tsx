@@ -25,12 +25,7 @@ import {
   TRINH_DO_BADGE_VARIANT,
 } from '~/constants/lecturer.constants';
 
-export function meta() {
-  return [
-    { title: "Quản lý giảng viên - VMU Training" },
-    { name: "description", content: "Quản lý thông tin giảng viên" },
-  ];
-}
+import { Breadcrumb } from '~/layouts/Breadcrumb';
 
 export default function Lecturers() {
   // ============================================
