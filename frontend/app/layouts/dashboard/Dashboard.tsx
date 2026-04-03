@@ -22,9 +22,6 @@ const formatNumber = (num: number | string): string => {
 };
 
 // Loader function for React Router v7
-export function loader() {
-    return null;
-}
 
 export function meta() {
     return [

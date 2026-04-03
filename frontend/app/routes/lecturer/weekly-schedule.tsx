@@ -40,9 +40,6 @@ import type { Subject } from '~/types/subject';
 import type { Course } from '~/types/course';
 import type { TeachingSchedule } from '~/types/teaching-schedule';
 
-export async function loader() {
-  return {};
-}
 
 export default function WeeklySchedulePage() {
   const [rows, setRows] = useState<GridRowsProp<WeeklyScheduleRow>>([]);
@@ -389,8 +386,8 @@ export default function WeeklySchedulePage() {
 
     try {
       // Find the selected course and week data
-      const selectedCourseData = courses.find(c => c.id === selectedCourse);
-      const selectedWeekData = weeks.find(w => w.week_number === selectedWeek);
+      const selectedCourseData = courses.find(c => Number(c.id) === Number(selectedCourse));
+      const selectedWeekData = weeks.find(w => Number(w.week_number) === Number(selectedWeek));
 
       if (!selectedCourseData || !selectedWeekData) {
         setError('Không tìm thấy thông tin kỳ học hoặc tuần học');
@@ -422,7 +419,7 @@ export default function WeeklySchedulePage() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!selectedCourse || !selectedWeek) {
       setError('Vui lòng chọn kỳ học và tuần để xuất file');
       return;
@@ -435,16 +432,16 @@ export default function WeeklySchedulePage() {
 
     try {
       // Find the selected course and week data
-      const selectedCourseData = courses.find(c => c.id === selectedCourse);
-      const selectedWeekData = weeks.find(w => w.week_number === selectedWeek);
+      const selectedCourseData = courses.find(c => Number(c.id) === Number(selectedCourse));
+      const selectedWeekData = weeks.find(w => Number(w.week_number) === Number(selectedWeek));
 
       if (!selectedCourseData || !selectedWeekData) {
         setError('Không tìm thấy thông tin kỳ học hoặc tuần học');
         return;
       }
 
-      // Call the PDF export utility
-      exportWeeklyScheduleToPDF({
+      // Call the PDF export utility (async - html2canvas)
+      await exportWeeklyScheduleToPDF({
         rows,
         selectedCourseData: {
           ma_khoa_hoc: selectedCourseData.ma_khoa_hoc,

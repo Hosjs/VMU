@@ -54,6 +54,7 @@ import type {
 import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
 import { exportTeachingPaymentToExcel } from '~/utils/teachingPaymentExcelExporter';
+import {exportTeachingPaymentStandalone} from "~/utils/teachingPaymentStandaloneExporter";
 
 /**
  * Format currency to VND
@@ -560,14 +561,21 @@ export default function TeachingPaymentPage() {
         return;
       }
 
-      // Use the template path relative to public folder
+      // Try template-based export first, fallback to standalone
       const templatePath = '/Teaching-payment_Excel_format/template_ai.xlsx';
-
-      // Export to Excel using the template
-      await exportTeachingPaymentToExcel({
-        data: rows as TeachingPaymentRow[],
-        templatePath,
-      });
+      try {
+        const checkTemplate = await fetch(templatePath, { method: 'HEAD' });
+        if (checkTemplate.ok) {
+          await exportTeachingPaymentToExcel({
+            data: rows as TeachingPaymentRow[],
+            templatePath,
+          });
+        } else {
+          exportTeachingPaymentStandalone(rows as TeachingPaymentRow[]);
+        }
+      } catch {
+        exportTeachingPaymentStandalone(rows as TeachingPaymentRow[]);
+      }
 
       setSuccess('Xuất file Excel thành công!');
     } catch (err) {

@@ -1,6 +1,4 @@
 import * as XLSX from 'xlsx-js-style';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 // Add font support for Vietnamese characters
 // Note: You may need to add a Vietnamese font file for proper character rendering
@@ -280,8 +278,17 @@ export const exportTeachingScheduleToExcel = ({
 
     XLSX.utils.book_append_sheet(wb, ws, 'Ke hoach giang day');
 
-    // Use writeFile with bookType option for browser compatibility
-    XLSX.writeFile(wb, `Ke_hoach_giang_day.xlsx`, { bookType: 'xlsx', type: 'binary' });
+    // Use Blob + anchor download for reliable cross-environment support
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Ke_hoach_giang_day.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
 // --- WEEKLY SCHEDULE EXPORT ---
@@ -551,25 +558,31 @@ export const exportWeeklyScheduleToExcel = ({
     ];
 
     XLSX.utils.book_append_sheet(wb, ws, 'Lịch học tuần');
-    XLSX.writeFile(wb, `Ke_hoach_giang_day_tuan_${selectedWeekData.week_number || ''}.xlsx`);
+
+    // Use Blob + anchor download for reliable cross-environment support
+    const filename = `Ke_hoach_giang_day_tuan_${selectedWeekData.week_number || ''}.xlsx`;
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 };
 
-// --- WEEKLY SCHEDULE PDF EXPORT ---
+// --- WEEKLY SCHEDULE PDF EXPORT (html2canvas - hỗ trợ tiếng Việt) ---
 
-export const exportWeeklyScheduleToPDF = ({
+export const exportWeeklyScheduleToPDF = async ({
     rows,
     selectedCourseData,
     selectedWeekData,
-}: ExportWeeklyScheduleParams): void => {
-    // Create PDF in A4 landscape format
-    const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-    });
+}: ExportWeeklyScheduleParams): Promise<void> => {
+    const html2canvas = (await import('html2canvas')).default;
+    const { jsPDF: JsPDF } = await import('jspdf');
 
-    // Format dates
     const startDate = selectedWeekData.start_date
         ? new Date(selectedWeekData.start_date).toLocaleDateString('vi-VN')
         : '';
@@ -581,128 +594,131 @@ export const exportWeeklyScheduleToPDF = ({
         : new Date().getFullYear();
     const weekLabel = selectedWeekData.week_label || `Tuần ${selectedWeekData.week_number || ''}`;
 
-    let currentY = 15;
-
-    // Header - Left and Right
-    // Note: Standard jsPDF fonts have limited Vietnamese support
-    // For best results, consider adding a custom font
-    doc.setFontSize(13);
-    doc.setFont('times', 'bold');
-
-    // Left header
-    doc.text('TRUONG DAI HOC HANG HAI VIET NAM', 15, currentY);
-    doc.text('VIEN DAO TAO SAU DAI HOC', 15, currentY + 6);
-
-    // Right header
-    const rightText1 = 'KE HOACH GIANG DAY VA HOC TAP';
-    const rightText2 = `Tu ngay: ${startDate} den ngay ${endDate} nam ${year} (${weekLabel})`;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    doc.text(rightText1, pageWidth - 15, currentY, { align: 'right' });
-    doc.setFontSize(11);
-    doc.text(rightText2, pageWidth - 15, currentY + 6, { align: 'right' });
-
-    currentY += 15;
-
-
-    // Prepare table data
-    const tableData = rows.map((row) => {
+    // Build HTML table
+    const tableRows = rows.map((row, i) => {
         const classNames = Array.isArray(row.class_names)
-            ? row.class_names.join('\n')
-            : row.class_names || '';
+            ? row.class_names.join('<br/>')
+            : (row.class_names || '');
+        return `
+        <tr style="background:${i % 2 === 0 ? '#fff' : '#f9f9f9'}">
+            <td style="text-align:center;padding:5px 4px;border:1px solid #ccc">${row.stt || i + 1}</td>
+            <td style="text-align:center;padding:5px 4px;border:1px solid #ccc">${classNames}</td>
+            <td style="padding:5px 4px;border:1px solid #ccc">${row.subject_name || ''}</td>
+            <td style="padding:5px 4px;border:1px solid #ccc">${row.lecturer_name || ''}</td>
+            <td style="text-align:center;padding:5px 4px;border:1px solid #ccc">${row.time_slot || ''}</td>
+            <td style="text-align:center;padding:5px 4px;border:1px solid #ccc">${row.room || ''}</td>
+            <td style="text-align:center;padding:5px 4px;border:1px solid #ccc">${row.ghi_chu || ''}</td>
+        </tr>`;
+    }).join('');
 
-        return [
-            row.stt || '',
-            classNames,
-            row.subject_name || '',
-            row.lecturer_name || '',
-            row.time_slot || '',
-            row.room || '',
-            row.ghi_chu || ''
-        ];
-    });
+    const html = `
+    <div id="pdf-content" style="font-family:'Times New Roman',Times,serif;font-size:11pt;width:1050px;padding:20px 30px;background:#fff;color:#000">
+        <table style="width:100%;margin-bottom:10px;border:none"><tr>
+            <td style="width:50%;vertical-align:top;border:none">
+                <div style="font-size:12pt;font-weight:bold">TRƯỜNG ĐẠI HỌC HÀNG HẢI VIỆT NAM</div>
+                <div style="font-size:11pt;font-weight:bold">VIỆN ĐÀO TẠO SAU ĐẠI HỌC</div>
+            </td>
+            <td style="width:50%;vertical-align:top;text-align:right;border:none">
+                <div style="font-size:12pt;font-weight:bold">KẾ HOẠCH GIẢNG DẠY VÀ HỌC TẬP</div>
+                <div style="font-size:10pt">Từ ngày: ${startDate} đến ngày ${endDate} năm ${year} (${weekLabel})</div>
+            </td>
+        </tr></table>
 
-    // Add instruction text rows at the END of table data
-    (tableData as any[]).push([
-        {
-            content: 'De nghi cac hoc vien cao hoc khoa 2024 dot 1, 2 va 2025 dot 1, 2 diem danh bang may nhan dien khuon mat. Cung voi ket qua theo doi hoc tap tren lop cua hoc vien, ket qua diem danh nay la co so de xac dinh dieu kien du thi ket thuc hoc phan. Thoi gian hoc sang bat dau tu 08h00, chieu bat dau tu 14h00. Moi thac mac xin gui ve E-mail: sdh@vimaru.edu.vn hoac gap truc tiep chuyen vien truc tai phong 203 A6.',
-            colSpan: 7,
-            styles: { fontStyle: 'italic', fontSize: 9, halign: 'left', cellPadding: 2 }
+        <table style="width:100%;border-collapse:collapse;font-size:10pt">
+            <thead>
+                <tr style="background:#e8eaf6">
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:4%">TT</th>
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:13%">Lớp học</th>
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:23%">Học phần</th>
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:16%">Giảng viên</th>
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:14%">Thời gian</th>
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:10%">Phòng học</th>
+                    <th style="padding:6px 4px;border:1px solid #999;text-align:center;width:11%">Kết quả<br/>theo dõi</th>
+                </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="7" style="padding:5px 6px;border:1px solid #ccc;font-style:italic;font-size:9pt">
+                        Đề nghị các học viên cao học khóa 2024 đợt 1, 2 và 2025 đợt 1, 2 điểm danh bằng máy nhận diện khuôn mặt.
+                        Cùng với kết quả theo dõi học tập trên lớp của học viên, kết quả điểm danh này là cơ sở để xác định điều kiện dự thi kết thúc học phần.
+                        Thời gian học sáng bắt đầu từ 08h00, chiều bắt đầu từ 14h00. Mọi thắc mắc xin gửi về E-mail: sdh@vimaru.edu.vn hoặc gặp trực tiếp chuyên viên trực tại phòng 203 A6.
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="padding:5px 6px;border:1px solid #ccc;font-style:italic;font-size:9pt">
+                        Phòng Khảo thí và ĐBCL triển khai kiểm tra công tác Giảng dạy và học tập theo kế hoạch.
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div style="margin-top:8px;font-size:10pt">
+            <div>Lịch trực lãnh đạo: Lại Huy Thiện - T7, Nguyễn Kim Phương - CN</div>
+            <div>Lịch trực chuyên viên: Đỗ Tất Mạnh - T7; Lê Thanh Lữ - CN</div>
+        </div>
+
+        <table style="width:100%;margin-top:14px;border:none;font-size:10pt"><tr>
+            <td style="width:50%;text-align:center;border:none">
+                <div style="font-weight:bold">Viện trưởng Viện ĐTSDH</div>
+                <div style="font-style:italic">(Đã ký)</div>
+                <div style="margin-top:18px;font-weight:bold">PGS.TS. Nguyễn Kim Phương</div>
+            </td>
+            <td style="width:50%;text-align:center;border:none">
+                <div style="font-weight:bold">Cán bộ phụ trách</div>
+                <div style="font-style:italic">(Đã ký)</div>
+                <div style="margin-top:18px;font-weight:bold">Trần Minh Tuấn</div>
+            </td>
+        </tr></table>
+
+        <div style="margin-top:10px;font-size:8pt;display:flex;justify-content:space-between">
+            <span>NBH: 05/5/25-REV:1</span>
+            <span>BM.04-QT.SDH.03</span>
+        </div>
+    </div>`;
+
+    // Render into hidden DOM element
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    try {
+        const element = container.querySelector('#pdf-content') as HTMLElement;
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const imgW = canvas.width;
+        const imgH = canvas.height;
+
+        // A4 landscape: 297 x 210 mm
+        const pdfW = 297;
+        const pdfH = 210;
+        const ratio = pdfW / (imgW / 2); // divide by scale
+        const renderedH = (imgH / 2) * ratio;
+
+        const doc = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        if (renderedH <= pdfH) {
+            doc.addImage(imgData, 'JPEG', 0, 0, pdfW, renderedH);
+        } else {
+            // Multi-page
+            const pageH = pdfH;
+            const totalPages = Math.ceil(renderedH / pageH);
+            for (let page = 0; page < totalPages; page++) {
+                if (page > 0) doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, -(page * pageH), pdfW, renderedH);
+            }
         }
-    ]);
-    (tableData as any[]).push([
-        {
-            content: 'Phong Khao thi va DBCL trien khai kiem tra cong tac Giang day va hoc tap theo ke hoach.',
-            colSpan: 7,
-            styles: { fontStyle: 'italic', fontSize: 9, halign: 'left', cellPadding: 2 }
-        }
-    ]);
 
-    // Create table
-    autoTable(doc, {
-        startY: currentY,
-        head: [['TT', 'Lop hoc', 'Hoc phan', 'Giang vien', 'Thoi gian', 'Phong hoc', 'Ket qua\ntheo doi']],
-        body: tableData,
-        styles: {
-            font: 'times',  // Changed from helvetica to times for better support
-            fontSize: 10,
-            cellPadding: 2,
-            lineColor: [0, 0, 0],
-            lineWidth: 0.1,
-        },
-        headStyles: {
-            fillColor: [242, 242, 242],
-            textColor: [0, 0, 0],
-            fontStyle: 'bold',
-            halign: 'center',
-            valign: 'middle',
-            fontSize: 11,
-        },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 10 },  // TT
-            1: { halign: 'center', cellWidth: 35 },  // Lớp học
-            2: { halign: 'left', cellWidth: 60 },    // Học phần
-            3: { halign: 'left', cellWidth: 40 },    // Giảng viên
-            4: { halign: 'center', cellWidth: 35 },  // Thời gian
-            5: { halign: 'center', cellWidth: 25 },  // Phòng học
-            6: { halign: 'center', cellWidth: 30 },  // Kết quả
-        },
-        margin: { left: 15, right: 15 },
-        didDrawPage: () => {
-            // Footer on every page
-            doc.setFontSize(9);
-            doc.setFont('times', 'normal');
-            doc.text('NBH: 05/5/25-REV:1', 15, doc.internal.pageSize.getHeight() - 10);
-            doc.text('BM.04-QT.SDH.03', pageWidth - 15, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-        }
-    });
-
-    // Get Y position after table
-    let finalY = (doc as any).lastAutoTable.finalY + 5;
-
-    // Add schedule section
-    doc.setFontSize(11);
-    doc.setFont('times', 'normal');
-    doc.text('Lich truc lanh dao: Lai Huy Thien - T7, Nguyen Kim Phuong - CN', 15, finalY);
-    doc.text('Lich truc chuyen vien: Do Tat Manh - T7; Le Thanh Lu - CN', 15, finalY + 5);
-
-    finalY += 15;
-
-    // Add signature section
-    doc.setFont('times', 'bold');
-    doc.text('Vien truong Vien DTSDH', 50, finalY, { align: 'center' });
-    doc.text('Can bo phu trach', pageWidth - 50, finalY, { align: 'center' });
-
-    doc.setFont('times', 'italic');
-    doc.setFontSize(10);
-    doc.text('(Da ky)', 50, finalY + 5, { align: 'center' });
-    doc.text('(Da ky)', pageWidth - 50, finalY + 5, { align: 'center' });
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(11);
-    doc.text('PGS.TS. Nguyen Kim Phuong', 50, finalY + 15, { align: 'center' });
-    doc.text('Tran Minh Tuan', pageWidth - 50, finalY + 15, { align: 'center' });
-
-    // Save PDF
-    doc.save(`Ke_hoach_giang_day_tuan_${selectedWeekData.week_number || ''}.pdf`);
+        doc.save(`Ke_hoach_giang_day_tuan_${selectedWeekData.week_number || ''}.pdf`);
+    } finally {
+        document.body.removeChild(container);
+    }
 };
 
