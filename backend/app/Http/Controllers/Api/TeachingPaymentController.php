@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Lecturer;
 use App\Models\TeachingPayment;
 use App\Models\TeachingSchedule;
 use Illuminate\Http\Request;
@@ -11,6 +12,101 @@ use Illuminate\Support\Facades\Validator;
 
 class TeachingPaymentController extends Controller
 {
+    /**
+     * Build lecturer title from hocHam + trinhDoChuyenMon.
+     */
+    private function buildLecturerTitle(Lecturer $lecturer): string
+    {
+        $parts = [];
+        if (!empty($lecturer->hocHam)) {
+            $parts[] = trim($lecturer->hocHam);
+        }
+        if (!empty($lecturer->trinhDoChuyenMon)) {
+            $parts[] = trim($lecturer->trinhDoChuyenMon);
+        }
+
+        return implode('.', $parts);
+    }
+
+    /**
+     * Resolve lecturer by id first, then by name fallback.
+     */
+    private function resolveLecturer(?int $lecturerId, ?string $name): ?Lecturer
+    {
+        if (!empty($lecturerId)) {
+            $lecturer = Lecturer::with('major')->find($lecturerId);
+            if ($lecturer) {
+                return $lecturer;
+            }
+        }
+
+        if (!empty($name)) {
+            return Lecturer::with('major')
+                ->where('hoTen', 'LIKE', '%' . trim($name) . '%')
+                ->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * Fill missing payment fields using saved lecturer profile.
+     */
+    private function applyLecturerProfile($payment, ?Lecturer $lecturer): void
+    {
+        if (!$lecturer) {
+            return;
+        }
+
+        if (empty($payment->lecturer_id)) {
+            $payment->lecturer_id = $lecturer->id;
+        }
+
+        if (empty($payment->chuc_danh_giang_vien)) {
+            $payment->chuc_danh_giang_vien = $this->buildLecturerTitle($lecturer);
+        }
+
+        if (empty($payment->ho_ten_giang_vien)) {
+            $payment->ho_ten_giang_vien = $lecturer->hoTen;
+        }
+
+        if (empty($payment->don_vi)) {
+            $payment->don_vi = $lecturer->don_vi ?: ($lecturer->major->tenNganh ?? '');
+        }
+
+        if (empty($payment->ma_so_thue_tncn)) {
+            $payment->ma_so_thue_tncn = $lecturer->ma_so_thue_tncn;
+        }
+        if (empty($payment->so_tai_khoan)) {
+            $payment->so_tai_khoan = $lecturer->so_tai_khoan;
+        }
+        if (empty($payment->tai_ngan_hang)) {
+            $payment->tai_ngan_hang = $lecturer->tai_ngan_hang;
+        }
+    }
+
+    /**
+     * Remember lecturer payment profile when user has entered new values.
+     */
+    private function syncLecturerProfileFromPaymentData(?Lecturer $lecturer, array $paymentData): void
+    {
+        if (!$lecturer) {
+            return;
+        }
+
+        $profileUpdates = [];
+        foreach (['don_vi', 'ma_so_thue_tncn', 'so_tai_khoan', 'tai_ngan_hang'] as $field) {
+            $value = isset($paymentData[$field]) ? trim((string) $paymentData[$field]) : '';
+            if ($value !== '' && $lecturer->{$field} !== $value) {
+                $profileUpdates[$field] = $value;
+            }
+        }
+
+        if (!empty($profileUpdates)) {
+            $lecturer->update($profileUpdates);
+        }
+    }
+
     /**
      * Get teaching payments by filters
      *
@@ -120,35 +216,11 @@ class TeachingPaymentController extends Controller
             }
         }
 
-        // ✅ Fill thông tin giảng viên từ bảng lecturers nếu chuc_danh_giang_vien đang null/rỗng
-        if (empty($payment->chuc_danh_giang_vien) && !empty($payment->can_bo_giang_day)) {
-            $lecturer = \App\Models\Lecturer::with('major')
-                ->where('hoTen', 'LIKE', '%' . trim($payment->can_bo_giang_day) . '%')
-                ->first();
-
-            if ($lecturer) {
-                // Kết hợp hocHam và trinhDoChuyenMon với dấu chấm (VD: "PGS.TS")
-                $chucDanhParts = [];
-                if (!empty($lecturer->hocHam)) {
-                    $chucDanhParts[] = trim($lecturer->hocHam);
-                }
-                if (!empty($lecturer->trinhDoChuyenMon)) {
-                    $chucDanhParts[] = trim($lecturer->trinhDoChuyenMon);
-                }
-
-                if (!empty($chucDanhParts)) {
-                    $payment->chuc_danh_giang_vien = implode('.', $chucDanhParts);
-                }
-
-                // Fill thêm các thông tin khác nếu còn thiếu
-                if (empty($payment->don_vi) && $lecturer->major) {
-                    $payment->don_vi = $lecturer->major->tenNganh ?? '';
-                }
-                if (empty($payment->ho_ten_giang_vien)) {
-                    $payment->ho_ten_giang_vien = $lecturer->hoTen;
-                }
-            }
-        }
+        $lecturer = $this->resolveLecturer(
+            $payment->lecturer_id,
+            $payment->can_bo_giang_day ?: $payment->ho_ten_giang_vien
+        );
+        $this->applyLecturerProfile($payment, $lecturer);
     }
 
     /**
@@ -232,34 +304,13 @@ class TeachingPaymentController extends Controller
 
                 // ✅ Lấy thông tin giảng viên từ bảng lecturers
                 $hoTenGiangVien = $schedule->can_bo_giang_day; // Họ tên = Cán bộ giảng dạy
-                $chucDanhGiangVien = '';
-                $donVi = '';
-                $lecturerId = null;
-
-                if (!empty($hoTenGiangVien)) {
-                    // Tìm lecturer theo tên (hoTen)
-                    $lecturer = \App\Models\Lecturer::with('major')->where('hoTen', 'LIKE', '%' . trim($hoTenGiangVien) . '%')->first();
-
-                    if ($lecturer) {
-                        $lecturerId = $lecturer->id;
-
-                        // ✅ Lấy chức danh từ hocHam và trinhDoChuyenMon
-                        // Kết hợp: hocHam.trinhDoChuyenMon (ví dụ: "PGS.TS" hoặc chỉ "TS")
-                        $chucDanhParts = [];
-                        if (!empty($lecturer->hocHam)) {
-                            $chucDanhParts[] = trim($lecturer->hocHam);
-                        }
-                        if (!empty($lecturer->trinhDoChuyenMon)) {
-                            $chucDanhParts[] = trim($lecturer->trinhDoChuyenMon);
-                        }
-                        $chucDanhGiangVien = implode('.', $chucDanhParts);
-
-                        // ✅ Lấy đơn vị từ major.tenNganh của lecturer
-                        if ($lecturer->major) {
-                            $donVi = $lecturer->major->tenNganh ?? '';
-                        }
-                    }
-                }
+                $lecturer = $this->resolveLecturer(null, $hoTenGiangVien);
+                $lecturerId = $lecturer?->id;
+                $chucDanhGiangVien = $lecturer ? $this->buildLecturerTitle($lecturer) : '';
+                $donVi = $lecturer ? ($lecturer->don_vi ?: ($lecturer->major->tenNganh ?? '')) : '';
+                $maSoThueTncn = $lecturer?->ma_so_thue_tncn;
+                $soTaiKhoan = $lecturer?->so_tai_khoan;
+                $taiNganHang = $lecturer?->tai_ngan_hang;
 
                 $payment = TeachingPayment::create([
                     'teaching_schedule_id' => $schedule->id,
@@ -276,6 +327,9 @@ class TeachingPaymentController extends Controller
                     'ho_ten_giang_vien' => $hoTenGiangVien, // = Cán bộ giảng dạy
                     'chuc_danh_giang_vien' => $chucDanhGiangVien, // Từ lecturers
                     'don_vi' => $donVi, // Từ lecturers → major
+                    'ma_so_thue_tncn' => $maSoThueTncn,
+                    'so_tai_khoan' => $soTaiKhoan,
+                    'tai_ngan_hang' => $taiNganHang,
 
                     'lop' => $lop ?: '', // ✅ Lấy từ weekly_schedules
                     'chuyen_nganh' => $chuyenNganh ?: '', // ✅ Lấy từ major của class
@@ -327,6 +381,7 @@ class TeachingPaymentController extends Controller
             'semester_code' => 'required|string|max:50',
             'payments' => 'required|array|min:1',
             'payments.*.id' => 'sometimes|integer',
+            'payments.*.lecturer_id' => 'nullable|integer|exists:lecturers,id',
             'payments.*.teaching_schedule_id' => 'required|integer',
             'payments.*.stt' => 'required|integer',
             'payments.*.ten_hoc_phan' => 'required|string',
@@ -388,6 +443,29 @@ class TeachingPaymentController extends Controller
             $savedPayments = [];
 
             foreach ($request->payments as $paymentData) {
+                $lecturer = $this->resolveLecturer(
+                    isset($paymentData['lecturer_id']) ? (int) $paymentData['lecturer_id'] : null,
+                    $paymentData['can_bo_giang_day'] ?? ($paymentData['ho_ten_giang_vien'] ?? null)
+                );
+
+                if ($lecturer) {
+                    if (empty($paymentData['ho_ten_giang_vien'])) {
+                        $paymentData['ho_ten_giang_vien'] = $lecturer->hoTen;
+                    }
+                    if (empty($paymentData['don_vi'])) {
+                        $paymentData['don_vi'] = $lecturer->don_vi ?: ($lecturer->major->tenNganh ?? '');
+                    }
+                    if (empty($paymentData['ma_so_thue_tncn'])) {
+                        $paymentData['ma_so_thue_tncn'] = $lecturer->ma_so_thue_tncn;
+                    }
+                    if (empty($paymentData['so_tai_khoan'])) {
+                        $paymentData['so_tai_khoan'] = $lecturer->so_tai_khoan;
+                    }
+                    if (empty($paymentData['tai_ngan_hang'])) {
+                        $paymentData['tai_ngan_hang'] = $lecturer->tai_ngan_hang;
+                    }
+                }
+
                 // Calculate amounts
                 $soTinChi = $paymentData['so_tin_chi'] ?? 0;
                 $donGiaTinChi = $paymentData['don_gia_tin_chi'] ?? 0;
@@ -403,6 +481,7 @@ class TeachingPaymentController extends Controller
                     'major_id' => $request->major_id,
                     'khoa_hoc_id' => $request->khoa_hoc_id,
                     'semester_code' => $request->semester_code,
+                    'lecturer_id' => $lecturer?->id,
                     'stt' => $paymentData['stt'],
                     'ten_hoc_phan' => $paymentData['ten_hoc_phan'],
                     'so_tin_chi' => $soTinChi,
@@ -468,6 +547,8 @@ class TeachingPaymentController extends Controller
                     $payment = TeachingPayment::create($data);
                     $savedPayments[] = $payment;
                 }
+
+                $this->syncLecturerProfileFromPaymentData($lecturer, $paymentData);
             }
 
             DB::commit();

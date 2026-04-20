@@ -69,6 +69,10 @@ class LecturerController extends Controller
             'trinhDoChuyenMon' => 'nullable|string|max:100',
             'hocHam' => 'nullable|string|max:100',
             'maNganh' => 'nullable|integer',
+            'don_vi' => 'nullable|string|max:255',
+            'ma_so_thue_tncn' => 'nullable|string|max:50',
+            'so_tai_khoan' => 'nullable|string|max:50',
+            'tai_ngan_hang' => 'nullable|string|max:255',
             'ghiChu' => 'nullable|string',
         ]);
 
@@ -100,6 +104,10 @@ class LecturerController extends Controller
                 'trinhDoChuyenMon' => $request->trinhDoChuyenMon,
                 'hocHam' => $request->hocHam,
                 'maNganh' => $request->maNganh,
+                'don_vi' => $request->don_vi,
+                'ma_so_thue_tncn' => $request->ma_so_thue_tncn,
+                'so_tai_khoan' => $request->so_tai_khoan,
+                'tai_ngan_hang' => $request->tai_ngan_hang,
                 'ghiChu' => $request->ghiChu,
             ]);
 
@@ -172,6 +180,10 @@ class LecturerController extends Controller
             'trinhDoChuyenMon' => 'nullable|string|max:100',
             'hocHam' => 'nullable|string|max:100',
             'maNganh' => 'nullable|integer',
+            'don_vi' => 'nullable|string|max:255',
+            'ma_so_thue_tncn' => 'nullable|string|max:50',
+            'so_tai_khoan' => 'nullable|string|max:50',
+            'tai_ngan_hang' => 'nullable|string|max:255',
             'ghiChu' => 'nullable|string',
         ]);
 

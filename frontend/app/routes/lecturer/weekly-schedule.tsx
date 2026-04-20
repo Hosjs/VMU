@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import type {
   GridColDef,
@@ -25,7 +25,7 @@ import {
   DialogActions,
   Tooltip,
 } from '@mui/material';
-import { PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import weeklyScheduleService from '~/services/weeklyScheduleService';
 import { roomService } from '~/services/room.service';
 import { subjectService } from '~/services/subject.service';
@@ -34,6 +34,7 @@ import { courseService } from '~/services/course.service';
 import { majorSubjectService } from '~/services/major-subject.service';
 import { getTeachingSchedules } from '~/services/teachingScheduleService';
 import { exportWeeklyScheduleToExcel, exportWeeklyScheduleToPDF } from '~/utils/excelExporter';
+import { parseWeeklyScheduleExcel } from '~/utils/weeklyScheduleExcelImporter';
 import type { WeeklyScheduleRow, BulkSaveWeeklyScheduleRequest, Week } from '~/types/weekly-schedule';
 import type { Room } from '~/types/room';
 import type { Subject } from '~/types/subject';
@@ -54,10 +55,12 @@ export default function WeeklySchedulePage() {
   const [teachingSchedules, setTeachingSchedules] = useState<TeachingSchedule[]>([]); // ✅ Store teaching schedules for comparison
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [addingClassToRow, setAddingClassToRow] = useState<string | number | null>(null);
   const [newClassInput, setNewClassInput] = useState<string>('');
+  const importFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Load initial data on mount
   useEffect(() => {
@@ -138,8 +141,6 @@ export default function WeeklySchedulePage() {
 
     try {
 
-      // ✅ FIX: Pass major_id as-is (could be number or string)
-      // Backend will handle both numeric ID and string maNganh
       const majorSubjects = await majorSubjectService.getSubjectsByMajor(majorId);
       const subjectsForMajor = majorSubjects.map(ms => ({
         id: ms.id,
@@ -233,8 +234,21 @@ export default function WeeklySchedulePage() {
         const formattedRows = Object.values(groupedBySTT).sort((a, b) => a.stt - b.stt);
         setRows(formattedRows);
       } else {
-        // Create empty rows if no existing data
-        setRows(createEmptyRows(5));
+        // Prefill from teaching plan for this course if weekly data does not exist yet.
+        const planSchedules = await getTeachingSchedules({
+          khoa_hoc_id: selectedCourse,
+        });
+
+        setTeachingSchedules(planSchedules || []);
+
+        const prefilledRows = createRowsFromTeachingPlan(planSchedules || []);
+        if (prefilledRows.length > 0) {
+          setRows(prefilledRows);
+          setSuccess(`Đã nạp ${prefilledRows.length} môn từ kế hoạch giảng dạy. Bạn có thể chỉnh sửa trước khi lưu.`);
+        } else {
+          // Create empty rows if no teaching plan data
+          setRows(createEmptyRows(5));
+        }
       }
     } catch (err) {
       console.error('❌ Error loading schedules:', err);
@@ -252,6 +266,66 @@ export default function WeeklySchedulePage() {
       class_names: [],
       subject_name: '',
       lecturer_name: '',
+      time_slot: '',
+      room: '',
+      ghi_chu: '',
+      isNew: true,
+    }));
+  };
+
+  const createRowsFromTeachingPlan = (planRows: TeachingSchedule[]): WeeklyScheduleRow[] => {
+    if (!planRows.length) return [];
+
+    const groupedBySubject = new Map<string, {
+      stt: number;
+      subject_name: string;
+      lecturers: string[];
+    }>();
+
+    for (const plan of planRows) {
+      const subjectName = plan.ten_hoc_phan?.trim() || '';
+      const isBreakRow = plan.so_tin_chi === 0 || !subjectName;
+
+      if (isBreakRow) continue;
+
+      const key = subjectName.toLowerCase();
+      const currentLecturer = plan.can_bo_giang_day?.trim();
+      const currentStt = Number(plan.stt) || 0;
+
+      if (!groupedBySubject.has(key)) {
+        groupedBySubject.set(key, {
+          stt: currentStt,
+          subject_name: subjectName,
+          lecturers: currentLecturer ? [currentLecturer] : [],
+        });
+        continue;
+      }
+
+      const existing = groupedBySubject.get(key);
+      if (!existing) continue;
+
+      if (currentStt > 0 && (existing.stt === 0 || currentStt < existing.stt)) {
+        existing.stt = currentStt;
+      }
+
+      if (currentLecturer && !existing.lecturers.some(name => name.toLowerCase() === currentLecturer.toLowerCase())) {
+        existing.lecturers.push(currentLecturer);
+      }
+    }
+
+    const sortedSubjects = Array.from(groupedBySubject.values()).sort((a, b) => {
+      if (a.stt === 0 && b.stt === 0) return a.subject_name.localeCompare(b.subject_name);
+      if (a.stt === 0) return 1;
+      if (b.stt === 0) return -1;
+      return a.stt - b.stt;
+    });
+
+    return sortedSubjects.map((subject, index) => ({
+      id: `prefill-${Date.now()}-${index}`,
+      stt: index + 1,
+      class_names: [],
+      subject_name: subject.subject_name,
+      lecturer_name: subject.lecturers.join(', '),
       time_slot: '',
       room: '',
       ghi_chu: '',
@@ -462,6 +536,37 @@ export default function WeeklySchedulePage() {
     } catch (err) {
       console.error('❌ Error exporting PDF:', err);
       setError('Lỗi khi xuất file PDF');
+    }
+  };
+
+  const handleImportExcelClick = () => {
+    importFileInputRef.current?.click();
+  };
+
+  const handleImportExcelChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+
+    if (!selectedCourse || !selectedWeek) {
+      setError('Vui lòng chọn kỳ học và tuần trước khi nhập file Excel');
+      return;
+    }
+
+    try {
+      setImporting(true);
+      setError(null);
+      setSuccess(null);
+
+      const importedRows = await parseWeeklyScheduleExcel(file);
+      setRows(importedRows);
+      setSuccess(`✅ Đã nhập ${importedRows.length} dòng từ file Excel. Vui lòng kiểm tra và lưu lại.`);
+    } catch (err: any) {
+      console.error('❌ Error importing weekly schedule Excel:', err);
+      setError(err?.message || 'Lỗi khi nhập file Excel lịch học tuần');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -779,8 +884,7 @@ export default function WeeklySchedulePage() {
           if (assignedLecturerObj) {
             let subtitle = '✅ Được phân công';
             if (assignedLecturerObj.hocHam || assignedLecturerObj.trinhDoChuyenMon) {
-              const credentials = [assignedLecturerObj.hocHam, assignedLecturerObj.trinhDoChuyenMon].filter(Boolean).join(', ');
-              subtitle = `✅ Được phân công • ${credentials}`;
+              subtitle = `✅ Được phân công • ${[assignedLecturerObj.hocHam, assignedLecturerObj.trinhDoChuyenMon].filter(Boolean).join(', ')}`;
             }
 
             lecturerOptions.push({
@@ -813,8 +917,7 @@ export default function WeeklySchedulePage() {
 
           let subtitle = '';
           if (l.hocHam || l.trinhDoChuyenMon) {
-            const credentials = [l.hocHam, l.trinhDoChuyenMon].filter(Boolean).join(', ');
-            subtitle = credentials;
+            subtitle = [l.hocHam, l.trinhDoChuyenMon].filter(Boolean).join(', ');
           }
 
           lecturerOptions.push({
@@ -845,7 +948,7 @@ export default function WeeklySchedulePage() {
               openOnFocus
               options={lecturerOptions}
               value={params.value || ''}
-              getOptionDisabled={(option) => option.isDivider === true}
+              getOptionDisabled={(option) => Boolean(option.isDivider)}
               onChange={(_, newValue) => {
                 if (typeof newValue === 'string') {
                   params.api.setEditCellValue({ id: params.id, field: 'lecturer_name', value: newValue });
@@ -1088,15 +1191,24 @@ export default function WeeklySchedulePage() {
             variant="contained"
             color="primary"
             onClick={handleSave}
-            disabled={saving || rows.length === 0}
+            disabled={saving || importing || rows.length === 0}
           >
             {saving ? <CircularProgress size={20} /> : 'Lưu lịch học'}
           </Button>
           <Button
             variant="outlined"
+            color="success"
+            startIcon={<ArrowUpTrayIcon className="h-5 w-5" />}
+            onClick={handleImportExcelClick}
+            disabled={loading || importing}
+          >
+            {importing ? 'Đang nhập...' : 'Nhập Excel'}
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<ArrowDownTrayIcon className="h-5 w-5" />}
             onClick={handleExport}
-            disabled={rows.length === 0}
+            disabled={importing || rows.length === 0}
           >
             Xuất Excel
           </Button>
@@ -1105,11 +1217,19 @@ export default function WeeklySchedulePage() {
             color="secondary"
             startIcon={<ArrowDownTrayIcon className="h-5 w-5" />}
             onClick={handleExportPDF}
-            disabled={rows.length === 0}
+            disabled={importing || rows.length === 0}
           >
             Xuất PDF
           </Button>
         </Box>
+
+        <input
+          ref={importFileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          className="hidden"
+          onChange={handleImportExcelChange}
+        />
 
         {/* DataGrid */}
         <Box sx={{ height: 600, width: '100%' }}>

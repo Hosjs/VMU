@@ -17,6 +17,10 @@ class Lecturer extends Model
         'trinhDoChuyenMon',
         'hocHam',
         'maNganh',
+        'don_vi',
+        'ma_so_thue_tncn',
+        'so_tai_khoan',
+        'tai_ngan_hang',
         'ghiChu',
     ];
 

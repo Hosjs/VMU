@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import type {
   GridColDef,
@@ -18,7 +18,7 @@ import {
   Typography,
   Autocomplete as MuiAutocomplete
 } from '@mui/material';
-import { PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import { getTeachingSchedules, bulkSaveTeachingSchedules } from '~/services/teachingScheduleService';
 import { courseService } from '~/services/course.service';
 import { majorService } from '~/services/major.service';
@@ -30,6 +30,7 @@ import type { TeachingScheduleRow, BulkSaveTeachingScheduleRequest } from '~/typ
 import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
 import { exportTeachingScheduleToExcel } from '~/utils/excelExporter';
+import { parseTeachingScheduleExcel } from '~/utils/teachingScheduleExcelImporter';
 
 
 export default function TeachingSchedulePage() {
@@ -47,8 +48,13 @@ export default function TeachingSchedulePage() {
   const [semesterCode, setSemesterCode] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const normalizeComparisonText = (value?: string | null) =>
+    (value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 
   // Load courses and majors on mount
   useEffect(() => {
@@ -240,6 +246,10 @@ export default function TeachingSchedulePage() {
       .map(row => row.stt);
   };
 
+  const getLecturerGroupCount = (stt: number): number => {
+    return rows.filter(row => row.stt === stt && !row.isBreak).length;
+  };
+
   const handleCourseChange = (value: string | number) => {
     const courseId = value ? Number(value) : '';
     setSelectedCourse(courseId);
@@ -369,7 +379,7 @@ export default function TeachingSchedulePage() {
         schedules,
       };
 
-      const response = await bulkSaveTeachingSchedules(requestData);
+      await bulkSaveTeachingSchedules(requestData);
       setSuccess('Lưu lịch giảng dạy thành công!');
 
       // Reload the schedules
@@ -412,6 +422,61 @@ export default function TeachingSchedulePage() {
     }
   };
 
+  const handleImportExcelClick = () => {
+    if (!selectedCourse || !selectedMajor || !semesterCode) {
+      setError('Vui lòng chọn kỳ học và ngành học trước khi nhập Excel');
+      return;
+    }
+
+    fileInputRef.current?.click();
+  };
+
+  const handleImportExcelChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+
+    if (!selectedCourse || !selectedMajor || !semesterCode) {
+      setError('Vui lòng chọn kỳ học và ngành học trước khi nhập Excel');
+      return;
+    }
+
+    try {
+      setImporting(true);
+      setError(null);
+      setSuccess(null);
+
+      const { rows: importedRows, metadata } = await parseTeachingScheduleExcel(file);
+
+      if (!importedRows.length) {
+        setError('File Excel không có dòng dữ liệu kế hoạch giảng dạy hợp lệ');
+        return;
+      }
+
+      const selectedCourseData = courses.find(c => c.id === selectedCourse);
+      const selectedMajorData = majors.find(m => m.id === selectedMajor);
+
+      if (metadata.courseCode && selectedCourseData && normalizeComparisonText(metadata.courseCode) !== normalizeComparisonText(selectedCourseData.ma_khoa_hoc)) {
+        setError(`File Excel đang thuộc khóa ${metadata.courseCode}, không khớp với kỳ học hiện tại ${selectedCourseData.ma_khoa_hoc}`);
+        return;
+      }
+
+      if (metadata.majorName && selectedMajorData && normalizeComparisonText(metadata.majorName) !== normalizeComparisonText(selectedMajorData.tenNganh)) {
+        setError(`File Excel đang thuộc chuyên ngành "${metadata.majorName}", không khớp với ngành học hiện tại "${selectedMajorData.tenNganh || ''}"`);
+        return;
+      }
+
+      setRows(importedRows);
+      setSuccess(`✅ Đã nhập thành công ${importedRows.length} dòng từ file Excel. Vui lòng kiểm tra lại trước khi lưu.`);
+    } catch (err: any) {
+      console.error('Import error:', err);
+      setError(err?.message || 'Lỗi khi nhập file Excel');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleAddBreakRow = () => {
     if (!canAddNewRow()) {
       const incompleteRows = getIncompleteRows();
@@ -446,11 +511,13 @@ export default function TeachingSchedulePage() {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
+        params.row.isAdditionalLecturer ? null : (
         <Chip
           label={params.value}
           size="small"
-          color={validateRow(params.row) ? 'success' : 'warning'}
+            color={getLecturerGroupCount(params.row.stt) > 1 ? 'info' : (validateRow(params.row) ? 'success' : 'warning')}
         />
+        )
       ),
     },
     {
@@ -458,6 +525,16 @@ export default function TeachingSchedulePage() {
       headerName: 'Tên học phần *',
       width: 280,
       editable: true,
+      renderCell: (params) => (
+        params.row.isAdditionalLecturer ? null : (
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{params.value}</span>
+            {getLecturerGroupCount(params.row.stt) > 1 && (
+              <Chip label={`${getLecturerGroupCount(params.row.stt)} GV`} size="small" color="primary" variant="outlined" />
+            )}
+          </div>
+        )
+      ),
       cellClassName: (params) => {
         return !params.value ? 'bg-red-50 border-red-200' : '';
       },
@@ -529,6 +606,11 @@ export default function TeachingSchedulePage() {
       type: 'number',
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => (
+        params.row.isAdditionalLecturer ? null : (
+          <span>{params.value}</span>
+        )
+      ),
       cellClassName: (params) => {
         // Don't mark as error if it's a break row
         if (params.row.isBreak) return '';
@@ -557,8 +639,7 @@ export default function TeachingSchedulePage() {
           let label = l.hoTen;
           let subtitle = '';
           if (l.hocHam || l.trinhDoChuyenMon) {
-            const credentials = [l.hocHam, l.trinhDoChuyenMon].filter(Boolean).join(', ');
-            subtitle = credentials;
+            subtitle = [l.hocHam, l.trinhDoChuyenMon].filter(Boolean).join(', ');
           }
           return {
             label,
@@ -608,6 +689,16 @@ export default function TeachingSchedulePage() {
           />
         );
       },
+      renderCell: (params) => (
+        params.row.isAdditionalLecturer ? (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-xs">↳</span>
+            <span className="font-medium text-gray-700">{params.value}</span>
+          </div>
+        ) : (
+          <span>{params.value}</span>
+        )
+      ),
       preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
         // Don't validate break rows
         if (params.row.isBreak) return { ...params.props, error: false };
@@ -763,19 +854,36 @@ export default function TeachingSchedulePage() {
                 color="info"
                 startIcon={<ArrowDownTrayIcon className="w-5 h-5" />}
                 onClick={handleExportToExcel}
-                disabled={loading || rows.length === 0}
+                disabled={loading || importing || rows.length === 0}
               >
                 Xuất Excel
               </Button>
               <Button
+                variant="outlined"
+                color="success"
+                startIcon={<ArrowUpTrayIcon className="w-5 h-5" />}
+                onClick={handleImportExcelClick}
+                disabled={loading || importing}
+              >
+                {importing ? 'Đang nhập...' : 'Nhập Excel'}
+              </Button>
+              <Button
                 variant="contained"
                 onClick={handleSave}
-                disabled={saving || loading || rows.length === 0 || getIncompleteRows().length > 0}
+                disabled={saving || loading || importing || rows.length === 0 || getIncompleteRows().length > 0}
               >
                 {saving ? <CircularProgress size={20} /> : 'Lưu tất cả'}
               </Button>
             </div>
           </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImportExcelChange}
+          />
 
           <Box sx={{ height: 600, width: '100%' }}>
             <DataGrid
@@ -783,14 +891,14 @@ export default function TeachingSchedulePage() {
               columns={columns}
               processRowUpdate={processRowUpdate}
               onProcessRowUpdateError={handleProcessRowUpdateError}
-              loading={loading}
+              loading={loading || importing}
               disableRowSelectionOnClick
               editMode="cell"
               getRowClassName={(params) => {
                 // Highlight break/holiday rows
                 if (params.row.isBreak) return 'bg-red-50';
                 // Highlight additional lecturer rows
-                if (params.row.isAdditionalLecturer) return 'bg-blue-50';
+                        if (params.row.isAdditionalLecturer) return 'bg-blue-50 group-child-row';
                 return '';
               }}
               sx={{
@@ -808,6 +916,12 @@ export default function TeachingSchedulePage() {
                   '&:hover': {
                     backgroundColor: '#dbeafe',
                   },
+                },
+                '& .group-child-row .MuiDataGrid-cell': {
+                  borderTop: '1px dashed #bfdbfe',
+                },
+                '& .group-child-row .MuiDataGrid-cell:nth-of-type(1)': {
+                  color: '#6b7280',
                 },
                 '& .border-red-200': {
                   borderColor: '#fecaca',
