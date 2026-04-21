@@ -14,7 +14,6 @@ import {
     PlusCircleIcon,
     PencilIcon,
     TrashIcon,
-    AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
@@ -23,6 +22,7 @@ import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { Modal } from '~/components/ui/Modal';
+import { formatters } from '~/utils/formatters';
 
 export default function CoursePage() {
     const [majors, setMajors] = useState<Major[]>([]);
@@ -49,7 +49,6 @@ export default function CoursePage() {
     const addForm = useForm<CourseFormData>({
         initialValues: {
             nam_hoc: new Date().getFullYear(),
-            hoc_ky: 1,
             dot: 1,
             ngay_bat_dau: '',
             ngay_ket_thuc: '',
@@ -59,12 +58,12 @@ export default function CoursePage() {
             setIsSubmitting(true);
             try {
                 await courseService.createCourse(values);
-                alert(`✅ Tạo kỳ học ${values.nam_hoc}.${values.hoc_ky}.${values.dot} thành công!`);
+                alert(`✅ Tạo năm học ${values.nam_hoc}.${values.dot} thành công!`);
                 setShowAddModal(false);
                 addForm.reset();
                 table.refresh();
             } catch (error: any) {
-                alert(`❌ Lỗi: ${error.message || 'Không thể tạo kỳ học'}`);
+                alert(`❌ Lỗi: ${error.message || 'Không thể tạo năm học'}`);
             } finally {
                 setIsSubmitting(false);
             }
@@ -83,12 +82,12 @@ export default function CoursePage() {
             setIsSubmitting(true);
             try {
                 await courseService.updateCourse(selectedCourse.id, values);
-                alert('✅ Cập nhật kỳ học thành công!');
+                alert('✅ Cập nhật năm học thành công!');
                 setShowEditModal(false);
                 setSelectedCourse(null);
                 table.refresh();
             } catch (error: any) {
-                alert(`❌ Lỗi: ${error.message || 'Không thể cập nhật kỳ học'}`);
+                alert(`❌ Lỗi: ${error.message || 'Không thể cập nhật năm học'}`);
             } finally {
                 setIsSubmitting(false);
             }
@@ -156,20 +155,14 @@ export default function CoursePage() {
     };
 
     const handleDelete = async (course: Course) => {
-        if (!confirm(`Bạn có chắc chắn muốn xóa kỳ học ${course.ma_khoa_hoc}?`)) return;
+        if (!confirm(`Bạn có chắc chắn muốn xóa năm học ${formatters.courseCode(course)}?`)) return;
         try {
             await courseService.deleteCourse(course.id);
-            alert('✅ Xóa kỳ học thành công!');
+            alert('✅ Xóa năm học thành công!');
             table.refresh();
         } catch (error: any) {
-            alert(`❌ Lỗi: ${error.message || 'Không thể xóa kỳ học'}`);
+            alert(`❌ Lỗi: ${error.message || 'Không thể xóa năm học'}`);
         }
-    };
-
-    const handleCreateClass = (course: Course) => {
-        setSelectedCourse(course);
-        createClassForm.setFieldValue('khoa_hoc_id', course.id);
-        setShowCreateClassModal(true);
     };
 
     // Table columns
@@ -186,12 +179,12 @@ export default function CoursePage() {
         },
         {
             key: 'ma_khoa_hoc',
-            label: 'Mã kỳ học',
+            label: 'Mã năm học',
             sortable: true,
             width: '120px',
             render: (item: Course) => (
                 <span className="font-semibold text-blue-600">
-                    {item.ma_khoa_hoc}
+                    {formatters.courseCode(item)}
                 </span>
             ),
         },
@@ -202,14 +195,6 @@ export default function CoursePage() {
             width: '100px',
             render: (item: Course) => (
                 <Badge variant="info">{item.nam_hoc}</Badge>
-            ),
-        },
-        {
-            key: 'hoc_ky',
-            label: 'Học kỳ',
-            width: '80px',
-            render: (item: Course) => (
-                <Badge variant="default">HK {item.hoc_ky}</Badge>
             ),
         },
         {
@@ -290,8 +275,8 @@ export default function CoursePage() {
                         <CalendarDaysIcon className="w-6 h-6 text-white"/>
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Quản lý kỳ học</h1>
-                        <p className="text-sm text-gray-500">Quản lý thông tin kỳ học và tạo lớp học</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Quản lý năm học</h1>
+                        <p className="text-sm text-gray-500">Quản lý thông tin năm học và tạo lớp học</p>
                     </div>
                 </div>
 
@@ -301,7 +286,7 @@ export default function CoursePage() {
                         onClick={() => setShowAddModal(true)}
                     >
                         <PlusCircleIcon className="w-5 h-5 mr-2"/>
-                        Thêm kỳ học
+                        Thêm năm học
                     </Button>
                     <Button
                         variant="primary"
@@ -329,7 +314,7 @@ export default function CoursePage() {
                                     className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"/>
                                 <Input
                                     type="text"
-                                    placeholder="Tìm theo mã kỳ học, năm học, ghi chú..."
+                                    placeholder="Tìm theo mã năm học, năm học, ghi chú..."
                                     value={searchForm.values.search}
                                     onChange={(e) => searchForm.handleChange('search', e.target.value)}
                                     className="pl-10"
@@ -360,7 +345,7 @@ export default function CoursePage() {
                         columns={columns}
                         data={table.data || []}
                         isLoading={table.isLoading}
-                        emptyMessage="Không có kỳ học nào"
+                        emptyMessage="Không có năm học nào"
                         onSort={table.handleSort}
                         sortBy={table.sortBy}
                         sortDirection={table.sortDirection}
@@ -383,10 +368,10 @@ export default function CoursePage() {
             <Modal
                 isOpen={showAddModal}
                 onClose={() => setShowAddModal(false)}
-                title="Thêm kỳ học mới"
+                title="Thêm năm học mới"
             >
                 <form onSubmit={addForm.handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Năm học <span className="text-red-500">*</span>
@@ -399,20 +384,6 @@ export default function CoursePage() {
                                 max={2100}
                                 required
                             />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Học kỳ <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                value={addForm.values.hoc_ky}
-                                onChange={(e) => addForm.handleChange('hoc_ky', parseInt(e.target.value))}
-                            >
-                                <option value={1}>Học kỳ 1</option>
-                                <option value={2}>Học kỳ 2</option>
-                                <option value={3}>Học kỳ 3</option>
-                            </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -475,12 +446,12 @@ export default function CoursePage() {
                         >
                             Hủy
                         </Button>
-                        <Button
+                            <Button
                             type="submit"
                             variant="primary"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Đang tạo...' : 'Tạo kỳ học'}
+                            {isSubmitting ? 'Đang tạo...' : 'Tạo năm học'}
                         </Button>
                     </div>
                 </form>
@@ -490,7 +461,7 @@ export default function CoursePage() {
             <Modal
                 isOpen={showEditModal}
                 onClose={() => setShowEditModal(false)}
-                title={`Chỉnh sửa kỳ học ${selectedCourse?.ma_khoa_hoc}`}
+                title={`Chỉnh sửa năm học ${formatters.courseCode(selectedCourse || '')}`}
             >
                 <form onSubmit={editForm.handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -551,7 +522,7 @@ export default function CoursePage() {
             <Modal
                 isOpen={showCreateClassModal}
                 onClose={() => setShowCreateClassModal(false)}
-                title={`Tạo lớp học cho kỳ ${selectedCourse?.ma_khoa_hoc}`}
+                title={`Tạo lớp học cho năm học ${formatters.courseCode(selectedCourse || '')}`}
             >
                 <form onSubmit={createClassForm.handleSubmit} className="space-y-4">
                     <div>
@@ -572,7 +543,7 @@ export default function CoursePage() {
                             ))}
                         </select>
                         <p className="text-xs text-gray-500 mt-1">
-                            Tên lớp sẽ được tạo theo format: {'{'}Mã ngành{'}'} {selectedCourse?.ma_khoa_hoc}
+                            Tên lớp sẽ được tạo theo format: {'{'}Mã ngành{'}'} {formatters.courseCode(selectedCourse || '')}
                         </p>
                     </div>
 

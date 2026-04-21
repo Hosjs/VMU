@@ -2,6 +2,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Modal } from '~/components/ui/Modal';
 import { Badge } from '~/components/ui/Badge';
 import type { Room } from '~/types/room';
+import { formatters } from '~/utils/formatters';
 
 interface ViewClassModalProps {
   isOpen: boolean;
@@ -60,23 +61,21 @@ export function ViewClassModal({ isOpen, onClose, classData }: ViewClassModalPro
 
           {/* Thông tin khóa học */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Thông tin khóa học</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">Thông tin năm học</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-600">Khóa học</label>
+                <label className="text-sm text-gray-600">Mã năm học</label>
                 <div className="mt-1">
                   <Badge variant="secondary">
-                    {classData.nam_hoc || classData.ma_khoa_hoc || classData.khoaHoc_id || classData.khoaHoc || 'N/A'}
+                    {formatters.courseCode({ ma_khoa_hoc: classData.ma_khoa_hoc, nam_hoc: classData.nam_hoc }) || 'N/A'}
                   </Badge>
                 </div>
               </div>
               <div>
-                <label className="text-sm text-gray-600">Năm học</label>
-                <p className="font-medium text-gray-900">{classData.nam_hoc || 'Chưa xác định'}</p>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">Mã khóa học</label>
-                <p className="font-medium text-gray-900">{classData.ma_khoa_hoc || 'Chưa xác định'}</p>
+                <label className="text-sm text-gray-600">Thông tin năm học</label>
+                <p className="font-medium text-gray-900">
+                  {formatters.courseCodeDetail({ ma_khoa_hoc: classData.ma_khoa_hoc, nam_hoc: classData.nam_hoc }) || 'Chưa xác định'}
+                </p>
               </div>
             </div>
           </div>

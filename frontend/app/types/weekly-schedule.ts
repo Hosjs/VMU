@@ -29,7 +29,6 @@ export interface WeeklySchedule {
       id: number;
       ma_khoa_hoc: string;
       nam_hoc: number;
-      hoc_ky: number;
       dot: number;
     };
   };
@@ -37,7 +36,6 @@ export interface WeeklySchedule {
     id: number;
     ma_khoa_hoc: string;
     nam_hoc: number;
-    hoc_ky: number;
     dot: number;
     ngay_bat_dau?: string;
     ngay_ket_thuc?: string;

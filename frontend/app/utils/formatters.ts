@@ -1,4 +1,41 @@
 // Format utilities
+type CourseCodeLike = {
+  ma_khoa_hoc?: string | null;
+  nam_hoc?: number | string | null;
+  dot?: number | string | null;
+};
+
+const formatCourseCodeValue = (value?: string | null): string => {
+  if (!value) return '';
+
+  const parts = String(value).split('.').map(part => part.trim()).filter(Boolean);
+  if (parts.length >= 3) {
+    return `${parts[0]}.${parts[2]}`;
+  }
+  if (parts.length === 2) {
+    return `${parts[0]}.${parts[1]}`;
+  }
+  return String(value).trim();
+};
+
+const extractCourseCodeParts = (course: CourseCodeLike): { year?: string; dot?: string } => {
+  if (course.nam_hoc !== undefined && course.nam_hoc !== null && course.dot !== undefined && course.dot !== null) {
+    return { year: String(course.nam_hoc), dot: String(course.dot) };
+  }
+
+  const raw = course.ma_khoa_hoc ? String(course.ma_khoa_hoc).trim() : '';
+  if (!raw) return {};
+
+  const parts = raw.split('.').map(part => part.trim()).filter(Boolean);
+  if (parts.length >= 3) {
+    return { year: parts[0], dot: parts[2] };
+  }
+  if (parts.length === 2) {
+    return { year: parts[0], dot: parts[1] };
+  }
+  return { year: parts[0] };
+};
+
 export const formatters = {
   // Format currency (VND)
   currency: (value: number | string): string => {
@@ -181,6 +218,32 @@ export const formatters = {
   arrayToString: (arr: string[], separator: string = ', '): string => {
     if (!arr || arr.length === 0) return '';
     return arr.join(separator);
+  },
+
+  // Format khóa/năm học code as YYYY.dot (drop học kỳ)
+  courseCode: (course: string | CourseCodeLike): string => {
+    if (typeof course === 'string') {
+      return formatCourseCodeValue(course);
+    }
+
+    if (course.nam_hoc !== undefined && course.nam_hoc !== null && course.dot !== undefined && course.dot !== null) {
+      return `${course.nam_hoc}.${course.dot}`;
+    }
+
+    return formatCourseCodeValue(course.ma_khoa_hoc);
+  },
+
+  // Human-friendly description for the course code
+  courseCodeDetail: (course: CourseCodeLike): string => {
+    const { year, dot } = extractCourseCodeParts(course);
+    if (year === '' && dot === '') return '';
+    if (year && dot) {
+      return `Năm học ${year}, đợt ${dot}`;
+    }
+    if (year) {
+      return `Năm học ${year}`;
+    }
+    return dot ? `Đợt ${dot}` : '';
   },
 
   // Parse string to array (from database format)

@@ -92,7 +92,6 @@ class CourseController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'nam_hoc' => 'required|integer|min:2020|max:2100',
-                'hoc_ky' => 'required|integer|between:1,3',
                 'dot' => 'required|integer|between:1,5',
                 'ngay_bat_dau' => 'nullable|date',
                 'ngay_ket_thuc' => 'nullable|date|after_or_equal:ngay_bat_dau',
@@ -107,22 +106,21 @@ class CourseController extends Controller
                 ], 422);
             }
 
-            // Generate ma_khoa_hoc: {nam_hoc}.{hoc_ky}.{dot}
-            $maKhoaHoc = "{$request->nam_hoc}.{$request->hoc_ky}.{$request->dot}";
+            // Generate ma_khoa_hoc: {nam_hoc}.{dot}
+            $maKhoaHoc = "{$request->nam_hoc}.{$request->dot}";
 
             // Check if already exists
             $exists = KhoaHoc::where('ma_khoa_hoc', $maKhoaHoc)->exists();
             if ($exists) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Kỳ học {$maKhoaHoc} đã tồn tại",
+                        'message' => "Năm học {$maKhoaHoc} đã tồn tại",
                 ], 422);
             }
 
             $course = KhoaHoc::create([
                 'ma_khoa_hoc' => $maKhoaHoc,
                 'nam_hoc' => $request->nam_hoc,
-                'hoc_ky' => $request->hoc_ky,
                 'dot' => $request->dot,
                 'ngay_bat_dau' => $request->ngay_bat_dau,
                 'ngay_ket_thuc' => $request->ngay_ket_thuc,
@@ -131,14 +129,14 @@ class CourseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Tạo kỳ học thành công',
+                'message' => 'Tạo năm học thành công',
                 'data' => $course,
             ], 201);
         } catch (\Exception $e) {
             Log::error('Error creating course: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Không thể tạo kỳ học',
+                'message' => 'Không thể tạo năm học',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -413,9 +411,8 @@ class CourseController extends Controller
     public function simple()
     {
         try {
-            $courses = KhoaHoc::select('id', 'ma_khoa_hoc', 'nam_hoc', 'hoc_ky', 'dot')
+            $courses = KhoaHoc::select('id', 'ma_khoa_hoc', 'nam_hoc', 'dot')
                 ->orderBy('nam_hoc', 'desc')
-                ->orderBy('hoc_ky', 'desc')
                 ->orderBy('dot', 'desc')
                 ->get();
 

@@ -35,6 +35,7 @@ import { majorSubjectService } from '~/services/major-subject.service';
 import { getTeachingSchedules } from '~/services/teachingScheduleService';
 import { exportWeeklyScheduleToExcel, exportWeeklyScheduleToPDF } from '~/utils/excelExporter';
 import { parseWeeklyScheduleExcel } from '~/utils/weeklyScheduleExcelImporter';
+import { formatters } from '~/utils/formatters';
 import type { WeeklyScheduleRow, BulkSaveWeeklyScheduleRequest, Week } from '~/types/weekly-schedule';
 import type { Room } from '~/types/room';
 import type { Subject } from '~/types/subject';
@@ -474,7 +475,6 @@ export default function WeeklySchedulePage() {
         selectedCourseData: {
           ma_khoa_hoc: selectedCourseData.ma_khoa_hoc,
           dot: selectedCourseData.dot,
-          hoc_ky: selectedCourseData.hoc_ky,
           nam_hoc: selectedCourseData.nam_hoc,
         },
         selectedWeekData: {
@@ -520,7 +520,6 @@ export default function WeeklySchedulePage() {
         selectedCourseData: {
           ma_khoa_hoc: selectedCourseData.ma_khoa_hoc,
           dot: selectedCourseData.dot,
-          hoc_ky: selectedCourseData.hoc_ky,
           nam_hoc: selectedCourseData.nam_hoc,
         },
         selectedWeekData: {
@@ -1124,7 +1123,7 @@ export default function WeeklySchedulePage() {
         {/* Filters */}
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
           <FormControl sx={{ minWidth: 250 }} size="small">
-            <InputLabel>Kỳ học *</InputLabel>
+            <InputLabel>Năm học *</InputLabel>
             <Select
               value={selectedCourse || ''}
               onChange={(e) => {
@@ -1132,14 +1131,14 @@ export default function WeeklySchedulePage() {
                 setSelectedWeek(null);
                 setRows([]);
               }}
-              label="Kỳ học *"
+              label="Năm học *"
             >
               <MenuItem value="">
-                <em>-- Chọn kỳ học --</em>
+                <em>-- Chọn năm học --</em>
               </MenuItem>
               {courses.map((course) => (
                 <MenuItem key={course.id} value={course.id}>
-                  {course.ma_khoa_hoc} ({course.nam_hoc}.{course.hoc_ky}.{course.dot})
+                  {formatters.courseCode(course)} ({formatters.courseCodeDetail(course)})
                 </MenuItem>
               ))}
             </Select>
@@ -1266,7 +1265,7 @@ export default function WeeklySchedulePage() {
             <strong>Hướng dẫn:</strong>
           </Typography>
           <Typography variant="body2" color="text.secondary" component="ul">
-            <li>Chọn kỳ học từ dropdown (VD: 2025.1.1)</li>
+            <li>Chọn năm học từ dropdown (VD: 2025.1)</li>
             <li>Hệ thống sẽ tự động tính và hiển thị danh sách các tuần trong kỳ</li>
             <li>Chọn tuần cần xem/chỉnh sửa (VD: Tuần 4 (06/01 - 12/01))</li>
             <li>Lịch học của tuần đó sẽ tự động được tải lên</li>

@@ -25,7 +25,6 @@ export interface TeachingSchedule {
     id: number;
     ma_khoa_hoc: string;
     nam_hoc: number;
-    hoc_ky: number;
     dot: number;
   };
 }

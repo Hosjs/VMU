@@ -17,7 +17,6 @@ class KhoaHoc extends Model
         'id',
         'ma_khoa_hoc',
         'nam_hoc',
-        'hoc_ky',
         'dot',
         'ngay_bat_dau',
         'ngay_ket_thuc',
@@ -26,7 +25,6 @@ class KhoaHoc extends Model
 
     protected $casts = [
         'nam_hoc' => 'integer',
-        'hoc_ky' => 'integer',
         'dot' => 'integer',
         'ngay_bat_dau' => 'date:Y-m-d',
         'ngay_ket_thuc' => 'date:Y-m-d',

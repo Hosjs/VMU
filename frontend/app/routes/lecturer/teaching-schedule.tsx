@@ -31,6 +31,7 @@ import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
 import { exportTeachingScheduleToExcel } from '~/utils/excelExporter';
 import { parseTeachingScheduleExcel } from '~/utils/teachingScheduleExcelImporter';
+import { formatters } from '~/utils/formatters';
 
 
 export default function TeachingSchedulePage() {
@@ -119,9 +120,9 @@ export default function TeachingSchedulePage() {
       // Create autocomplete options for courses
       const courseOpts: AutocompleteOption[] = (coursesData || []).map(course => ({
         value: course.id,
-        label: course.ma_khoa_hoc,
-        subtitle: `Năm ${course.nam_hoc}, HK ${course.hoc_ky}, Đợt ${course.dot}`,
-        searchText: `${course.ma_khoa_hoc} ${course.nam_hoc} ${course.hoc_ky} ${course.dot}`,
+        label: formatters.courseCode(course),
+        subtitle: formatters.courseCodeDetail(course),
+        searchText: `${formatters.courseCode(course)} ${course.nam_hoc} ${course.dot} ${formatters.courseCodeDetail(course)}`,
       }));
 
       setCourseOptions(courseOpts);
@@ -261,7 +262,7 @@ export default function TeachingSchedulePage() {
         if (selectedMajor) {
           const major = majors.find(m => m.id === selectedMajor);
           if (major) {
-            setSemesterCode(`${major.maNganh} ${course.ma_khoa_hoc}`);
+              setSemesterCode(`${major.maNganh} ${course.ma_khoa_hoc}`);
           }
         }
       }
@@ -458,7 +459,7 @@ export default function TeachingSchedulePage() {
       const selectedMajorData = majors.find(m => m.id === selectedMajor);
 
       if (metadata.courseCode && selectedCourseData && normalizeComparisonText(metadata.courseCode) !== normalizeComparisonText(selectedCourseData.ma_khoa_hoc)) {
-        setError(`File Excel đang thuộc khóa ${metadata.courseCode}, không khớp với kỳ học hiện tại ${selectedCourseData.ma_khoa_hoc}`);
+        setError(`File Excel đang thuộc khóa ${metadata.courseCode}, không khớp với năm học hiện tại ${formatters.courseCode(selectedCourseData)}`);
         return;
       }
 
@@ -772,7 +773,7 @@ export default function TeachingSchedulePage() {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Autocomplete
-            label="Kỳ học"
+            label="Năm học"
             placeholder="Tìm kiếm theo mã kỳ học hoặc năm học..."
             options={courseOptions}
             value={selectedCourse}

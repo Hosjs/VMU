@@ -7,6 +7,7 @@ import { courseService } from '~/services/course.service';
 import { studentService } from '~/services/student.service';
 import type { Course } from '~/types/course';
 import type { SelectOption } from '~/types/common';
+import { formatters } from '~/utils/formatters';
 
 interface AddClassModalProps {
   isOpen: boolean;
@@ -73,10 +74,10 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
 
   const getCourseOptions = (): SelectOption[] => {
     return [
-      { value: '', label: '-- Chọn kỳ học --' },
+      { value: '', label: '-- Chọn năm học --' },
       ...courses.map((c) => ({
         value: c.id.toString(),
-        label: `${c.ma_khoa_hoc} (${c.nam_hoc} - HK${c.hoc_ky} - Đợt ${c.dot})`,
+        label: `${formatters.courseCode(c)} (${formatters.courseCodeDetail(c)})`,
       })),
     ];
   };
@@ -98,11 +99,11 @@ export function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps
 
     if (!course || !major) return '';
 
-    // Format: {MajorCode} {ma_khoa_hoc}
-    // Example: CNTT 2025.1.1
+    // Format: {MajorCode} {courseCode}
+    // Example: CNTT 2025.1
     // major.label format: "CNTT - Công nghệ thông tin"
     const majorCode = major.label.split(' - ')[0]?.trim() || major.value;
-    return `${majorCode} ${course.ma_khoa_hoc}`;
+    return `${majorCode} ${formatters.courseCode(course)}`;
   };
 
   const updateForm = (id: string, field: keyof ClassForm, value: any) => {

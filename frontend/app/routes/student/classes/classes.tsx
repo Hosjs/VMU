@@ -25,6 +25,7 @@ import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { generateKhoaHocOptions } from '~/constants/room.constants';
+import { formatters } from '~/utils/formatters';
 
 export function meta() {
   return [
@@ -250,11 +251,11 @@ export default function Classes() {
     },
     {
       key: 'khoaHoc',
-      label: 'Khóa',
+      label: 'Năm học',
       width: '120px',
       sortable: true,
       render: (room: Room) => {
-        const khoaHocLabel = room.nam_hoc || room.ma_khoa_hoc || room.khoaHoc_id || room.khoaHoc;
+        const khoaHocLabel = formatters.courseCode({ ma_khoa_hoc: room.ma_khoa_hoc, nam_hoc: room.nam_hoc });
         return (
           <div className="text-center">
             <Badge variant="secondary">

@@ -19,7 +19,7 @@ interface TeachingScheduleRow {
 
 interface ExportToExcelParams {
     rows: readonly TeachingScheduleRow[];
-    selectedCourseData: { ma_khoa_hoc?: string; dot?: string | number; hoc_ky?: number };
+    selectedCourseData: { ma_khoa_hoc?: string; dot?: string | number; nam_hoc?: number };
     selectedMajorData: { tenNganh?: string; maNganh?: string };
 }
 
@@ -34,7 +34,7 @@ export const exportTeachingScheduleToExcel = ({
     // 1. TIÊU ĐỀ (Ngoài bảng)
     data.push(['KẾ HOẠCH VÀ PHÂN CÔNG GIẢNG VIÊN GIẢNG DẠY']);
     data.push([`Chuyên ngành: ${selectedMajorData.tenNganh || ''}; Khóa ${selectedCourseData.ma_khoa_hoc || ''} đợt ${selectedCourseData.dot || ''}`]);
-    data.push([`HỌC KỲ ${(selectedCourseData.hoc_ky || 1) === 1 ? 'I' : (selectedCourseData.hoc_ky || 1) === 2 ? 'II' : 'III'}`]);
+    data.push([`NĂM HỌC ${selectedCourseData.nam_hoc || ''} - ĐỢT ${selectedCourseData.dot || ''}`]);
 
     // 2. HEADER BẢNG (Dòng 4)
     data.push(['TT', 'Tên học phần', 'Số tín chỉ', 'Cán bộ giảng dạy', 'Tuần', 'Ngày', 'Ghi chú']);
@@ -141,10 +141,9 @@ export const exportTeachingScheduleToExcel = ({
 
     // 4. CÁC DÒNG KẾ HOẠCH CUỐI (NẰM TRONG BẢNG - VIẾT LIỀN NHAU)
     const specialStartRow = data.length;
-    const semesterText = (selectedCourseData.hoc_ky || 1) === 1 ? 'I' : (selectedCourseData.hoc_ky || 1) === 2 ? 'II' : 'III';
 
     // Chú ý: Các dòng này push liên tiếp, không xen kẽ dòng trống
-    data.push([`ÔN TẬP VÀ THI HỌC KỲ ${semesterText}`, '', '', '', '', '', '']);
+    data.push([`ÔN TẬP VÀ THI NĂM HỌC ${selectedCourseData.nam_hoc || ''} - ĐỢT ${selectedCourseData.dot || ''}`, '', '', '', '', '', '']);
     data.push(['NGHỈ TẾT NGUYÊN ĐÁN', '', '', '', '', '', '']);
     data.push(['Thực tập', '', '7', '', '', '', '']);
     data.push(['Đề án tốt nghiệp', '', '9', '', '', '', '']);
@@ -310,7 +309,6 @@ interface ExportWeeklyScheduleParams {
     selectedCourseData: {
         ma_khoa_hoc?: string;
         dot?: string | number;
-        hoc_ky?: number;
         nam_hoc?: number;
     };
     selectedWeekData: {

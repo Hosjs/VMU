@@ -24,30 +24,30 @@ export const ROOM_STATUS_CONFIG: Record<string, {
 // ============================================
 
 /**
- * Khóa học options
+ * Năm học options
  */
 export const KHOA_HOC_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Tất cả khóa' },
-  { value: '2024', label: 'Khóa 2024' },
-  { value: '2023', label: 'Khóa 2023' },
-  { value: '2022', label: 'Khóa 2022' },
-  { value: '2021', label: 'Khóa 2021' },
-  { value: '2020', label: 'Khóa 2020' },
+  { value: '', label: 'Tất cả năm học' },
+  { value: '2024', label: 'Năm học 2024' },
+  { value: '2023', label: 'Năm học 2023' },
+  { value: '2022', label: 'Năm học 2022' },
+  { value: '2021', label: 'Năm học 2021' },
+  { value: '2020', label: 'Năm học 2020' },
 ];
 
 /**
- * Generate khóa học options dynamically
+ * Generate năm học options dynamically
  * @param yearsBack - Số năm về trước (default: 10)
- * @returns Array of khóa học options
+ * @returns Array of năm học options
  */
 export const generateKhoaHocOptions = (yearsBack = 10): SelectOption[] => {
   const currentYear = new Date().getFullYear();
-  const options: SelectOption[] = [{ value: '', label: 'Tất cả khóa' }];
+  const options: SelectOption[] = [{ value: '', label: 'Tất cả năm học' }];
 
   for (let year = currentYear; year >= currentYear - yearsBack; year--) {
     options.push({
       value: year.toString(),
-      label: `Khóa ${year}`
+      label: `Năm học ${year}`
     });
   }
 

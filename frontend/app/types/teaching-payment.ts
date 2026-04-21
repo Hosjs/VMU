@@ -85,7 +85,6 @@ export interface TeachingPayment {
     id: number;
     ma_khoa_hoc: string;
     nam_hoc: number;
-    hoc_ky: number;
     dot: number;
   };
   lecturer?: {

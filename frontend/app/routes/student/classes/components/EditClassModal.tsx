@@ -10,6 +10,7 @@ import { roomService } from '~/services/room.service';
 import type { Course } from '~/types/course';
 import type { SelectOption } from '~/types/common';
 import type { Room } from '~/types/room';
+import { formatters } from '~/utils/formatters';
 
 interface EditClassModalProps {
   isOpen: boolean;
@@ -123,10 +124,10 @@ export function EditClassModal({ isOpen, onClose, onSuccess, classData }: EditCl
 
   const getCourseOptions = (): SelectOption[] => {
     return [
-      { value: '', label: '-- Chọn kỳ học --' },
+      { value: '', label: '-- Chọn năm học --' },
       ...courses.map((c) => ({
         value: c.id.toString(),
-        label: `${c.ma_khoa_hoc} (${c.nam_hoc} - HK${c.hoc_ky} - Đợt ${c.dot})`,
+        label: `${formatters.courseCode(c)} (${formatters.courseCodeDetail(c)})`,
       })),
     ];
   };
