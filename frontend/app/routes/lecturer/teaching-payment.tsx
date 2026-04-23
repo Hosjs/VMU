@@ -953,7 +953,7 @@ export default function TeachingPaymentPage() {
             value={semesterCode}
             onChange={(e) => setSemesterCode(e.target.value)}
             fullWidth
-            helperText="VD: QLKT 2025.2.1"
+            helperText="VD: QLKT 2025.1"
           />
         </div>
       </div>
