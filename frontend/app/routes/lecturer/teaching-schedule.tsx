@@ -402,8 +402,8 @@ export default function TeachingSchedulePage() {
     }
 
     try {
-      const selectedCourseData = courses.find(c => c.id === selectedCourse);
-      const selectedMajorData = majors.find(m => m.id === selectedMajor);
+      const selectedCourseData = courses.find(c => Number(c.id) === Number(selectedCourse));
+      const selectedMajorData = majors.find(m => Number(m.id) === Number(selectedMajor));
 
       if (!selectedCourseData || !selectedMajorData) {
         setError('Không tìm thấy thông tin kỳ học hoặc ngành học');

@@ -1,0 +1,15 @@
+Options -MultiViews
+RewriteEngine On
+
+# Serve existing files and directories directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Don't rewrite requests to /api/ (backend Laravel)
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^ - [L]
+
+# Redirect all other routes to index.html (SPA fallback)
+RewriteRule ^ /index.html [L]
+

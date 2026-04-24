@@ -54,7 +54,7 @@ import type {
 import type { Course } from '~/types/course';
 import type { Major } from '~/types/major';
 import { exportTeachingPaymentToExcel } from '~/utils/teachingPaymentExcelExporter';
-import { formatters } from '~/utils/formatters';
+import {exportTeachingPaymentStandalone} from "~/utils/teachingPaymentStandaloneExporter";
 
 /**
  * Format currency to VND
@@ -228,9 +228,9 @@ export default function TeachingPaymentPage() {
       // Create autocomplete options for courses
       const courseOpts: AutocompleteOption[] = (coursesData || []).map(course => ({
         value: course.id,
-        label: formatters.courseCode(course),
-        subtitle: formatters.courseCodeDetail(course),
-        searchText: `${formatters.courseCode(course)} ${course.nam_hoc} ${course.dot} ${formatters.courseCodeDetail(course)}`,
+        label: course.ma_khoa_hoc,
+        subtitle: `Năm ${course.nam_hoc}, HK ${course.hoc_ky}, Đợt ${course.dot}`,
+        searchText: `${course.ma_khoa_hoc} ${course.nam_hoc} ${course.hoc_ky} ${course.dot}`,
       }));
 
       setCourseOptions(courseOpts);
@@ -561,14 +561,21 @@ export default function TeachingPaymentPage() {
         return;
       }
 
-      // Use the template path relative to public folder
+      // Try template-based export first, fallback to standalone
       const templatePath = '/Teaching-payment_Excel_format/template_ai.xlsx';
-
-      // Export to Excel using the template
-      await exportTeachingPaymentToExcel({
-        data: rows as TeachingPaymentRow[],
-        templatePath,
-      });
+      try {
+        const checkTemplate = await fetch(templatePath, { method: 'HEAD' });
+        if (checkTemplate.ok) {
+          await exportTeachingPaymentToExcel({
+            data: rows as TeachingPaymentRow[],
+            templatePath,
+          });
+        } else {
+          exportTeachingPaymentStandalone(rows as TeachingPaymentRow[]);
+        }
+      } catch {
+        exportTeachingPaymentStandalone(rows as TeachingPaymentRow[]);
+      }
 
       setSuccess('Xuất file Excel thành công!');
     } catch (err) {
@@ -931,7 +938,7 @@ export default function TeachingPaymentPage() {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Autocomplete
-            label="Năm học"
+            label="Kỳ học"
             placeholder="Tìm kiếm theo mã kỳ học hoặc năm học..."
             options={courseOptions}
             value={selectedCourse}
@@ -953,7 +960,7 @@ export default function TeachingPaymentPage() {
             value={semesterCode}
             onChange={(e) => setSemesterCode(e.target.value)}
             fullWidth
-            helperText="VD: QLKT 2025.1"
+            helperText="VD: QLKT 2025.2.1"
           />
         </div>
       </div>
