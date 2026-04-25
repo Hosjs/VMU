@@ -2,19 +2,22 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WeeklySchedule extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
 
     protected $table = 'weekly_schedules';
 
     protected $fillable = [
         'stt',
         'week_number',
+        'iso_year',
+        'iso_week',
         'khoa_hoc_id',
         'class_id',
         'subject_id',
@@ -28,6 +31,8 @@ class WeeklySchedule extends Model
 
     protected $casts = [
         'stt' => 'integer',
+        'iso_year' => 'integer',
+        'iso_week' => 'integer',
         'khoa_hoc_id' => 'integer',
         'class_id' => 'integer',
         'subject_id' => 'integer',

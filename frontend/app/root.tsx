@@ -37,16 +37,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <body
             className="min-h-screen relative"
             style={{
-                backgroundImage: 'url("")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
-                backgroundAttachment: 'fixed'
             }}
         >
         <div
-            className="fixed inset-0 bg-white/70 backdrop-blur-sm"
-            style={{ zIndex: -1 }}
+            className="fixed inset-0 bg-white/70"
+            style={{ zIndex: -1, backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
         ></div>
 
         <AuthProvider>

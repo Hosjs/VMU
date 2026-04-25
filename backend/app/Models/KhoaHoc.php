@@ -16,7 +16,10 @@ class KhoaHoc extends Model
     protected $fillable = [
         'id',
         'ma_khoa_hoc',
+        'ma_khoa_hoc_short',
         'nam_hoc',
+        'hoc_ky',
+        'semester_label',
         'dot',
         'ngay_bat_dau',
         'ngay_ket_thuc',

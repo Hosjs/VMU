@@ -247,8 +247,24 @@ export default function TeachingSchedulePage() {
       .map(row => row.stt);
   };
 
-  const getLecturerGroupCount = (stt: number): number => {
-    return rows.filter(row => row.stt === stt && !row.isBreak).length;
+  const handleMajorChange = (value: string | number) => {
+    const majorId = value ? Number(value) : '';
+    setSelectedMajor(majorId);
+
+    if (majorId) {
+      // Lấy maNganh từ subtitle của option (đã có sẵn, không cần majors array)
+      const majorOption = majorOptions.find(o => Number(o.value) === majorId);
+      const maNganh = majorOption?.subtitle?.replace('Mã ngành: ', '') ?? '';
+
+      const courseOption = selectedCourse
+          ? courseOptions.find(o => Number(o.value) === Number(selectedCourse))
+          : null;
+
+      // courseOption.label chính là ma_khoa_hoc
+      setSemesterCode(courseOption ? `${maNganh} ${courseOption.label}` : maNganh);
+    } else {
+      setSemesterCode('');
+    }
   };
 
   const handleCourseChange = (value: string | number) => {
@@ -256,29 +272,14 @@ export default function TeachingSchedulePage() {
     setSelectedCourse(courseId);
 
     if (courseId) {
-      const course = courses.find(c => c.id === courseId);
-      if (course) {
-        // Generate semester code based on selected major and course
-        if (selectedMajor) {
-          const major = majors.find(m => m.id === selectedMajor);
-          if (major) {
-              setSemesterCode(`${major.maNganh} ${course.ma_khoa_hoc}`);
-          }
-        }
-      }
-    }
-  };
+      const courseOption = courseOptions.find(o => Number(o.value) === courseId);
 
-  const handleMajorChange = (value: string | number) => {
-    const majorId = value ? Number(value) : '';
-    setSelectedMajor(majorId);
+      const majorOption = selectedMajor
+          ? majorOptions.find(o => Number(o.value) === Number(selectedMajor))
+          : null;
+      const maNganh = majorOption?.subtitle?.replace('Mã ngành: ', '') ?? '';
 
-    if (majorId && selectedCourse) {
-      const major = majors.find(m => m.id === majorId);
-      const course = courses.find(c => c.id === selectedCourse);
-      if (major && course) {
-        setSemesterCode(`${major.maNganh} ${course.ma_khoa_hoc}`);
-      }
+      setSemesterCode(majorOption ? `${maNganh} ${courseOption?.label ?? ''}` : courseOption?.label ?? '');
     }
   };
 
@@ -348,7 +349,7 @@ export default function TeachingSchedulePage() {
     setSuccess(null);
 
     if (!selectedCourse || !selectedMajor || !semesterCode) {
-      setError('Vui lòng chọn kỳ học và ngành học');
+      setError('Vui lòng chọn năm học và chuyên ngành');
       return;
     }
 
@@ -397,7 +398,7 @@ export default function TeachingSchedulePage() {
 
   const handleExportToExcel = () => {
     if (!selectedCourse || !selectedMajor || !semesterCode || rows.length === 0) {
-      setError('Vui lòng chọn kỳ học, ngành học và có dữ liệu để xuất');
+      setError('Vui lòng chọn năm học, chuyên ngành và có dữ liệu để xuất');
       return;
     }
 
@@ -406,7 +407,7 @@ export default function TeachingSchedulePage() {
       const selectedMajorData = majors.find(m => Number(m.id) === Number(selectedMajor));
 
       if (!selectedCourseData || !selectedMajorData) {
-        setError('Không tìm thấy thông tin kỳ học hoặc ngành học');
+        setError('Không tìm thấy thông tin năm học hoặc chuyên ngành');
         return;
       }
 
@@ -765,7 +766,7 @@ export default function TeachingSchedulePage() {
           Lên lịch giảng dạy
         </h1>
         <p className="text-gray-600">
-          Quản lý lịch giảng dạy cho từng ngành và kỳ học
+          Quản lý lịch giảng dạy cho từng chuyên ngành và năm học
         </p>
       </div>
 
@@ -774,7 +775,7 @@ export default function TeachingSchedulePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Autocomplete
             label="Năm học"
-            placeholder="Tìm kiếm theo mã kỳ học hoặc năm học..."
+            placeholder="Tìm kiếm theo mã năm học..."
             options={courseOptions}
             value={selectedCourse}
             onChange={handleCourseChange}
@@ -783,8 +784,8 @@ export default function TeachingSchedulePage() {
           />
 
           <Autocomplete
-            label="Ngành học"
-            placeholder="Tìm kiếm theo mã ngành hoặc tên ngành..."
+            label="Chuyên ngành"
+            placeholder="Tìm kiếm theo mã hoặc tên chuyên ngành..."
             options={majorOptions}
             value={selectedMajor}
             onChange={handleMajorChange}
@@ -793,7 +794,7 @@ export default function TeachingSchedulePage() {
           />
 
           <TextField
-            label="Mã kỳ học - Ngành"
+            label="Lớp"
             value={semesterCode}
             onChange={(e) => setSemesterCode(e.target.value)}
             fullWidth
@@ -946,10 +947,10 @@ export default function TeachingSchedulePage() {
       ) : (
         <Paper elevation={1} className="p-12 text-center">
           <Typography variant="h6" className="text-gray-500">
-            Vui lòng chọn kỳ học và ngành học để bắt đầu
+            Vui lòng chọn năm học và chuyên ngành để bắt đầu
           </Typography>
           <Typography variant="body2" className="text-gray-400 mt-2">
-            Chọn kỳ học và ngành học ở trên để tạo lịch giảng dạy
+            Chọn năm học và chuyên ngành ở trên để tạo lịch giảng dạy
           </Typography>
         </Paper>
       )}

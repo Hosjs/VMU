@@ -19,10 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
 
-        // Thêm CORS middleware cho API
-        $middleware->api(prepend: [
-            \App\Http\Middleware\Cors::class,
-        ]);
+        // CORS phải là GLOBAL middleware (chạy trước route matching)
+        // Nếu chỉ để trong api group, OPTIONS preflight có thể trả về 404/405
+        // mà không có CORS headers vì middleware không chạy
+        $middleware->prepend(\App\Http\Middleware\Cors::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

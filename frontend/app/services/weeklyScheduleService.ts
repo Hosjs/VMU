@@ -110,6 +110,30 @@ class WeeklyScheduleService {
     );
     return response;
   }
+
+  async getStudyPlanSuggestions(params: {
+    khoa_hoc_id: number;
+    week_number: string | number;
+    major_id: string | number;
+  }): Promise<StudyPlanSuggestionsResponse> {
+    return apiService.get<StudyPlanSuggestionsResponse>(
+      `${this.baseUrl}/study-plan-suggestions`,
+      params,
+    );
+  }
+}
+
+export interface StudyPlanSuggestionsResponse {
+  major: { id: number; maNganh: string; tenNganh: string };
+  classes_in_course: Array<{ id: number; class_name: string; major_id: string }>;
+  subjects: Array<{
+    id: number;
+    maMon: string;
+    tenMon: string;
+    soTinChi: number;
+    already_scheduled: boolean;
+  }>;
+  suggested_count: number;
 }
 
 export default new WeeklyScheduleService();

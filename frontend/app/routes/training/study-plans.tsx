@@ -12,6 +12,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ClipboardDocumentListIcon,
+  ArrowDownOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
@@ -19,10 +20,15 @@ import { Select } from '~/components/ui/Select';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
 import { Table } from '~/components/ui/Table';
+import { studyPlanImportService, type StudyPlanImportResult } from '~/services/study-plan-import.service';
 
 export default function StudyPlansPage() {
   const [trainingData, setTrainingData] = useState<TrainingCourse[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [importYearsBack, setImportYearsBack] = useState<number>(1);
+  const [importPreview, setImportPreview] = useState<StudyPlanImportResult | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Sử dụng useForm hook để quản lý form
   const form = useForm<TrainingPlanFormData>({
@@ -31,6 +37,7 @@ export default function StudyPlansPage() {
       nam_vao: new Date().getFullYear(),
       ma_nganh: ''
     },
+    resetOnSubmit: false,
     onSubmit: async (values) => {
       if (!values.ma_nganh) {
         form.setFieldError('ma_nganh', 'Vui lòng chọn mã ngành');
@@ -326,21 +333,121 @@ export default function StudyPlansPage() {
             </div>
 
             {/* Search Button */}
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button
                 type="submit"
                 variant="primary"
                 isLoading={trainingPlanAsync.isLoading || form.isSubmitting}
                 disabled={!form.values.ma_nganh}
-                className="w-full"
+                className="flex-1"
               >
                 <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
                 Tìm kiếm
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={!form.values.ma_nganh || importLoading}
+                onClick={async () => {
+                  setImportError(null);
+                  setImportLoading(true);
+                  try {
+                    const res = await studyPlanImportService.preview({
+                      education_type: form.values.education_type,
+                      target_nam_vao: form.values.nam_vao,
+                      ma_nganh: form.values.ma_nganh,
+                      years_back: importYearsBack,
+                    });
+                    setImportPreview(res);
+                  } catch (e: any) {
+                    setImportError(e?.message || 'Không tải được kế hoạch năm trước');
+                  } finally {
+                    setImportLoading(false);
+                  }
+                }}
+              >
+                <ArrowDownOnSquareIcon className="w-5 h-5 mr-2" />
+                Import từ năm trước
               </Button>
             </div>
           </div>
         </form>
       </Card>
+
+      {(importPreview || importError) && (
+        <Card>
+          <div className="p-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {importPreview
+                  ? `Kế hoạch năm ${importPreview.source_year} → áp dụng cho năm ${importPreview.target_year}`
+                  : 'Import từ năm trước'}
+              </h3>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">Lùi về</label>
+                <select
+                  value={importYearsBack}
+                  onChange={(e) => setImportYearsBack(parseInt(e.target.value))}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                >
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <option key={n} value={n}>{n} năm</option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setImportPreview(null);
+                    setImportError(null);
+                  }}
+                >
+                  Đóng
+                </Button>
+              </div>
+            </div>
+
+            {importError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                {importError}
+              </div>
+            )}
+
+            {importPreview && (
+              <>
+                <p className="text-sm text-gray-600">
+                  Tìm thấy <strong>{importPreview.count}</strong> môn học của năm {importPreview.source_year}.
+                  Để áp dụng cho năm {importPreview.target_year}, gõ nút <em>"Tìm kiếm"</em> với năm đích, hoặc dùng kết quả dưới làm tham chiếu.
+                </p>
+                <div className="max-h-96 overflow-auto border border-gray-200 rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left">STT</th>
+                        <th className="px-3 py-2 text-left">Mã</th>
+                        <th className="px-3 py-2 text-left">Tên môn</th>
+                        <th className="px-3 py-2 text-right">TC</th>
+                        <th className="px-3 py-2 text-left">Kỳ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(importPreview.items || []).map((it: any, i: number) => (
+                        <tr key={i} className="border-t border-gray-100">
+                          <td className="px-3 py-2">{i + 1}</td>
+                          <td className="px-3 py-2">{it.maHocPhan || it.maMonHoc || '—'}</td>
+                          <td className="px-3 py-2">{it.tenMon || it.tenMonHoc || it.tenHocPhan || '—'}</td>
+                          <td className="px-3 py-2 text-right">{it.soTinChi ?? it.tinChi ?? '—'}</td>
+                          <td className="px-3 py-2">{it.hocKy ?? it.kyHoc ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Statistics */}
       {trainingData.length > 0 && (

@@ -566,9 +566,36 @@ export default function Students() {
           </div>
         </div>
 
-        <Button variant="primary" onClick={handleCreate} leftIcon={<span>+</span>}>
-          Thêm học viên
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={async () => {
+              const major = window.prompt('Mã ngành cần đồng bộ (để trống = tất cả):') ?? undefined;
+              const yearRaw = window.prompt('Năm vào trường (để trống = tất cả):') ?? undefined;
+              const year = yearRaw ? Number(yearRaw) : undefined;
+              try {
+                const r = await studentService.syncExternal({ major: major || undefined, year });
+                if (r.ok) {
+                  const s = r.stats!;
+                  setToast({
+                    message: `✅ Đồng bộ (${r.source}): tạo ${s.created}, cập nhật ${s.updated}, bỏ qua ${s.skipped}, lỗi ${s.failed}.`,
+                    type: 'success',
+                  });
+                  refresh();
+                } else {
+                  setToast({ message: `❌ ${r.message || 'Đồng bộ thất bại'}`, type: 'error' });
+                }
+              } catch (e: any) {
+                setToast({ message: `❌ Lỗi: ${e?.message ?? e}`, type: 'error' });
+              }
+            }}
+          >
+            Đồng bộ HV từ API ngoài
+          </Button>
+          <Button variant="primary" onClick={handleCreate} leftIcon={<span>+</span>}>
+            Thêm học viên
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

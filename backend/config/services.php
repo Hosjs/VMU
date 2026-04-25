@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // D4 — External student API (hệ thống SĐH ngoài). Cấu hình qua .env.
+    'external_student' => [
+        'source'    => env('EXTERNAL_STUDENT_SOURCE', 'vmu_sdh'),
+        'base_url'  => env('EXTERNAL_STUDENT_API_URL'),
+        'token'     => env('EXTERNAL_STUDENT_API_TOKEN'),
+        'timeout'   => (int) env('EXTERNAL_STUDENT_API_TIMEOUT', 30),
+    ],
+
 ];

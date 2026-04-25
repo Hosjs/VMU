@@ -134,6 +134,20 @@ export const studentService = {
   },
 
   /**
+   * D4 — Đồng bộ học viên từ API ngoài (yêu cầu permission students.create).
+   */
+  async syncExternal(params?: { major?: string; year?: number }): Promise<{
+    ok: boolean;
+    message?: string;
+    source?: string;
+    count?: number;
+    stats?: { created: number; updated: number; skipped: number; failed: number };
+    errors?: Array<{ index: number; message: string }>;
+  }> {
+    return apiService.post('/students/sync-external', params ?? {});
+  },
+
+  /**
    * ✅ NEW: Lấy danh sách học viên với pagination (tương thích useTable hook)
    * Hàm này gọi API internal Laravel với authentication
    */

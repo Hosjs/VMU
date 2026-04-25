@@ -60,6 +60,8 @@ export interface Week {
   start_date: string;
   end_date: string;
   display_label: string;
+  iso_year?: number;
+  iso_week?: number;
 }
 
 /**

@@ -22,6 +22,13 @@ use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\TeachingScheduleController;
 use App\Http\Controllers\Api\WeeklyScheduleController;
 use App\Http\Controllers\Api\TeachingPaymentController;
+use App\Http\Controllers\Api\LecturerAbsenceController;
+use App\Http\Controllers\Api\LecturerStatsController;
+use App\Http\Controllers\Api\ClassStatsController;
+use App\Http\Controllers\Api\ExamScheduleController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\StudyPlanImportController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -126,6 +133,7 @@ Route::prefix('weekly-schedules')->group(function () {
     Route::get('/', [WeeklyScheduleController::class, 'index']);
     Route::get('/week-numbers', [WeeklyScheduleController::class, 'getWeekNumbers']);
     Route::get('/weeks-by-semester', [WeeklyScheduleController::class, 'getWeeksBySemester']);
+    Route::get('/study-plan-suggestions', [WeeklyScheduleController::class, 'studyPlanSuggestions']);
     Route::get('/{id}', [WeeklyScheduleController::class, 'show']);
 });
 
@@ -214,6 +222,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('students')->group(function () {
         Route::get('/', [StudentController::class, 'index'])->middleware('permission:students.view');
         Route::post('/', [StudentController::class, 'store'])->middleware('permission:students.create');
+        Route::post('/sync-external', [StudentController::class, 'syncExternal'])->middleware('permission:students.create');
         Route::get('/{maHV}', [StudentController::class, 'show'])->middleware('permission:students.view');
         Route::put('/{maHV}', [StudentController::class, 'update'])->middleware('permission:students.edit');
         Route::delete('/{maHV}', [StudentController::class, 'destroy'])->middleware('permission:students.delete');
@@ -260,6 +269,37 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{id}', [WeeklyScheduleController::class, 'update'])->middleware('permission:weekly_schedules.edit');
         Route::delete('/{id}', [WeeklyScheduleController::class, 'destroy'])->middleware('permission:weekly_schedules.delete');
     });
+
+    // Lecturer Absences
+    Route::prefix('lecturer-absences')->group(function () {
+        Route::get('/', [LecturerAbsenceController::class, 'index']);
+        Route::post('/', [LecturerAbsenceController::class, 'store']);
+        Route::put('/{id}', [LecturerAbsenceController::class, 'update']);
+        Route::delete('/{id}', [LecturerAbsenceController::class, 'destroy']);
+    });
+
+    // Teaching Stats
+    Route::get('/lecturers/{id}/teaching-stats', [LecturerStatsController::class, 'teachingStats']);
+    Route::get('/classes/{id}/study-stats', [ClassStatsController::class, 'studyStats']);
+
+    // Audit Logs
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::get('/audit-logs/{auditableType}/{auditableId}', [AuditLogController::class, 'forEntity']);
+
+    // Exam Schedules
+    Route::prefix('exam-schedules')->group(function () {
+        Route::get('/', [ExamScheduleController::class, 'index']);
+        Route::post('/', [ExamScheduleController::class, 'store']);
+        Route::get('/{id}', [ExamScheduleController::class, 'show']);
+        Route::put('/{id}', [ExamScheduleController::class, 'update']);
+        Route::delete('/{id}', [ExamScheduleController::class, 'destroy']);
+    });
+
+    // Notifications (for upcoming schedule bell)
+    Route::get('/me/upcoming-schedules', [NotificationController::class, 'upcomingSchedules']);
+
+    // Study Plan Import
+    Route::post('/study-plans/import-from-previous', [StudyPlanImportController::class, 'import']);
 
     // Teaching Payment Management (Protected)
     Route::prefix('teaching-payments')->group(function () {

@@ -41,5 +41,9 @@ export default [
 
     //academic routes
     route("academic/grades", "routes/academic/grades.tsx"),
+    route("academic/exam-schedules", "routes/academic/exam-schedules.tsx"),
+    route("academic/lecturer-absences", "routes/academic/lecturer-absences.tsx"),
+    route("academic/audit-logs", "routes/academic/audit-logs.tsx"),
+    route("academic/stats", "routes/academic/stats.tsx"),
   ]),
 ] satisfies RouteConfig;

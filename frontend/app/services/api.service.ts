@@ -25,6 +25,31 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+/** Wraps fetch with a timeout. Translates raw browser network errors
+ *  ("Load failed", "Failed to fetch") into a friendly message so users
+ *  on mobile Chrome/Firefox see something actionable. */
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs = 15000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } catch (err: any) {
+    // Translate cryptic browser network errors into a user-friendly message
+    if (err?.name === 'AbortError') {
+      throw new Error('Kết nối quá thời gian, vui lòng thử lại.');
+    }
+    // "Load failed" (Safari/iOS WebKit), "Failed to fetch" (Chrome/Firefox)
+    throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const TOKEN_KEY = 'auth_token';
 
 function getAuthToken(): string | null {
@@ -41,7 +66,7 @@ const httpClient = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
       headers,
     });
@@ -58,7 +83,7 @@ const httpClient = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -76,7 +101,7 @@ const httpClient = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(data),
@@ -94,7 +119,7 @@ const httpClient = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       headers,
     });

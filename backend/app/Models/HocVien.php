@@ -17,6 +17,9 @@ class HocVien extends Model
 
     protected $fillable = [
         'maHV',
+        'external_id',
+        'external_source',
+        'synced_at',
         'hoDem',
         'ten',
         'ngaySinh',
@@ -39,6 +42,7 @@ class HocVien extends Model
     protected $casts = [
         'ngaySinh' => 'date',
         'ngayNhapHoc' => 'datetime',
+        'synced_at' => 'datetime',
         'namVaoTruong' => 'integer',
     ];
 

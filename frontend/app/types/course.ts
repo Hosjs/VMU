@@ -3,7 +3,8 @@
  */
 export interface Course {
   id: number;
-  ma_khoa_hoc: string; // Format: "2025.1" (năm học.đợt)
+  ma_khoa_hoc: string; // Format: "2025.1.1" (năm.học_kỳ.đợt)
+  ma_khoa_hoc_short?: string | null; // D3 — dạng "2025.1" (năm.học_kỳ)
   nam_hoc: number; // Năm học (VD: 2025)
   dot: number; // Đợt (1-5)
   ngay_bat_dau?: string;

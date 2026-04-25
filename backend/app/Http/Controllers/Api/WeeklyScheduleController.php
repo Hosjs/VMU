@@ -346,6 +346,85 @@ class WeeklyScheduleController extends Controller
     }
 
     /**
+     * A2 — Suggest a "khung môn" for a week from the major's study plan.
+     *
+     * Returns subjects from `major_subjects` for the given major, plus the list
+     * of classes in this course/major and which subjects are already scheduled
+     * in the week so the frontend can append placeholder rows for the rest.
+     */
+    public function studyPlanSuggestions(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'khoa_hoc_id' => 'required|integer|exists:khoa_hoc,id',
+            'week_number' => 'required',
+            'major_id'    => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $rawMajorId = $request->input('major_id');
+        $major = is_numeric($rawMajorId)
+            ? \App\Models\Major::find($rawMajorId) ?: \App\Models\Major::where('maNganh', $rawMajorId)->first()
+            : \App\Models\Major::where('maNganh', $rawMajorId)->first();
+
+        if (!$major) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy ngành học',
+            ], 404);
+        }
+
+        $khoaHocId = (int) $request->input('khoa_hoc_id');
+        $weekNumber = (string) $request->input('week_number');
+
+        // Classes in this course that belong to this major (classes.major_id stores maNganh).
+        $classes = \App\Models\classes::query()
+            ->where('khoaHoc_id', $khoaHocId)
+            ->where('major_id', $major->maNganh)
+            ->select('id', 'class_name', 'major_id')
+            ->orderBy('class_name')
+            ->get();
+
+        // Subject IDs already scheduled in this week for any of those classes.
+        $scheduledSubjectIds = WeeklySchedule::where('khoa_hoc_id', $khoaHocId)
+            ->where('week_number', $weekNumber)
+            ->whereIn('class_id', $classes->pluck('id'))
+            ->whereNotNull('subject_id')
+            ->pluck('subject_id')
+            ->unique()
+            ->values();
+
+        $subjects = $major->subjects()
+            ->select('subjects.id', 'subjects.maMon', 'subjects.tenMon', 'subjects.soTinChi')
+            ->orderBy('subjects.tenMon')
+            ->get()
+            ->map(function ($s) use ($scheduledSubjectIds) {
+                $s->already_scheduled = $scheduledSubjectIds->contains($s->id);
+                return $s;
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'major' => [
+                    'id'       => $major->id,
+                    'maNganh'  => $major->maNganh,
+                    'tenNganh' => $major->tenNganh,
+                ],
+                'classes_in_course' => $classes,
+                'subjects'          => $subjects,
+                'suggested_count'   => $subjects->where('already_scheduled', false)->count(),
+            ],
+        ]);
+    }
+
+    /**
      * Get week list for a specific khoa_hoc (semester)
      * Calculates weeks based on start and end dates
      */
@@ -395,7 +474,9 @@ class WeeklyScheduleController extends Controller
                     'week_label' => "Tuần {$i}",
                     'start_date' => $weekStartDate->format('Y-m-d'),
                     'end_date' => $weekEndDate->format('Y-m-d'),
-                    'display_label' => "Tuần {$i} ({$weekStartDate->format('d/m')} - {$weekEndDate->format('d/m')})",
+                    'iso_year' => (int) $weekStartDate->isoFormat('GGGG'),
+                    'iso_week' => $weekStartDate->isoWeek(),
+                    'display_label' => "Tuần {$i} ({$weekStartDate->format('d/m')} - {$weekEndDate->format('d/m')}) · ISO W{$weekStartDate->isoWeek()}/{$weekStartDate->isoFormat('GGGG')}",
                 ];
             }
 

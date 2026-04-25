@@ -5,6 +5,13 @@
 
     RewriteEngine On
 
+    # -----------------------------------------------------------------------
+    # CORS: Pass OPTIONS preflight requests directly to Laravel (index.php)
+    # Apache may otherwise intercept OPTIONS and respond without CORS headers
+    # -----------------------------------------------------------------------
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule .* index.php [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -23,3 +30,19 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# -----------------------------------------------------------------------
+# Apache-level CORS fallback (safety net if PHP middleware doesn't run)
+# Uses setifempty to avoid duplicate headers when PHP already set them
+# -----------------------------------------------------------------------
+<IfModule mod_headers.c>
+    # Match both www and non-www origins
+    SetEnvIf Origin "^https://(www\.)?sdtvimaru\.com$" CORS_ORIGIN=$0
+
+    Header always setifempty Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+    Header always setifempty Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" env=CORS_ORIGIN
+    Header always setifempty Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN" env=CORS_ORIGIN
+    Header always setifempty Access-Control-Allow-Credentials "true" env=CORS_ORIGIN
+    Header always set Vary "Origin"
+</IfModule>
+

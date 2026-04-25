@@ -97,7 +97,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           requiredPermissions: ['education_levels.view'],
         },
         {
-          title: 'Ngành học',
+          title: 'Chuyên ngành',
           path: '/majors',
           icon: <BuildingLibraryIcon className="w-5 h-5" />,
           requiredPermissions: ['majors.view'],
@@ -191,6 +191,26 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
           path: '/academic/grades',
           icon: <MagnifyingGlassIcon className="w-5 h-5" />,
           requiredPermissions: ['grades.view'],
+        },
+        {
+          title: 'Lịch thi',
+          path: '/academic/exam-schedules',
+          icon: <CalendarDaysIcon className="w-5 h-5" />,
+        },
+        {
+          title: 'GV nghỉ dạy',
+          path: '/academic/lecturer-absences',
+          icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
+        },
+        {
+          title: 'Lịch sử thay đổi',
+          path: '/academic/audit-logs',
+          icon: <DocumentTextIcon className="w-5 h-5" />,
+        },
+        {
+          title: 'Thống kê',
+          path: '/academic/stats',
+          icon: <ChartBarIcon className="w-5 h-5" />,
         },
       ],
     },

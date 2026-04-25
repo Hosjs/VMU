@@ -18,7 +18,7 @@ export function Breadcrumb() {
     // Categories
     'categories': 'Danh mục',
     'training-levels': 'Trình độ đào tạo',
-    'majors': 'Ngành học',
+    'majors': 'Chuyên ngành',
     'subjects': 'Môn học',
     'courses': 'Học phần',
     'course': 'Học phần',

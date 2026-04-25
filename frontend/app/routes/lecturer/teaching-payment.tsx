@@ -366,7 +366,7 @@ export default function TeachingPaymentPage() {
     setSuccess(null);
 
     if (!selectedCourse || !selectedMajor || !semesterCode) {
-      setError('Vui lòng chọn kỳ học và ngành học');
+      setError('Vui lòng chọn năm học và chuyên ngành');
       return;
     }
 
@@ -425,7 +425,7 @@ export default function TeachingPaymentPage() {
     setSuccess(null);
 
     if (!selectedCourse || !selectedMajor || !semesterCode) {
-      setError('Vui lòng chọn kỳ học và ngành học');
+      setError('Vui lòng chọn năm học và chuyên ngành');
       return;
     }
 
@@ -930,7 +930,7 @@ export default function TeachingPaymentPage() {
           Thanh toán tiền giảng dạy
         </h1>
         <p className="text-gray-600">
-          Quản lý thanh toán tiền giảng dạy cho giảng viên theo từng kỳ học
+          Quản lý thanh toán tiền giảng dạy cho giảng viên theo từng năm học
         </p>
       </div>
 
@@ -938,8 +938,8 @@ export default function TeachingPaymentPage() {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Autocomplete
-            label="Kỳ học"
-            placeholder="Tìm kiếm theo mã kỳ học hoặc năm học..."
+            label="Năm học"
+            placeholder="Tìm kiếm theo mã năm học..."
             options={courseOptions}
             value={selectedCourse}
             onChange={handleCourseChange}
@@ -947,8 +947,8 @@ export default function TeachingPaymentPage() {
           />
 
           <Autocomplete
-            label="Ngành học"
-            placeholder="Tìm kiếm theo mã ngành hoặc tên ngành..."
+            label="Chuyên ngành"
+            placeholder="Tìm kiếm theo mã hoặc tên chuyên ngành..."
             options={majorOptions}
             value={selectedMajor}
             onChange={handleMajorChange}
@@ -956,7 +956,7 @@ export default function TeachingPaymentPage() {
           />
 
           <MuiTextField
-            label="Mã kỳ học - Ngành"
+            label="Lớp"
             value={semesterCode}
             onChange={(e) => setSemesterCode(e.target.value)}
             fullWidth
@@ -1350,10 +1350,10 @@ export default function TeachingPaymentPage() {
       ) : (
         <Paper elevation={1} className="p-12 text-center">
           <Typography variant="h6" className="text-gray-500">
-            Vui lòng chọn kỳ học và ngành học để bắt đầu
+            Vui lòng chọn năm học và chuyên ngành để bắt đầu
           </Typography>
           <Typography variant="body2" className="text-gray-400 mt-2">
-            Chọn kỳ học và ngành học ở trên để xem bảng thanh toán
+            Chọn năm học và chuyên ngành ở trên để xem bảng thanh toán
           </Typography>
         </Paper>
       )}

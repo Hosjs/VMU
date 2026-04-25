@@ -325,6 +325,26 @@ class StudentController extends Controller
     }
 
     /**
+     * D4 — Trigger sync học viên từ API ngoài (admin).
+     * Body (optional): { major: string, year: int }
+     */
+    public function syncExternal(Request $request, \App\Services\ExternalStudentSync $sync)
+    {
+        $params = array_filter([
+            'major' => $request->input('major'),
+            'year'  => $request->input('year'),
+        ]);
+
+        $result = $sync->sync($params);
+        $status = ($result['ok'] ?? false) ? 200 : 502;
+
+        return response()->json([
+            'success' => $result['ok'] ?? false,
+            'data'    => $result,
+        ], $status);
+    }
+
+    /**
      * Get student by code from database (removed external API dependency)
      */
     public function getByCode(Request $request, $maHV)

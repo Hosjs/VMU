@@ -62,13 +62,17 @@ class Cors
             'https://sdtvimaru.com',
         ];
 
-        // Add production URLs from environment if available
-        if ($productionUrl = env('FRONTEND_URL')) {
-            $allowedOrigins[] = $productionUrl;
+        // Use config() so values are correct even when config is cached (php artisan config:cache)
+        if ($productionUrl = config('app.frontend_url')) {
+            if (!in_array($productionUrl, $allowedOrigins)) {
+                $allowedOrigins[] = $productionUrl;
+            }
         }
 
-        if ($appUrl = env('APP_URL')) {
-            $allowedOrigins[] = $appUrl;
+        if ($appUrl = config('app.url')) {
+            if (!in_array($appUrl, $allowedOrigins)) {
+                $allowedOrigins[] = $appUrl;
+            }
         }
 
         // Check if the origin is allowed
@@ -88,12 +92,18 @@ class Cors
             return $origin;
         }
 
-        // Default: allow all origins in development mode (not recommended for production)
-        if (env('APP_ENV') === 'development' || env('APP_ENV') === 'local') {
+        // Default: allow all origins in development/local mode
+        if (app()->environment('development', 'local')) {
             return $origin ?: '*';
         }
 
-        // Default to first allowed origin
+        // For production: return the first matching https:// origin
+        foreach ($allowedOrigins as $allowed) {
+            if (str_starts_with($allowed, 'https://')) {
+                return $allowed;
+            }
+        }
+
         return $allowedOrigins[0];
     }
 }

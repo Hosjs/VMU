@@ -4,12 +4,14 @@ interface UseFormOptions<T> {
   initialValues: T;
   onSubmit: (values: T) => Promise<void>;
   validate?: (values: T) => Record<string, string>;
+  resetOnSubmit?: boolean;
 }
 
 export function useForm<T extends Record<string, any>>({
   initialValues,
   onSubmit,
   validate,
+  resetOnSubmit = true,
 }: UseFormOptions<T>) {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -83,10 +85,12 @@ export function useForm<T extends Record<string, any>>({
 
     try {
       await onSubmit(values);
-      // Reset form after successful submit
-      setValues(initialValues);
-      setErrors({});
-      setTouched({});
+      // Reset form after successful submit (only if resetOnSubmit is true)
+      if (resetOnSubmit) {
+        setValues(initialValues);
+        setErrors({});
+        setTouched({});
+      }
     } catch (error) {
       console.error('Form submission error:', error);
       if (error instanceof Error) {

@@ -23,6 +23,13 @@ import { Table } from '~/components/ui/Table';
 import { Pagination } from '~/components/ui/Pagination';
 import { Modal } from '~/components/ui/Modal';
 
+export function meta() {
+  return [
+    { title: "Quản lý chuyên ngành - VMU Training" },
+    { name: "description", content: "Quản lý danh sách các chuyên ngành" },
+  ];
+}
+
 export default function MajorsPage() {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [allMajors, setAllMajors] = useState<Major[]>([]);
@@ -275,7 +282,7 @@ export default function MajorsPage() {
             <AcademicCapIcon className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Quản lý ngành học</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý chuyên ngành</h1>
             <p className="text-sm text-gray-500">Quản lý thông tin các ngành đào tạo</p>
           </div>
         </div>
@@ -291,7 +298,7 @@ export default function MajorsPage() {
           </Button>
           <Button variant="primary" onClick={handleCreate}>
             <PlusIcon className="w-5 h-5 mr-2" />
-            Thêm ngành học
+            Thêm chuyên ngành
           </Button>
         </div>
       </div>
@@ -357,7 +364,7 @@ export default function MajorsPage() {
             columns={columns}
             data={table.data}
             isLoading={table.isLoading}
-            emptyMessage="Chưa có dữ liệu ngành học"
+            emptyMessage="Chưa có dữ liệu chuyên ngành"
             onSort={table.handleSort}
             sortBy={table.sortBy}
             sortDirection={table.sortDirection}
@@ -384,7 +391,7 @@ export default function MajorsPage() {
           createModal.close();
           editModal.close();
         }}
-        title={selectedMajor ? 'Cập nhật ngành học' : 'Thêm ngành học mới'}
+        title={selectedMajor ? 'Cập nhật chuyên ngành' : 'Thêm chuyên ngành mới'}
       >
         <form onSubmit={form.handleSubmit} className="space-y-4">
           <Input
@@ -444,7 +451,7 @@ export default function MajorsPage() {
               rows={3}
               value={form.values.mo_ta || ''}
               onChange={(e) => form.handleChange('mo_ta', e.target.value)}
-              placeholder="Mô tả thêm về ngành học..."
+              placeholder="Mô tả thêm về chuyên ngành..."
             />
           </div>
 
@@ -474,11 +481,11 @@ export default function MajorsPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            Bạn có chắc chắn muốn xóa ngành học <strong>{selectedMajor?.tenNganhHoc}</strong>?
+            Bạn có chắc chắn muốn xóa chuyên ngành <strong>{selectedMajor?.tenNganhHoc}</strong>?
           </p>
           {selectedMajor?.children && selectedMajor.children.length > 0 && (
             <p className="text-red-600 text-sm">
-              ⚠️ Ngành học này có {selectedMajor.children.length} chương trình con. Không thể xóa!
+              ⚠️ Chuyên ngành này có {selectedMajor.children.length} chương trình con. Không thể xóa!
             </p>
           )}
           <div className="flex justify-end gap-2">
@@ -556,7 +563,7 @@ export default function MajorsPage() {
           ) : (
             <div className="text-center py-8">
               <BookOpenIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Ngành học này chưa có môn học nào</p>
+              <p className="text-gray-500">Chuyên ngành này chưa có môn học nào</p>
             </div>
           )}
 

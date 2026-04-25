@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import type {
   GridColDef,
@@ -26,16 +26,18 @@ import {
   Tooltip,
 } from '@mui/material';
 import { PlusIcon, TrashIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import weeklyScheduleService from '~/services/weeklyScheduleService';
 import { roomService } from '~/services/room.service';
 import { subjectService } from '~/services/subject.service';
 import { lecturerService } from '~/services/lecturer.service';
 import { courseService } from '~/services/course.service';
+import { majorService } from '~/services/major.service';
 import { majorSubjectService } from '~/services/major-subject.service';
+import type { Major } from '~/types/major';
 import { getTeachingSchedules } from '~/services/teachingScheduleService';
 import { exportWeeklyScheduleToExcel, exportWeeklyScheduleToPDF } from '~/utils/excelExporter';
-import { parseWeeklyScheduleExcel } from '~/utils/weeklyScheduleExcelImporter';
-import { formatters } from '~/utils/formatters';
+import { parseWeeklyScheduleExcel } from '~/utils/weeklyScheduleImporter';
 import type { WeeklyScheduleRow, BulkSaveWeeklyScheduleRequest, Week } from '~/types/weekly-schedule';
 import type { Room } from '~/types/room';
 import type { Subject } from '~/types/subject';
@@ -61,7 +63,13 @@ export default function WeeklySchedulePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [addingClassToRow, setAddingClassToRow] = useState<string | number | null>(null);
   const [newClassInput, setNewClassInput] = useState<string>('');
-  const importFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<GridRowId | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState<string>('');
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [selectedMajorMa, setSelectedMajorMa] = useState<string>('');
+  const [loadingPlan, setLoadingPlan] = useState(false);
 
   // Load initial data on mount
   useEffect(() => {
@@ -93,16 +101,18 @@ export default function WeeklySchedulePage() {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [coursesData, classesData, lecturersData, subjectsResponse] = await Promise.all([
+      const [coursesData, classesData, lecturersData, subjectsResponse, majorsData] = await Promise.all([
         courseService.getSimpleCourses(),
         roomService.getClasses(),
         lecturerService.getSimpleLecturers(),
         subjectService.getSubjects({ per_page: 1000 }),
+        majorService.getAllMajors().catch(() => [] as Major[]),
       ]);
 
       setCourses(coursesData || []);
       setClasses(classesData || []);
       setLecturers(lecturersData || []);
+      setMajors(majorsData || []);
 
       const subjectsData = subjectsResponse?.data || [];
       setSubjects(subjectsData);
@@ -349,13 +359,135 @@ export default function WeeklySchedulePage() {
     setRows([...rows, newRow]);
   };
 
-  const handleDeleteRow = (id: GridRowId) => {
-    setRows(rows.filter((row) => row.id !== id));
-    // Reorder STT
-    const reorderedRows = rows
-      .filter((row) => row.id !== id)
-      .map((row, index) => ({ ...row, stt: index + 1 }));
-    setRows(reorderedRows);
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleLoadStudyPlan = async () => {
+    if (!selectedCourse || !selectedWeek || !selectedMajorMa) {
+      setError('Hãy chọn năm học, tuần và ngành trước khi tải khung môn.');
+      return;
+    }
+    setLoadingPlan(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const data = await weeklyScheduleService.getStudyPlanSuggestions({
+        khoa_hoc_id: selectedCourse,
+        week_number: String(selectedWeek),
+        major_id: selectedMajorMa,
+      });
+
+      const classNames = (data.classes_in_course || []).map((c) => c.class_name);
+      const newSubjects = (data.subjects || []).filter((s) => !s.already_scheduled);
+
+      if (newSubjects.length === 0) {
+        setSuccess(`Tất cả ${data.subjects.length} môn của ngành ${data.major.tenNganh} đã được xếp lịch trong tuần này.`);
+        return;
+      }
+
+      const offset = rows.length;
+      const placeholderRows: WeeklyScheduleRow[] = newSubjects.map((s, idx) => ({
+        id: `plan-${Date.now()}-${idx}`,
+        stt: offset + idx + 1,
+        class_names: [...classNames],
+        subject_id: s.id,
+        subject_name: s.tenMon,
+        lecturer_name: '',
+        time_slot: '',
+        room: '',
+        ghi_chu: '',
+        isNew: true,
+      } as any));
+
+      setRows([...rows, ...placeholderRows]);
+      setSuccess(
+        `Đã tải ${newSubjects.length} môn từ kế hoạch ngành ${data.major.tenNganh}` +
+        (classNames.length ? ` (gán sẵn ${classNames.length} lớp).` : '. Chưa có lớp nào của ngành này trong năm học.'),
+      );
+    } catch (err: any) {
+      setError(`Không tải được khung môn: ${err?.message ?? err}`);
+    } finally {
+      setLoadingPlan(false);
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await parseWeeklyScheduleExcel(file);
+      if (result.warnings.length) {
+        setError(result.warnings.join(' • '));
+      }
+      if (result.rows.length) {
+        const offset = rows.length;
+        const merged = [
+          ...rows,
+          ...result.rows.map((r, idx) => ({ ...r, id: `import-${Date.now()}-${idx}`, stt: offset + idx + 1 })),
+        ];
+        setRows(merged);
+        setSuccess(`Đã nhập ${result.rows.length} dòng từ file Excel. Hãy kiểm tra lại trước khi lưu.`);
+      } else if (!result.warnings.length) {
+        setError('Không có dòng nào được nhập từ file Excel.');
+      }
+    } catch (err: any) {
+      setError(`Lỗi đọc file Excel: ${err?.message ?? err}`);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleInsertRowAfter = (afterId: GridRowId) => {
+    const index = rows.findIndex((r) => r.id === afterId);
+    if (index === -1) return;
+    const newRow: WeeklyScheduleRow = {
+      id: `new-${Date.now()}`,
+      stt: index + 2,
+      class_names: [],
+      subject_name: '',
+      lecturer_name: '',
+      time_slot: '',
+      room: '',
+      ghi_chu: '',
+      isNew: true,
+    };
+    const next = [...rows.slice(0, index + 1), newRow, ...rows.slice(index + 1)];
+    setRows(next.map((r, i) => ({ ...r, stt: i + 1 })));
+  };
+
+  const handleRequestDeleteRow = (id: GridRowId) => {
+    setDeleteConfirmTarget(id);
+  };
+
+  const handleConfirmDeleteRow = async () => {
+    if (deleteConfirmTarget === null) return;
+    const targetId = deleteConfirmTarget;
+    const isPersisted = typeof targetId === 'number' || (typeof targetId === 'string' && !targetId.startsWith('new-'));
+    try {
+      if (isPersisted) {
+        await weeklyScheduleService.delete(Number(targetId));
+        setSuccess('Đã xoá lịch học khỏi hệ thống');
+        setTimeout(() => setSuccess(null), 2000);
+      }
+      const reorderedRows = rows
+        .filter((row) => row.id !== targetId)
+        .map((row, index) => ({ ...row, stt: index + 1 }));
+      setRows(reorderedRows);
+    } catch (err: any) {
+      console.error('❌ Error deleting row:', err);
+      setError(err?.response?.data?.message || 'Lỗi khi xoá lịch học');
+    } finally {
+      setDeleteConfirmTarget(null);
+    }
+  };
+
+  const handleCancelDeleteRow = () => {
+    setDeleteConfirmTarget(null);
   };
 
   const processRowUpdate = (newRow: GridRowModel<WeeklyScheduleRow>) => {
@@ -1028,24 +1160,47 @@ export default function WeeklySchedulePage() {
     {
       field: 'time_slot',
       headerName: 'Thời gian',
-      width: 180,
-      minWidth: 150,
+      width: 220,
+      minWidth: 180,
       editable: true,
-      renderEditCell: (params) => (
-        <TextField
-          value={params.value || ''}
-          onChange={(e) => {
-            params.api.setEditCellValue({
-              id: params.id,
-              field: params.field,
-              value: e.target.value,
-            });
-          }}
-          variant="standard"
-          placeholder="VD: Thứ 2, 7h-9h"
-          fullWidth
-        />
-      ),
+      renderEditCell: (params) => {
+        const TIME_PRESETS = [
+          'Cả ngày Thứ 7',
+          'Cả ngày Chủ nhật',
+          'Cả ngày Thứ 7 và Chủ nhật',
+        ];
+        return (
+          <MuiAutocomplete
+            freeSolo
+            openOnFocus
+            options={TIME_PRESETS}
+            value={params.value || ''}
+            onChange={(_, newValue) => {
+              params.api.setEditCellValue({
+                id: params.id,
+                field: params.field,
+                value: typeof newValue === 'string' ? newValue : '',
+              });
+            }}
+            onInputChange={(_, newInputValue) => {
+              params.api.setEditCellValue({
+                id: params.id,
+                field: params.field,
+                value: newInputValue,
+              });
+            }}
+            renderInput={(inputParams) => (
+              <TextField
+                {...inputParams}
+                autoFocus
+                fullWidth
+                variant="standard"
+                placeholder="Chọn preset hoặc nhập: Thứ 2, 7h-9h"
+              />
+            )}
+          />
+        );
+      },
     },
     {
       field: 'room',
@@ -1095,23 +1250,35 @@ export default function WeeklySchedulePage() {
     {
       field: 'actions',
       headerName: 'Thao tác',
-      width: 100,
+      width: 160,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Button
-          size="small"
-          color="error"
-          onClick={() => handleDeleteRow(params.id)}
-          startIcon={<TrashIcon className="h-4 w-4" />}
-        >
-          Xóa
-        </Button>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title="Chèn dòng bên dưới">
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => handleInsertRowAfter(params.id)}
+              sx={{ minWidth: 32, px: 1 }}
+            >
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+          </Tooltip>
+          <Button
+            size="small"
+            color="error"
+            onClick={() => handleRequestDeleteRow(params.id)}
+            startIcon={<TrashIcon className="h-4 w-4" />}
+          >
+            Xóa
+          </Button>
+        </Box>
       ),
     },
-  ], [rows, classes, subjects, majorSubjectsMap, lecturers, teachingSchedules, loadSubjectsByMajor, handleDeleteRow]);
+  ], [rows, classes, subjects, majorSubjectsMap, lecturers, teachingSchedules, loadSubjectsByMajor]);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -1124,6 +1291,7 @@ export default function WeeklySchedulePage() {
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
           <FormControl sx={{ minWidth: 250 }} size="small">
             <InputLabel>Năm học *</InputLabel>
+            <InputLabel>Năm học *</InputLabel>
             <Select
               value={selectedCourse || ''}
               onChange={(e) => {
@@ -1132,13 +1300,15 @@ export default function WeeklySchedulePage() {
                 setRows([]);
               }}
               label="Năm học *"
+              label="Năm học *"
             >
               <MenuItem value="">
+                <em>-- Chọn năm học --</em>
                 <em>-- Chọn năm học --</em>
               </MenuItem>
               {courses.map((course) => (
                 <MenuItem key={course.id} value={course.id}>
-                  {formatters.courseCode(course)} ({formatters.courseCodeDetail(course)})
+                  {course.ma_khoa_hoc_short ?? course.ma_khoa_hoc} ({course.nam_hoc}.{course.hoc_ky}.{course.dot})
                 </MenuItem>
               ))}
             </Select>
@@ -1161,6 +1331,45 @@ export default function WeeklySchedulePage() {
               ))}
             </Select>
           </FormControl>
+
+          <FormControl sx={{ minWidth: 240 }} size="small">
+            <InputLabel>Lọc theo môn</InputLabel>
+            <Select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value as string)}
+              label="Lọc theo môn"
+            >
+              <MenuItem value=""><em>-- Tất cả môn --</em></MenuItem>
+              {Array.from(new Set(rows.map((r) => r.subject_name).filter(Boolean))).map((name) => (
+                <MenuItem key={name} value={name}>{name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl sx={{ minWidth: 240 }} size="small" disabled={!selectedCourse || !selectedWeek}>
+            <InputLabel>Ngành (KH giảng dạy)</InputLabel>
+            <Select
+              value={selectedMajorMa}
+              onChange={(e) => setSelectedMajorMa(String(e.target.value))}
+              label="Ngành (KH giảng dạy)"
+            >
+              <MenuItem value=""><em>-- Chọn ngành --</em></MenuItem>
+              {majors.map((m: any) => (
+                <MenuItem key={m.id} value={m.maNganh ?? m.ma}>
+                  {(m.maNganh ?? m.ma)} — {m.tenNganh ?? m.tenNganhHoc}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="outlined"
+            color="secondary"
+            disabled={!selectedCourse || !selectedWeek || !selectedMajorMa || loadingPlan}
+            onClick={handleLoadStudyPlan}
+          >
+            {loadingPlan ? <CircularProgress size={18} /> : 'Tải khung môn từ ngành'}
+          </Button>
 
           {loading && <CircularProgress size={24} />}
         </Box>
@@ -1186,6 +1395,21 @@ export default function WeeklySchedulePage() {
           >
             Thêm dòng
           </Button>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowUpTrayIcon className="h-5 w-5" />}
+            onClick={handleImportClick}
+            disabled={importing}
+          >
+            {importing ? <CircularProgress size={20} /> : 'Nhập Excel'}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            hidden
+            onChange={handleImportFile}
+          />
           <Button
             variant="contained"
             color="primary"
@@ -1233,7 +1457,7 @@ export default function WeeklySchedulePage() {
         {/* DataGrid */}
         <Box sx={{ height: 600, width: '100%' }}>
           <DataGrid
-            rows={rows}
+            rows={subjectFilter ? rows.filter((r) => r.subject_name === subjectFilter) : rows}
             columns={columns}
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={handleProcessRowUpdateError}
@@ -1265,7 +1489,7 @@ export default function WeeklySchedulePage() {
             <strong>Hướng dẫn:</strong>
           </Typography>
           <Typography variant="body2" color="text.secondary" component="ul">
-            <li>Chọn năm học từ dropdown (VD: 2025.1)</li>
+            <li>Chọn năm học từ dropdown (VD: 2025.1.1)</li>
             <li>Hệ thống sẽ tự động tính và hiển thị danh sách các tuần trong kỳ</li>
             <li>Chọn tuần cần xem/chỉnh sửa (VD: Tuần 4 (06/01 - 12/01))</li>
             <li>Lịch học của tuần đó sẽ tự động được tải lên</li>
@@ -1279,6 +1503,20 @@ export default function WeeklySchedulePage() {
             <li>Click "Lưu lịch học" để lưu toàn bộ thay đổi</li>
           </Typography>
         </Box>
+
+        {/* Delete Confirm Dialog */}
+        <Dialog open={deleteConfirmTarget !== null} onClose={handleCancelDeleteRow} maxWidth="xs" fullWidth>
+          <DialogTitle>Xác nhận xoá</DialogTitle>
+          <DialogContent>
+            <Typography>Bạn có chắc muốn xoá dòng lịch học này? Thao tác không thể hoàn tác.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelDeleteRow}>Huỷ</Button>
+            <Button onClick={handleConfirmDeleteRow} color="error" variant="contained" startIcon={<TrashIcon className="h-4 w-4" />}>
+              Xoá
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Add Class Dialog */}
         <Dialog open={addingClassToRow !== null} onClose={handleCancelAddClass} maxWidth="sm" fullWidth>

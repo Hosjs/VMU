@@ -411,7 +411,7 @@ class CourseController extends Controller
     public function simple()
     {
         try {
-            $courses = KhoaHoc::select('id', 'ma_khoa_hoc', 'nam_hoc', 'dot')
+            $courses = KhoaHoc::select('id', 'ma_khoa_hoc', 'ma_khoa_hoc_short', 'nam_hoc', 'hoc_ky', 'dot')
                 ->orderBy('nam_hoc', 'desc')
                 ->orderBy('dot', 'desc')
                 ->get();
