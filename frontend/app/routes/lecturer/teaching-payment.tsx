@@ -229,8 +229,8 @@ export default function TeachingPaymentPage() {
       const courseOpts: AutocompleteOption[] = (coursesData || []).map(course => ({
         value: course.id,
         label: course.ma_khoa_hoc,
-        subtitle: `Năm ${course.nam_hoc}, HK ${course.hoc_ky}, Đợt ${course.dot}`,
-        searchText: `${course.ma_khoa_hoc} ${course.nam_hoc} ${course.hoc_ky} ${course.dot}`,
+        subtitle: `Năm ${course.nam_hoc}`,
+        searchText: `${course.ma_khoa_hoc} ${course.nam_hoc}`,
       }));
 
       setCourseOptions(courseOpts);

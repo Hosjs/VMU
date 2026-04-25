@@ -504,6 +504,10 @@ export default function TeachingSchedulePage() {
     setError(null);
   };
 
+  const getLecturerGroupCount = (stt: number): number => {
+    return rows.filter((row) => row.stt === stt && !row.isBreak).length;
+  };
+
   const columns: GridColDef<TeachingScheduleRow>[] = [
     {
       field: 'stt',
@@ -957,3 +961,7 @@ export default function TeachingSchedulePage() {
     </div>
   );
 }
+function getLecturerGroupCount(stt: number) {
+  throw new Error('Function not implemented.');
+}
+

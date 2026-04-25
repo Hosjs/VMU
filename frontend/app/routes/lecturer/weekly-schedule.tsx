@@ -26,7 +26,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import { PlusIcon, TrashIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
-import { PlusIcon, TrashIcon, ArrowDownTrayIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import weeklyScheduleService from '~/services/weeklyScheduleService';
 import { roomService } from '~/services/room.service';
 import { subjectService } from '~/services/subject.service';
@@ -58,7 +57,6 @@ export default function WeeklySchedulePage() {
   const [teachingSchedules, setTeachingSchedules] = useState<TeachingSchedule[]>([]); // ✅ Store teaching schedules for comparison
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [addingClassToRow, setAddingClassToRow] = useState<string | number | null>(null);
@@ -671,7 +669,7 @@ export default function WeeklySchedulePage() {
   };
 
   const handleImportExcelClick = () => {
-    importFileInputRef.current?.click();
+    fileInputRef.current?.click();
   };
 
   const handleImportExcelChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -690,7 +688,8 @@ export default function WeeklySchedulePage() {
       setError(null);
       setSuccess(null);
 
-      const importedRows = await parseWeeklyScheduleExcel(file);
+      const importedResult = await parseWeeklyScheduleExcel(file);
+      const importedRows = importedResult.rows || importedResult;
       setRows(importedRows);
       setSuccess(`✅ Đã nhập ${importedRows.length} dòng từ file Excel. Vui lòng kiểm tra và lưu lại.`);
     } catch (err: any) {
@@ -1291,7 +1290,6 @@ export default function WeeklySchedulePage() {
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
           <FormControl sx={{ minWidth: 250 }} size="small">
             <InputLabel>Năm học *</InputLabel>
-            <InputLabel>Năm học *</InputLabel>
             <Select
               value={selectedCourse || ''}
               onChange={(e) => {
@@ -1300,15 +1298,13 @@ export default function WeeklySchedulePage() {
                 setRows([]);
               }}
               label="Năm học *"
-              label="Năm học *"
             >
               <MenuItem value="">
-                <em>-- Chọn năm học --</em>
                 <em>-- Chọn năm học --</em>
               </MenuItem>
               {courses.map((course) => (
                 <MenuItem key={course.id} value={course.id}>
-                  {course.ma_khoa_hoc_short ?? course.ma_khoa_hoc} ({course.nam_hoc}.{course.hoc_ky}.{course.dot})
+                  {course.ma_khoa_hoc_short ?? course.ma_khoa_hoc} ({course.nam_hoc}.{(course as any).hoc_ky}.{course.dot})
                 </MenuItem>
               ))}
             </Select>
@@ -1447,7 +1443,7 @@ export default function WeeklySchedulePage() {
         </Box>
 
         <input
-          ref={importFileInputRef}
+          ref={fileInputRef}
           type="file"
           accept=".xlsx,.xls"
           className="hidden"
@@ -1489,7 +1485,7 @@ export default function WeeklySchedulePage() {
             <strong>Hướng dẫn:</strong>
           </Typography>
           <Typography variant="body2" color="text.secondary" component="ul">
-            <li>Chọn năm học từ dropdown (VD: 2025.1.1)</li>
+            <li>Chọn kỳ học từ dropdown (VD: 2025.1.1)</li>
             <li>Hệ thống sẽ tự động tính và hiển thị danh sách các tuần trong kỳ</li>
             <li>Chọn tuần cần xem/chỉnh sửa (VD: Tuần 4 (06/01 - 12/01))</li>
             <li>Lịch học của tuần đó sẽ tự động được tải lên</li>
